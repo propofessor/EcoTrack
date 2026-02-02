@@ -7,6 +7,7 @@ const routes = require('./routes.js');
 const app = express();
 
 const swaggerOptions = {
+	failOnErrors: true,
 	definition: {
 		openapi: '3.0.0',
 		info: {
