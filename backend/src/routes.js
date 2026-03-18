@@ -172,48 +172,94 @@ sessionRoutes.post('/logout', (req, res) => {
  *     responses:
  *       200:
  *         description: >
- *           Always returns 200. Check the `valid` field to determine
- *           whether the session is active.
+ *           Session is valid. Returns the authenticated user's profile.
  *         content:
  *           application/json:
  *             schema:
- *               oneOf:
- *                 - type: object
- *                   properties:
- *                     valid:
- *                       type: boolean
- *                       example: true
- *                     user:
- *                       $ref: '#/components/schemas/User'
- *                 - type: object
- *                   properties:
- *                     valid:
- *                       type: boolean
- *                       example: false
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: >
+ *           No session cookie present, or the token is invalid/expired.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: false
+ *                 reason:
+ *                   type: string
+ *                   example: No session found
+ *             examples:
+ *               noSession:
+ *                 value:
+ *                   valid: false
+ *                   reason: No session found
+ *               invalidToken:
+ *                 value:
+ *                   valid: false
+ *                   reason: Invalid or expired session
+ *       404:
+ *         description: >
+ *           Token is valid but the referenced user no longer exists in the database.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: false
+ *                 reason:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Unexpected server error while looking up the user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-sessionRoutes.get('/validate', async (req, res) => {
+sessionRoutes.get('/validate', (req, res) => {
 	const token = req.cookies.session;
 
 	if (!token) {
-		res.status(200);
-		return res.json({ valid: false });
+		return res
+			.status(401)
+			.json({ valid: false, reason: 'No session found' });
 	}
 
 	checkToken(token, async (err, decoded) => {
 		if (err) {
-			res.status(200);
-			return res.json({ valid: false });
+			return res
+				.status(401)
+				.json({ valid: false, reason: 'Invalid or expired session' });
 		}
 
-		const user = await db.getUser(decoded.user_id);
+		try {
+			const user = await db.getUser(decoded.user_id);
 
-		if (!user) {
-			res.status(200);
-			return res.json({ valid: false });
+			if (!user) {
+				return res
+					.status(404)
+					.json({ valid: false, reason: 'User not found' });
+			}
+
+			return res.status(200).json({ valid: true, user });
+		} catch (dbError) {
+			console.error(
+				'Error fetching user during session validation:',
+				dbError
+			);
+			return res.status(500).json({ message: 'Internal server error' });
 		}
-
-		res.status(200);
-		return res.json({ valid: true, user });
 	});
 });
 

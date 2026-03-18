@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const swaggerUI = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
@@ -35,5 +36,4 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 app.listen(3000, () => {
 	console.log('Server is running on http://localhost:3000');
 });
-
 module.exports = app;

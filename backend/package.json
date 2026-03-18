@@ -3,9 +3,26 @@
 	"version": "1.0.0",
 	"description": "",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"docs:generate": "node docs/generate-swagger.js",
 		"dev": "nodemon src/index.js",
-		"start": "node src/index.js"
+		"start": "node src/index.js",
+		"test": "jest --forceExit",
+		"test:watch": "jest --watch",
+		"test:coverage": "jest --coverage --forceExit"
+	},
+	"jest": {
+		"testEnvironment": "node",
+		"testMatch": [
+			"**/__tests__/**/*.test.js"
+		],
+		"setupFiles": [
+			"./__tests__/setup.js"
+		],
+		"collectCoverageFrom": [
+			"src/**/*.js",
+			"!src/schema.js",
+			"!src/index.js"
+		]
 	},
 	"keywords": [],
 	"author": "",
@@ -15,7 +32,6 @@
 		"@supabase/supabase-js": "^2.97.0",
 		"cookie-parser": "^1.4.7",
 		"cors": "^2.8.6",
-		"dotenv": "^17.2.3",
 		"express": "^5.2.1",
 		"jsonwebtoken": "^9.0.3",
 		"postgres": "^3.4.8",
@@ -24,6 +40,11 @@
 		"swagger-ui-express": "^5.0.1"
 	},
 	"devDependencies": {
-		"nodemon": "^3.1.11"
+		"@jest/globals": "^30.3.0",
+		"dotenv": "^17.2.3",
+		"jest": "^30.3.0",
+		"js-yaml": "^4.1.1",
+		"nodemon": "^3.1.11",
+		"supertest": "^7.2.2"
 	}
 }

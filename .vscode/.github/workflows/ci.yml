@@ -1,0 +1,145 @@
+# .github/workflows/ci.yml
+#
+# Pipeline CI/CD per Ecotrack backend.
+# Si attiva su ogni push e pull request verso main.
+#
+# Jobs:
+#   1. quality  → lint (Prettier) + validazione Swagger
+#   2. test     → unit + integration con Jest
+#   3. deploy   → placeholder per staging (solo su push a main)
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancella run precedenti della stessa PR per risparmiare minuti
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: backend   # tutti gli step girano in /backend
+
+jobs:
+  # ─── JOB 1: Qualità del codice ─────────────────────────────────────────────
+  quality:
+    name: Lint & Swagger
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10          # deve corrispondere a packageManager in package.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Installa dipendenze
+        run: pnpm install --frozen-lockfile
+
+      # Controlla che il codice rispetti .prettierrc senza modificarlo
+      - name: Controlla formattazione (Prettier)
+        run: pnpm exec prettier --check "src/**/*.js"
+
+      # Genera la spec Swagger e verifica che non ci siano errori nei JSDoc
+      # Se swagger-jsdoc lancia un'eccezione (failOnErrors: true), lo step fallisce
+      - name: Valida documentazione Swagger
+        run: node docs/generate-swagger.js
+
+      # (Opzionale) Carica openapi.yaml come artefatto scaricabile dalla PR
+      - name: Upload openapi.yaml
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: backend/docs/openapi.yaml
+          retention-days: 7
+
+  # ─── JOB 2: Test ───────────────────────────────────────────────────────────
+  test:
+    name: Test (Jest)
+    runs-on: ubuntu-latest
+    needs: quality          # non eseguire i test se il lint fallisce
+
+    env:
+      # Il DB mock non usa Supabase, ma src/db.js viene comunque caricato
+      # durante il bootstrapping del modulo; gli env evitano crash al require.
+      # I valori qui sono placeholder — non raggiungono mai Supabase nei test.
+      SUPABASE_URL: https://placeholder.supabase.co
+      SUPABASE_SECRET_KEY: placeholder-key
+      # JWT_SECRET è impostato dentro i test stessi (beforeAll),
+      # ma è buona norma averne anche uno di fallback in CI.
+      JWT_SECRET: ci-test-secret-non-usato-in-produzione
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Installa dipendenze
+        run: pnpm install --frozen-lockfile
+
+      # Esegue tutti i test e raccoglie la coverage
+      - name: Esegui test con coverage
+        run: pnpm test:coverage
+
+      # Rende la coverage scaricabile come artefatto
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage/
+          retention-days: 14
+
+      # (Opzionale) Pubblica un commento di riepilogo sulla PR
+      # Richiede: actions/github-script o jest-coverage-comment action
+      # - name: Commenta coverage sulla PR
+      #   uses: ArtiomTr/jest-coverage-report-action@v2
+      #   with:
+      #     working-directory: backend
+
+  # ─── JOB 3: Deploy (solo su push a main) ───────────────────────────────────
+  deploy:
+    name: Deploy staging
+    runs-on: ubuntu-latest
+    needs: [quality, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ──────────────────────────────────────────────────────────────────────
+      # Sostituisci questo step con il tuo metodo di deploy:
+      #   - Railway:  railwayapp/railway-github-action
+      #   - Render:   trigger deploy hook via curl
+      #   - Fly.io:   superfly/flyctl-actions/setup-flyctl + flyctl deploy
+      #   - Docker:   docker build + push su registry + deploy
+      # ──────────────────────────────────────────────────────────────────────
+      - name: Placeholder deploy
+        run: echo "Deploy su staging completato (configura il tuo provider qui)"
