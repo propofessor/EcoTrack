@@ -1,22 +1,18 @@
+require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
-const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
-// Create a single supabase client for interacting with your database
 const db = createClient(
 	process.env.SUPABASE_URL,
 	process.env.SUPABASE_SECRET_KEY
 );
 
 const getProviderTypeId = async (provider_type_name) => {
-	console.log('looking up provider type:', provider_type_name);
-
 	const { data, error } = await db
 		.from('provider_types')
 		.select('id')
 		.eq('label', provider_type_name)
 		.single();
-	console.log('data:', data);
-	console.log('error:', error);
 
 	if (error || !data) return null;
 	return data.id;
@@ -36,15 +32,22 @@ const createUser = async (name) => {
 const createAuthProvider = async (
 	user_id,
 	provider_user_id,
-	provider_data,
+	password,
 	provider_type_name
 ) => {
 	const provider_type_id = await getProviderTypeId(provider_type_name);
 	if (!provider_type_id) return null;
 
+	const hash = await bcrypt.hash(password, 12);
+
 	const { data, error } = await db
 		.from('auth_providers')
-		.insert({ user_id, provider_user_id, provider_data, provider_type_id })
+		.insert({
+			user_id,
+			provider_user_id,
+			provider_data: { hash },
+			provider_type_id
+		})
 		.select()
 		.single();
 
@@ -52,26 +55,23 @@ const createAuthProvider = async (
 	return data;
 };
 
-const getUserId = async (
-	provider_user_id,
-	provider_data,
-	provider_type_name
-) => {
+const getUserId = async (provider_user_id, password, provider_type_name) => {
 	const provider_type_id = await getProviderTypeId(provider_type_name);
 	if (!provider_type_id) return null;
 
 	const { data, error } = await db
 		.from('auth_providers')
-		.select('user_id')
+		.select('user_id, provider_data')
 		.eq('provider_user_id', provider_user_id)
 		.eq('provider_type_id', provider_type_id)
-		.contains('provider_data', provider_data);
+		.single();
 
-	console.log('data:', data);
-	console.log('error:', error);
+	if (error || !data) return null;
 
-	if (error || !data || data.length === 0) return null;
-	return data[0].user_id;
+	const match = await bcrypt.compare(password, data.provider_data.hash);
+	if (!match) return null;
+
+	return data.user_id;
 };
 
 const getUser = async (user_id) => {
