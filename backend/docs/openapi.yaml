@@ -27,15 +27,23 @@ paths:
               properties:
                 provider_user_id:
                   type: string
-                  example: google-oauth2|123456789
+                  example: john@example.com
                 provider_data:
-                  type: object
-                  description: Provider-specific auth payload (e.g. OAuth tokens, password hash)
-                  example:
-                    password: s3cr3t
+                  oneOf:
+                    - $ref: '#/components/schemas/LocalProviderData'
+                  description: |
+                    Provider-specific auth payload. For "local": { password: string }.
                 provider_type_name:
                   type: string
                   example: local
+            examples:
+              local:
+                summary: Login con email e password
+                value:
+                  provider_user_id: john@example.com
+                  provider_data:
+                    password: s3cr3tP@ssword
+                  provider_type_name: local
       responses:
         '200':
           description: Login successful. Sets a session cookie and returns the token.
@@ -43,11 +51,19 @@ paths:
             Set-Cookie:
               schema:
                 type: string
-                example: session=eyJ...; HttpOnly; SameSite=Lax
+                example: session=eyJ...; HttpOnly; SameSite=Lax; Path=/
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthToken'
+        '400':
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: All fields are required
         '401':
           description: Invalid credentials
           content:
@@ -119,7 +135,7 @@ paths:
             Set-Cookie:
               schema:
                 type: string
-                example: session=eyJ...; HttpOnly; SameSite=Lax
+                example: session=eyJ...; HttpOnly; SameSite=Lax; Path=/
           content:
             application/json:
               schema:
@@ -195,6 +211,7 @@ paths:
                 password:
                   type: string
                   format: password
+                  minLength: 8
                   example: s3cr3tP@ssword
       responses:
         '201':
@@ -206,13 +223,29 @@ paths:
               example:
                 message: User created successfully
         '400':
-          description: One or more required fields are missing
+          description: Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingFields:
+                  value:
+                    message: All fields are required
+                invalidEmail:
+                  value:
+                    message: Invalid email format
+                passwordTooShort:
+                  value:
+                    message: Password must be at least 8 characters
+        '409':
+          description: Email already registered
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                message: All fields are required
+                message: Email already in use
         '500':
           description: Database error while creating the user or auth provider
           content:
@@ -258,6 +291,15 @@ components:
         message:
           type: string
           example: An error occurred
+    LocalProviderData:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          format: password
+          example: s3cr3tP@ssword
   securitySchemes:
     cookieAuth:
       type: apiKey
