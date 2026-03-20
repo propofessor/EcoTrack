@@ -2,6 +2,7 @@ const db = require('./db');
 const routes = require('express')();
 const sessionRoutes = require('express')();
 const userRoutes = require('express')();
+const bcrypt = require('bcrypt');
 const { createSession, checkToken } = require('./utils');
 
 /**
@@ -100,6 +101,10 @@ const { createSession, checkToken } = require('./utils');
 sessionRoutes.post('/login', async (req, res) => {
 	const { provider_user_id, provider_data, provider_type_name } = req.body;
 
+	if (!provider_user_id || !provider_data || !provider_type_name) {
+		return res.status(400).json({ message: 'All fields are required' });
+	}
+
 	const userId = await db.getUserId(
 		provider_user_id,
 		provider_data.password,
@@ -107,15 +112,13 @@ sessionRoutes.post('/login', async (req, res) => {
 	);
 
 	if (!userId) {
-		res.status(401);
-		return res.json({ message: 'Invalid credentials' });
+		return res.status(401).json({ message: 'Invalid credentials' });
 	}
 
-	const token = createSession(userId);
-
-	if (!token) {
-		res.status(500);
-		return res.json({ message: 'Internal server error' });
+	try {
+		const token = createSession(userId);
+	} catch (error) {
+		return res.status(500).json({ message: error });
 	}
 
 	res.cookie('session', token, {
@@ -126,8 +129,7 @@ sessionRoutes.post('/login', async (req, res) => {
 		maxAge: 7 * 24 * 60 * 60 * 1000
 	});
 
-	res.status(200);
-	return res.json({ token });
+	return res.status(200).json({ token });
 });
 
 /**
@@ -156,8 +158,7 @@ sessionRoutes.post('/logout', (req, res) => {
 		domain: 'localhost'
 	});
 
-	res.status(200);
-	return res.json({ message: 'Logged out successfully' });
+	return res.status(200).json({ message: 'Logged out successfully' });
 });
 
 /**
@@ -194,25 +195,21 @@ sessionRoutes.get('/validate', async (req, res) => {
 	const token = req.cookies.session;
 
 	if (!token) {
-		res.status(200);
-		return res.json({ valid: false });
+		return res.status(200).json({ valid: false });
 	}
 
 	checkToken(token, async (err, decoded) => {
 		if (err) {
-			res.status(200);
-			return res.json({ valid: false });
+			return res.status(200).json({ valid: false });
 		}
 
 		const user = await db.getUser(decoded.user_id);
 
 		if (!user) {
-			res.status(200);
-			return res.json({ valid: false });
+			return res.status(200).json({ valid: false });
 		}
 
-		res.status(200);
-		return res.json({ valid: true, user });
+		return res.status(200).json({ valid: true, user });
 	});
 });
 
@@ -253,28 +250,36 @@ sessionRoutes.post('/refresh', (req, res) => {
 	const token = req.cookies.session;
 
 	if (!token) {
-		res.status(200);
-		return res.json({ message: 'No session found' });
+		return res.status(200).json({ message: 'No session found' });
 	}
 
 	checkToken(token, (err, decoded) => {
 		if (err) {
-			res.status(200);
-			return res.json({ message: 'Invalid or expired session' });
+			return res
+				.status(200)
+				.json({ message: 'Invalid or expired session' });
 		}
+		try {
+			const newToken = createSession(decoded.user_id);
 
-		const newToken = createSession(decoded.user_id);
+			if (!newToken) {
+				return res
+					.status(500)
+					.json({ message: 'Internal server error' });
+			}
 
-		res.cookie('session', newToken, {
-			httpOnly: true,
-			sameSite: 'lax',
-			secure: process.env.NODE_ENV === 'production',
-			domain: 'localhost',
-			maxAge: 7 * 24 * 60 * 60 * 1000
-		});
+			res.cookie('session', newToken, {
+				httpOnly: true,
+				sameSite: 'lax',
+				domain: 'localhost',
+				secure: process.env.NODE_ENV === 'production',
+				maxAge: 7 * 24 * 60 * 60 * 1000
+			});
 
-		res.status(200);
-		return res.json({ message: 'Session refreshed' });
+			return res.status(200).json({ message: 'Session refreshed' });
+		} catch (error) {
+			return res.status(500).json({ message: 'Internal server error' });
+		}
 	});
 });
 
@@ -319,25 +324,23 @@ sessionRoutes.get('/me', async (req, res) => {
 	const token = req.cookies.session;
 
 	if (!token) {
-		res.status(401);
-		return res.json({ message: 'No session found' });
+		return res.status(401).json({ message: 'No session found' });
 	}
 
 	checkToken(token, async (err, decoded) => {
 		if (err) {
-			res.status(401);
-			return res.json({ message: 'Invalid or expired session' });
+			return res
+				.status(401)
+				.json({ message: 'Invalid or expired session' });
 		}
 
 		const user = await db.getUser(decoded.user_id);
 
 		if (!user) {
-			res.status(404);
-			return res.json({ message: 'User not found' });
+			return res.status(404).json({ message: 'User not found' });
 		}
 
-		res.status(200);
-		return res.json(user);
+		return res.status(200).json(user);
 	});
 });
 
@@ -404,31 +407,40 @@ userRoutes.post('/register', async (req, res) => {
 	const { name, email, password } = req.body;
 
 	if (!name || !email || !password) {
-		res.status(400);
-		return res.json({ message: 'All fields are required' });
+		return res.status(400).json({ message: 'All fields are required' });
+	}
+
+	if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) === false) {
+		return res.status(400).json({ message: 'Invalid email format' });
+	}
+
+	if (password.length < 8) {
+		return res.status(400).json({
+			message: 'Password must be at least 8 characters'
+		});
 	}
 
 	const user = await db.createUser(name);
 
 	if (!user) {
-		res.status(500);
-		return res.json({ message: 'Could not create user' });
+		return res.status(500).json({ message: 'Could not create user' });
 	}
 
+	const hash = await bcrypt.hash(password, 12);
 	const authProvider = await db.createAuthProvider(
 		user.id,
 		email,
-		password,
+		{ password: hash },
 		'local'
 	);
 
 	if (!authProvider) {
-		res.status(500);
-		return res.json({ message: 'Could not create auth provider' });
+		return res
+			.status(500)
+			.json({ message: 'Could not create auth provider' });
 	}
 
-	res.status(201);
-	return res.json({ message: 'User created successfully' });
+	return res.status(201).json({ message: 'User created successfully' });
 });
 
 routes.use('/session', sessionRoutes).use('/user', userRoutes);

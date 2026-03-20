@@ -27,12 +27,11 @@ describe('createSession', () => {
 		expect(token.split('.')).toHaveLength(3);
 	});
 
-	it('restituisce null se JWT_SECRET non è impostato', () => {
+	it('lancia un errore se JWT_SECRET non è impostato', () => {
 		const originalSecret = process.env.JWT_SECRET;
 		delete process.env.JWT_SECRET;
 
-		const token = createSession(42);
-		expect(token).toBeNull();
+		expect(() => createSession(42)).toThrow('JWT_SECRET not set.');
 
 		process.env.JWT_SECRET = originalSecret;
 	});
@@ -78,5 +77,17 @@ describe('checkToken', () => {
 			expect(err.name).toBe('TokenExpiredError');
 			done();
 		});
+	});
+
+	it('lancia errore se JWT_SECRET non è impostato', (done) => {
+		const originalSecret = process.env.JWT_SECRET;
+		delete process.env.JWT_SECRET;
+
+		expect(() => checkToken('some-token', () => {})).toThrow(
+			'JWT_SECRET not set.'
+		);
+
+		process.env.JWT_SECRET = originalSecret;
+		done();
 	});
 });

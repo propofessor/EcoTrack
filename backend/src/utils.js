@@ -2,8 +2,7 @@ const jwt = require('jsonwebtoken');
 
 const createSession = (user_id) => {
 	if (!process.env.JWT_SECRET) {
-		console.error('JWT_SECRET not set.');
-		return null;
+		throw new Error('JWT_SECRET not set.');
 	}
 
 	const token = jwt.sign({ user_id }, process.env.JWT_SECRET, {
@@ -15,8 +14,7 @@ const createSession = (user_id) => {
 
 const checkToken = (token, handler) => {
 	if (!process.env.JWT_SECRET) {
-		console.error('JWT_SECRET not set.');
-		return null;
+		throw new Error('JWT_SECRET not set.');
 	}
 
 	jwt.verify(token, process.env.JWT_SECRET, handler);

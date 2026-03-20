@@ -81,16 +81,14 @@ describe('POST /session/login', () => {
 
 	test('200 — credenziali valide: restituisce token e imposta cookie', async () => {
 		db.getUserId.mockResolvedValue(1);
-		createSession.mockReturnValue('mocked-jwt-token');
+		createSession.mockReturnValue('mocked.jwt.token');
 
 		const res = await request(app).post('/session/login').send(validBody);
 
 		expect(res.status).toBe(200);
-		expect(res.body).toEqual({ token: 'mocked-jwt-token' });
+		expect(res.body).toEqual({ token: 'mocked.jwt.token' });
 		expect(res.headers['set-cookie']).toBeDefined();
-		expect(res.headers['set-cookie'][0]).toMatch(
-			/session=mocked-jwt-token/
-		);
+		expect(res.headers['set-cookie'][0]).toBe('session=mocked.jwt.token');
 		expect(res.headers['set-cookie'][0]).toMatch(/HttpOnly/i);
 		expect(res.headers['set-cookie'][0]).toMatch(/Path=\//i);
 	});
@@ -109,12 +107,10 @@ describe('POST /session/login', () => {
 	});
 
 	test('400 — manca provider_data', async () => {
-		const res = await request(app)
-			.post('/session/login')
-			.send({
-				provider_user_id: 'john@example.com',
-				provider_type_name: 'local'
-			});
+		const res = await request(app).post('/session/login').send({
+			provider_user_id: 'john@example.com',
+			provider_type_name: 'local'
+		});
 
 		expect(res.status).toBe(400);
 		expect(res.body.message).toBe('All fields are required');
@@ -158,17 +154,7 @@ describe('POST /session/login', () => {
 		const res = await request(app).post('/session/login').send(validBody);
 
 		expect(res.status).toBe(500);
-		expect(res.body.message).toBe('Internal server error');
-	});
-
-	test('500 — createSession restituisce null', async () => {
-		db.getUserId.mockResolvedValue(1);
-		createSession.mockReturnValue(null);
-
-		const res = await request(app).post('/session/login').send(validBody);
-
-		expect(res.status).toBe(500);
-		expect(res.body.message).toBe('Internal server error');
+		expect(res.body.message).toBe('JWT_SECRET not set.');
 	});
 });
 
@@ -260,7 +246,7 @@ describe('GET /session/validate', () => {
 describe('POST /session/refresh', () => {
 	test('200 — token valido: emette nuovo cookie e restituisce message', async () => {
 		checkToken.mockImplementation((token, cb) => cb(null, { user_id: 1 }));
-		createSession.mockReturnValue('new-mocked-jwt-token');
+		createSession.mockReturnValue('new-mocked.jwt.token');
 
 		const res = await request(app)
 			.post('/session/refresh')
@@ -269,7 +255,7 @@ describe('POST /session/refresh', () => {
 		expect(res.status).toBe(200);
 		expect(res.body.message).toBe('Session refreshed');
 		expect(res.headers['set-cookie']).toBeDefined();
-		expect(res.headers['set-cookie'][0]).toMatch(/new-mocked-jwt-token/);
+		expect(res.headers['set-cookie'][0]).toBe('new-mocked.jwt.token');
 	});
 
 	test('200 — nessun cookie: restituisce "No session found"', async () => {
