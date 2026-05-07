@@ -1,0 +1,212 @@
+openapi: 3.0.3
+info:
+  title: Stateless Authentication API
+  description: API endpoints for a stateless JWT authentication system aligned with the specific database schema.
+  version: 1.1.0
+servers:
+  - url: /api
+    description: Relative API server route
+tags:
+  - name: Authentication
+    description: Standard email and password operations
+  - name: SSO
+    description: Single Sign-On operations (Google & CIE)
+  - name: Session
+    description: Token lifecycle and user session endpoints
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Creates a user record and their associated local_credentials.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User successfully created
+          headers:
+            Set-Cookie:
+              description: Access and Refresh tokens (HttpOnly)
+              schema:
+                type: string
+        '400':
+          description: Invalid input or email already exists
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate an existing user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successfully authenticated
+          headers:
+            Set-Cookie:
+              description: Access and Refresh tokens (HttpOnly)
+              schema:
+                type: string
+        '401':
+          description: Invalid credentials
+  /auth/google:
+    get:
+      tags:
+        - SSO
+      summary: Initiate Google OAuth 2.0 flow
+      responses:
+        '302':
+          description: Redirect to Google consent screen
+  /auth/google/callback:
+    get:
+      tags:
+        - SSO
+      summary: Handle Google OAuth callback
+      description: Maps to an existing user or creates a new one, adding a record in auth_providers.
+      responses:
+        '302':
+          description: Redirect to frontend dashboard with HttpOnly cookies set
+  /auth/cie:
+    get:
+      tags:
+        - SSO
+      summary: Initiate CIE OIDC flow
+      responses:
+        '302':
+          description: Redirect to CIE provider (Ministero dell'Interno)
+  /auth/cie/callback:
+    get:
+      tags:
+        - SSO
+      summary: Handle CIE OIDC callback
+      description: Maps to an existing user or creates a new one, adding a record in auth_providers.
+      responses:
+        '302':
+          description: Redirect to frontend dashboard with HttpOnly cookies set
+  /auth/refresh:
+    post:
+      tags:
+        - Session
+      summary: Refresh the Access Token
+      description: Uses the HttpOnly Refresh Token cookie to issue a new Access Token.
+      responses:
+        '200':
+          description: Access token successfully refreshed
+          headers:
+            Set-Cookie:
+              description: New Access token
+              schema:
+                type: string
+        '401':
+          description: Invalid or expired Refresh Token
+  /auth/logout:
+    post:
+      tags:
+        - Session
+      summary: Log the user out
+      description: Clears the HttpOnly cookies by setting their expiration date to the past.
+      responses:
+        '200':
+          description: Successfully logged out
+          headers:
+            Set-Cookie:
+              description: Expired tokens to clear cookies
+              schema:
+                type: string
+  /auth/me:
+    get:
+      tags:
+        - Session
+      summary: Get current user profile
+      description: Requires a valid Access Token cookie. Returns data mapped from the users table.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized (Token missing or invalid)
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: SecurePassword123!
+        name:
+          type: string
+          example: Mario Rossi
+        plate:
+          type: string
+          example: AG881PF
+        preferences:
+          type: object
+          description: Initial user preferences stored as JSON
+          example: { "theme": "dark", "notifications": true }
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: SecurePassword123!
+    UserProfile:
+      type: object
+      description: Data representing the users table.
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        name:
+          type: string
+          example: Mario Rossi
+        plate:
+          type: string
+          example: AG881PF
+        achievements:
+          type: object
+          description: JSON object representing unlocked achievements
+          example: { "first_walk": true, "carbon_saver_level_1": false }
+        preferences:
+          type: object
+          description: JSON object representing user preferences
+          example: { "theme": "dark", "notifications": true }

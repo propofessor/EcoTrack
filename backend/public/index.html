@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API EcoTrack</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+        .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        input { display: block; margin-bottom: 10px; padding: 8px; width: 95%; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+        button:hover { background-color: #0056b3; }
+        #console { background: #222; color: #0f0; padding: 15px; font-family: monospace; border-radius: 8px; min-height: 100px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+    <h1>Pannello di Test Autenticazione</h1>
+
+    <div class="box">
+        <h3>Registrazione</h3>
+        <input type="text" id="reg-name" placeholder="Nome Completo (es. Mario Rossi)">
+        <input type="email" id="reg-email" placeholder="Email">
+        <input type="password" id="reg-password" placeholder="Password">
+        <button onclick="testRegister()">Registrati</button>
+    </div>
+
+    <div class="box">
+        <h3>Login</h3>
+        <input type="email" id="log-email" placeholder="Email">
+        <input type="password" id="log-password" placeholder="Password">
+        <button onclick="testLogin()">Accedi</button>
+    </div>
+
+    <div class="box">
+        <h3>Azioni Sessione</h3>
+        <button onclick="testProfile()" style="background-color: #28a745;">Ottieni Profilo (/me)</button>
+        <button onclick="testRefresh()" style="background-color: #ffc107; color: black;">Aggiorna Token (/refresh)</button>
+        <button onclick="testLogout()" style="background-color: #dc3545;">Logout</button>
+    </div>
+
+    <h3>Risposta dal Server:</h3>
+    <div id="console">In attesa di azioni...</div>
+
+    <script>
+        // Funzione per stampare i messaggi nella nostra finta console nera
+        function logToConsole(data) {
+            document.getElementById('console').textContent = JSON.stringify(data, null, 2);
+        }
+
+        // --- 1. TEST REGISTRAZIONE ---
+        async function testRegister() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const data = await response.json();
+                logToConsole({ status: response.status, data });
+            } catch (err) { logToConsole({ error: err.message }); }
+        }
+
+        // --- 2. TEST LOGIN ---
+        async function testLogin() {
+            const email = document.getElementById('log-email').value;
+            const password = document.getElementById('log-password').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                logToConsole({ status: response.status, data });
+            } catch (err) { logToConsole({ error: err.message }); }
+        }
+
+        // --- 3. TEST PROFILO ---
+        async function testProfile() {
+            try {
+                const response = await fetch('/api/auth/me');
+                const data = await response.json();
+                logToConsole({ status: response.status, data });
+            } catch (err) { logToConsole({ error: err.message }); }
+        }
+
+        // --- 4. TEST REFRESH TOKEN ---
+        async function testRefresh() {
+            try {
+                const response = await fetch('/api/auth/refresh', { method: 'POST' });
+                const data = await response.json();
+                logToConsole({ status: response.status, data });
+            } catch (err) { logToConsole({ error: err.message }); }
+        }
+
+        // --- 5. TEST LOGOUT ---
+        async function testLogout() {
+            try {
+                const response = await fetch('/api/auth/logout', { method: 'POST' });
+                const data = await response.json();
+                logToConsole({ status: response.status, data });
+            } catch (err) { logToConsole({ error: err.message }); }
+        }
+    </script>
+</body>
+</html>
