@@ -265,7 +265,8 @@ router.get('/me', async (req, res) => {
 		const { data: userProfile, error: profileError } = await db
 			.from('users')
 			.select('id, email, name, plate, achievements, preferences')
-			.eq('id', authData.user.id); // .single() ci assicura di ricevere un solo oggetto, non un array
+			.eq('id', authData.user.id) // .single() ci assicura di ricevere un solo oggetto, non un array
+			.single();
 
 		if (profileError) {
 			console.error(
@@ -283,6 +284,96 @@ router.get('/me', async (req, res) => {
 		console.error('Errore del server in /auth/me:', err);
 		return res.status(500).json({ error: 'Errore interno del server' });
 	}
+});
+
+// --- SSO TAG ---
+
+// 1. Endpoint per avviare il flusso Google OAuth 2.0 (VERSIONE DEBUG)
+router.get('/google', async (req, res) => {
+    console.log("🕵️ 1. Richiesta arrivata a /api/auth/google");
+	return res.status(200).json({ message: "Endpoint Google OAuth 2.0 in fase di sviluppo" });
+});
+
+// 1. Endpoint per avviare il flusso Google OAuth 2.0 (VERSIONE DEBUG)
+router.get('/google1', async (req, res) => {
+    console.log("🕵️ 1. Richiesta arrivata a /api/auth/google");
+    
+    try {
+        console.log("🕵️ 2. Sto chiedendo l'URL a Supabase...");
+        
+        const { data, error } = await db.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: 'http://localhost:3000/api/auth/google/callback',
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                }
+            }
+        });
+
+        console.log("🕵️ 3. Supabase ha risposto!");
+        
+        if (error) {
+            console.error("❌ Errore Supabase:", error.message);
+            return res.status(500).json({ error: "Impossibile avviare il login con Google" });
+        }
+
+        console.log("🕵️ 4. URL ottenuto:", data.url);
+        console.log("🕵️ 5. Sto facendo il redirect del browser...");
+        
+        res.redirect(data.url);
+
+    } catch (err) {
+        console.error("❌ Errore critico di sistema:", err);
+        return res.status(500).json({ error: "Errore interno del server" });
+    }
+});
+
+// 2. Endpoint per gestire il ritorno da Google (Callback)
+router.get('/google/callback', async (req, res) => {
+    try {
+        // Google ci invia un parametro 'code' nell'URL
+        const { code } = req.query;
+
+        if (!code) {
+            return res.status(400).json({ error: "Codice di autorizzazione mancante" });
+        }
+
+        // Scambiamo il codice di Google con una sessione valida di Supabase
+        const { data, error } = await db.auth.exchangeCodeForSession(code);
+
+        if (error || !data.session) {
+            console.error("Errore nello scambio del codice:", error?.message);
+            return res.status(401).json({ error: "Autenticazione Google fallita" });
+        }
+
+        const accessToken = data.session.access_token;
+        const refreshToken = data.session.refresh_token;
+
+        // Impostiamo i nostri fantastici cookie di sicurezza
+        res.cookie('access_token', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict', // In alcuni casi con SSO potrebbe servire 'lax', ma partiamo sicuri
+            maxAge: 3600000 
+        });
+
+        res.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 3600000 
+        });
+
+        // Dopo aver impostato i cookie, reindirizziamo l'utente alla nostra applicazione
+        // Per ora lo mandiamo alla radice "/", ma in futuro sarà la tua dashboard frontend!
+        res.redirect('/');
+
+    } catch (err) {
+        console.error("Errore del server in /auth/google/callback:", err);
+        return res.status(500).json({ error: "Errore interno del server" });
+    }
 });
 
 module.exports = router;
