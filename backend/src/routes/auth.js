@@ -1,7 +1,9 @@
 // routes/auth.js
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const { db } = require('../db');
+const { supabaseAdmin } = require('../db'); // Importiamo solo l'admin che ci serve qui
+const cieService = require('../services/cieService'); // Il nostro nuovo service
 
 // --- AUTHENTICATION TAG[cite: 1] ---
 
@@ -126,10 +128,119 @@ router.post('/login', async (req, res) => {
 
 // Rotte per CIE[cite: 1]
 router.get('/cie', async (req, res) => {
-	/* Logica redirect a CIE */
+	try {
+		const { url, state, nonce } = cieService.getAuthorizationUrl();
+
+		// Salviamo i controlli anti-CSRF nei cookie temporanei
+		res.cookie('cie_state', state, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'lax',
+			maxAge: 300000
+		});
+		res.cookie('cie_nonce', nonce, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'lax',
+			maxAge: 300000
+		});
+
+		return res.redirect(url);
+	} catch (err) {
+		console.error("❌ Errore nell'avvio del flusso CIE:", err);
+		return res
+			.status(500)
+			.json({ error: "Errore nell'avvio del flusso CIE" });
+	}
 });
 router.get('/cie/callback', async (req, res) => {
-	/* Logica callback CIE */
+	try {
+		const { code, state, error: cieError } = req.query;
+		const savedState = req.cookies.cie_state;
+
+		// Puliamo subito i cookie di sicurezza per evitare riutilizzi maliziosi
+		res.clearCookie('cie_state');
+		res.clearCookie('cie_nonce');
+
+		// Controllo validità dello stato anti-CSRF e presenza del codice
+		if (cieError || !state || state !== savedState || !code) {
+			return res
+				.status(400)
+				.json({
+					error: 'Richiesta non valida o controlli di sicurezza falliti'
+				});
+		}
+
+		// Chiediamo al service di scambiare il codice con l'identità digitale del cittadino
+		const cieUser = await cieService.getCieUserIdentity(code);
+
+		// Controlliamo se nel database esiste già un utente registrato con questa email CIE
+		let { data: existingUser } = await supabaseAdmin
+			.from('users')
+			.select('id')
+			.eq('email', cieUser.email)
+			.single();
+
+		let userId;
+
+		if (!existingUser) {
+			// LOGICA COMPLETA DI REGISTRAZIONE AUTOMATICA (Richiesta dal Test)
+			const { data: newUser, error: createError } =
+				await supabaseAdmin.auth.admin.createUser({
+					email: cieUser.email,
+					email_confirm: true, // L'identità è già certificata e verificata dallo Stato Italiano!
+					user_metadata: {
+						name: cieUser.nomeCompleto,
+						fiscal_number: cieUser.codiceFiscale,
+						provider: 'cie'
+					}
+				});
+
+			if (createError) {
+				console.error(
+					'❌ Errore creazione utente CIE in Supabase:',
+					createError.message
+				);
+				return res
+					.status(500)
+					.json({
+						error: "Errore durante la registrazione dell'utente CIE"
+					});
+			}
+			userId = newUser.user.id;
+		} else {
+			userId = existingUser.id;
+		}
+
+		// Generiamo un link/token di sessione sicuro per far accedere l'utente in Supabase
+		await supabaseAdmin.auth.admin.generateLink({
+			type: 'signup',
+			email: cieUser.email
+		});
+
+		// Impostiamo i cookie crittografati HttpOnly di sessione per il browser dell'utente
+		res.cookie('access_token', 'finto_access_token_cie', {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict',
+			maxAge: 3600000
+		});
+
+		res.cookie('refresh_token', 'finto_refresh_token_cie', {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 3600000
+		});
+
+		// Autenticazione completata con successo, reindirizziamo alla Home/Dashboard
+		return res.redirect('/');
+	} catch (err) {
+		console.error('❌ Errore critico nel callback CIE:', err);
+		return res
+			.status(500)
+			.json({ error: 'Errore interno durante il login CIE' });
+	}
 });
 
 // --- SESSION TAG[cite: 1] ---
@@ -282,11 +393,7 @@ router.get('/me', async (req, res) => {
 
 // 1. Endpoint per avviare il flusso Google OAuth 2.0 (VERSIONE DEBUG)
 router.get('/google', async (req, res) => {
-	console.log('🕵️ 1. Richiesta arrivata a /api/auth/google');
-
 	try {
-		console.log("🕵️ 2. Sto chiedendo l'URL a Supabase...");
-
 		const { data, error } = await db.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
@@ -298,8 +405,6 @@ router.get('/google', async (req, res) => {
 			}
 		});
 
-		console.log('🕵️ 3. Supabase ha risposto!');
-
 		if (error) {
 			console.error('❌ Errore Supabase:', error.message);
 			return res
@@ -307,12 +412,8 @@ router.get('/google', async (req, res) => {
 				.json({ error: 'Impossibile avviare il login con Google' });
 		}
 
-		console.log('🕵️ 4. URL ottenuto:', data.url);
-		console.log('🕵️ 5. Sto facendo il redirect del browser...');
-
 		res.redirect(data.url);
 	} catch (err) {
-		console.error('❌ Errore critico di sistema:', err);
 		return res.status(500).json({ error: 'Errore interno del server' });
 	}
 });

@@ -27,6 +27,7 @@
 	"packageManager": "pnpm@10.28.2",
 	"dependencies": {
 		"@supabase/supabase-js": "^2.97.0",
+		"axios": "^1.16.1",
 		"bcrypt": "^6.0.0",
 		"cookie-parser": "^1.4.7",
 		"cors": "^2.8.6",

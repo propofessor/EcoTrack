@@ -3,6 +3,9 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const authRoutes = require('./routes/auth'); // Importiamo il file appena creato
+const usersRoutes = require('./routes/users');
+const mapsRoutes = require('./routes/maps');
+const historyRoutes = require('./routes/history');
 
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
@@ -26,6 +29,9 @@ app.use(
 // (Poiché il tuo server OpenAPI ha l'URL base "/api"[cite: 1]
 // e le rotte iniziano per "/auth/..."[cite: 1])
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/maps', mapsRoutes);
+app.use('/api/history', historyRoutes);
 
 const PORT = 3000;
 

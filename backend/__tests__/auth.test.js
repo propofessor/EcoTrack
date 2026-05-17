@@ -1,20 +1,46 @@
 // auth.test.js
 const request = require('supertest');
 const app = require('../src/index');
-const db = require('../src/db'); // Importiamo il vero client per poterlo "sostituire"
+const { db, supabaseAdmin } = require('../src/db'); // Importiamo il vero client per poterlo "sostituire"
+const cieService = require('../src/services/cieService');
 
 // 1. CREIAMO LA CONTROFIGURA (MOCK)
 // Diciamo a Jest: "Sostituisci il vero supabaseClient con questo oggetto finto".
 // jest.fn() crea una funzione "spia" che possiamo manipolare a nostro piacimento.
-jest.mock('../src/db', () => ({
-	auth: {
-		signUp: jest.fn(),
-		signInWithPassword: jest.fn(),
-		getUser: jest.fn(),
-		signOut: jest.fn(),
-		refreshSession: jest.fn()
-	},
-	from: jest.fn()
+jest.mock('../src/db', () => {
+	const mockDb = {
+		auth: {
+			signUp: jest.fn(),
+			signInWithPassword: jest.fn(),
+			getUser: jest.fn(),
+			signOut: jest.fn(),
+			refreshSession: jest.fn(),
+			signInWithOAuth: jest.fn(),
+			exchangeCodeForSession: jest.fn()
+		},
+		from: jest.fn()
+	};
+
+	const mockSupabaseAdmin = {
+		from: jest.fn(),
+		auth: {
+			admin: {
+				createUser: jest.fn(),
+				generateLink: jest.fn()
+			}
+		}
+	};
+
+	return {
+		db: mockDb,
+		supabaseAdmin: mockSupabaseAdmin
+	};
+});
+
+// 3. MOCK DEL SERVICE CIE (Evita di chiamare i server ministeriali)
+jest.mock('../src/services/cieService', () => ({
+	getAuthorizationUrl: jest.fn(),
+	getCieUserIdentity: jest.fn()
 }));
 
 describe('Test delle rotte di Autenticazione', () => {
@@ -431,6 +457,312 @@ describe('Test delle rotte di Autenticazione', () => {
 			// Verifichiamo l'intervento della rete di salvataggio (il blocco catch)
 			expect(risposta.statusCode).toBe(500);
 			expect(risposta.body.error).toBe('Errore interno del server');
+		});
+	});
+	// --- NUOVO BLOCCO PER I TEST DI GOOGLE OAUTH ---
+	describe('Test delle rotte Google OAuth', () => {
+		beforeEach(() => {
+			jest.clearAllMocks();
+		});
+
+		// ==========================================
+		// TEST PER LA ROTTA: GET /api/auth/google
+		// ==========================================
+		describe('GET /api/auth/google', () => {
+			it("Dovrebbe reindirizzare correttamente l'utente verso l'URL di Google (302)", async () => {
+				const fintoUrlGoogle =
+					'https://accounts.google.com/o/oauth2/auth?client_id=...';
+
+				// Istruiamo il mock a restituire l'URL di reindirizzamento simulato
+				db.auth.signInWithOAuth.mockResolvedValue({
+					data: { url: fintoUrlGoogle },
+					error: null
+				});
+
+				const risposta = await request(app).get('/api/auth/google');
+
+				// Lo stato 302 indica un reindirizzamento (Redirect)
+				expect(risposta.statusCode).toBe(302);
+				// Verifichiamo che l'header 'location' punti all'URL fornito da Supabase
+				expect(risposta.headers.location).toBe(fintoUrlGoogle);
+				expect(db.auth.signInWithOAuth).toHaveBeenCalledTimes(1);
+			});
+
+			it("Dovrebbe restituire 500 se Supabase fallisce l'inizializzazione dell'OAuth", async () => {
+				db.auth.signInWithOAuth.mockResolvedValue({
+					data: null,
+					error: { message: 'Errore di configurazione del provider' }
+				});
+
+				const risposta = await request(app).get('/api/auth/google');
+
+				expect(risposta.statusCode).toBe(500);
+				expect(risposta.body.error).toBe(
+					'Impossibile avviare il login con Google'
+				);
+			});
+		});
+
+		// ==========================================
+		// TEST PER LA ROTTA: GET /api/auth/google/callback
+		// ==========================================
+		describe('GET /api/auth/google/callback', () => {
+			it('Dovrebbe restituire 400 se il parametro "code" è assente nell\'URL', async () => {
+				// Effettuiamo la richiesta senza passare query parameter (?code=...)
+				const risposta = await request(app).get(
+					'/api/auth/google/callback'
+				);
+
+				expect(risposta.statusCode).toBe(400);
+				expect(risposta.body.error).toBe(
+					'Codice di autorizzazione mancante'
+				);
+				expect(db.auth.exchangeCodeForSession).not.toHaveBeenCalled();
+			});
+
+			it('Dovrebbe scambiare il codice, impostare i cookie e reindirizzare alla Home "/" (302)', async () => {
+				// Simuliamo il successo dello scambio del codice con una sessione valida
+				db.auth.exchangeCodeForSession.mockResolvedValue({
+					data: {
+						session: {
+							access_token: 'google_access_token_valido',
+							refresh_token: 'google_refresh_token_valido'
+						}
+					},
+					error: null
+				});
+
+				// Inviamo la richiesta simulando il codice restituito da Google (?code=...)
+				const risposta = await request(app)
+					.get('/api/auth/google/callback')
+					.query({ code: 'codice_di_test_valido' });
+
+				// Controlliamo il reindirizzamento finale del backend alla home "/"
+				expect(risposta.statusCode).toBe(302);
+				expect(risposta.headers.location).toBe('/');
+
+				// Verifichiamo l'impostazione corretta dei cookie di sicurezza
+				const setCookieHeaders = risposta.headers['set-cookie'];
+				expect(setCookieHeaders).toBeDefined();
+
+				const hasAccessToken = setCookieHeaders.some((cookie) =>
+					cookie.includes('access_token=google_access_token_valido')
+				);
+				const hasRefreshToken = setCookieHeaders.some((cookie) =>
+					cookie.includes('refresh_token=google_refresh_token_valido')
+				);
+
+				expect(hasAccessToken).toBe(true);
+				expect(hasRefreshToken).toBe(true);
+				expect(db.auth.exchangeCodeForSession).toHaveBeenCalledWith(
+					'codice_di_test_valido'
+				);
+			});
+
+			it('Dovrebbe restituire 401 se lo scambio del codice fallisce su Supabase', async () => {
+				db.auth.exchangeCodeForSession.mockResolvedValue({
+					data: { session: null },
+					error: { message: 'Auth code expired or invalid' }
+				});
+
+				const risposta = await request(app)
+					.get('/api/auth/google/callback')
+					.query({ code: 'codice_scaduto' });
+
+				expect(risposta.statusCode).toBe(401);
+				expect(risposta.body.error).toBe(
+					'Autenticazione Google fallita'
+				);
+			});
+
+			it('Dovrebbe rispondere con 500 in caso di crash improvviso del server (blocco catch)', async () => {
+				// Provochiamo un errore drastico lanciando un'eccezione
+				db.auth.exchangeCodeForSession.mockRejectedValue(
+					new Error('Crash del server di autenticazione')
+				);
+
+				const risposta = await request(app)
+					.get('/api/auth/google/callback')
+					.query({ code: 'codice_qualsiasi' });
+
+				expect(risposta.statusCode).toBe(500);
+				expect(risposta.body.error).toBe('Errore interno del server');
+			});
+		});
+	});
+	// --- NUOVO BLOCCO PER I TEST DI AUTENTICAZIONE VIA CIE ---
+	describe('Test delle rotte CIE ID (OpenID Connect)', () => {
+		beforeEach(() => {
+			jest.clearAllMocks();
+		});
+
+		// ==========================================
+		// TEST PER LA ROTTA: GET /api/auth/cie (Inizio Flusso)
+		// ==========================================
+		describe('GET /api/auth/cie', () => {
+			it("Dovrebbe generare l'URL, impostare i cookie di sicurezza dello state e reindirizzare alla CIE (302)", async () => {
+				// Simuliamo il comportamento del service
+				cieService.getAuthorizationUrl.mockReturnValue({
+					url: 'https://collaudo.idserver.servizicie.interno.gov.it/idp/profile/oidc/authorize?client_id=...',
+					state: 'finto_state_123',
+					nonce: 'finto_nonce_123'
+				});
+
+				const risposta = await request(app).get('/api/auth/cie');
+
+				// Controlliamo il reindirizzamento al portale ministeriale
+				expect(risposta.statusCode).toBe(302);
+				expect(risposta.headers.location).toContain(
+					'servizicie.interno.gov.it'
+				);
+
+				// Verifichiamo che Express imposti i cookie anti-CSRF temporanei
+				const setCookieHeaders = risposta.headers['set-cookie'];
+				expect(setCookieHeaders).toBeDefined();
+
+				const hasStateCookie = setCookieHeaders.some((c) =>
+					c.includes('cie_state=finto_state_123')
+				);
+				const hasNonceCookie = setCookieHeaders.some((c) =>
+					c.includes('cie_nonce=finto_nonce_123')
+				);
+
+				expect(hasStateCookie).toBe(true);
+				expect(hasNonceCookie).toBe(true);
+			});
+
+			it('Dovrebbe rispondere con 500 se il service fallisce la generazione dei parametri', async () => {
+				cieService.getAuthorizationUrl.mockImplementation(() => {
+					throw new Error('Errore crittografico casuale');
+				});
+
+				const risposta = await request(app).get('/api/auth/cie');
+				expect(risposta.statusCode).toBe(500);
+				expect(risposta.body.error).toBe(
+					"Errore nell'avvio del flusso CIE"
+				);
+			});
+		});
+
+		// ==========================================
+		// TEST PER LA ROTTA: GET /api/auth/cie/callback (Ritorno da CIE)
+		// ==========================================
+		describe('GET /api/auth/cie/callback', () => {
+			it('Dovrebbe restituire 400 se lo "state" ricevuto non coincide con quello nei cookie (Attacco CSRF)', async () => {
+				const risposta = await request(app)
+					.get('/api/auth/cie/callback')
+					.query({ code: 'codice_valido', state: 'state_malizioso' })
+					// Simuliamo che nel browser dell'utente ci sia un altro state salvato
+					.set('Cookie', ['cie_state=state_originale_buono']);
+
+				expect(risposta.statusCode).toBe(400);
+				expect(risposta.body.error).toBe(
+					'Richiesta non valida o controlli di sicurezza falliti'
+				);
+			});
+
+			it('Dovrebbe autenticare con successo un utente CIE GIÀ ESISTENTE, impostare i cookie e andare in Home', async () => {
+				// 1. Il service restituisce con successo i dati del Codice Fiscale letti dalla CIE
+				cieService.getCieUserIdentity.mockResolvedValue({
+					codiceFiscale: 'RSSMRA80A01H501U',
+					email: 'rssmra80a01h501u@cie.internal',
+					nomeCompleto: 'Mario Rossi'
+				});
+
+				// 2. Il database trova che l'utente esiste già
+				const mockSingle = jest.fn().mockResolvedValue({
+					data: { id: 'utente-uuid-esistente' },
+					error: null
+				});
+				supabaseAdmin.from.mockReturnValue({
+					select: jest.fn(() => ({
+						eq: jest.fn(() => ({
+							single: mockSingle
+						}))
+					}))
+				});
+
+				// Eseguiamo la chiamata inviando i cookie corretti accoppiati alla query
+				const risposta = await request(app)
+					.get('/api/auth/cie/callback')
+					.query({
+						code: 'codice_cie_valido',
+						state: 'mio_state_identico'
+					})
+					.set('Cookie', [
+						'cie_state=mio_state_identico',
+						'cie_nonce=mio_nonce'
+					]);
+
+				expect(risposta.statusCode).toBe(302);
+				expect(risposta.headers.location).toBe('/');
+
+				// L'admin non deve registrare nessuno perché l'utente esisteva già
+				expect(
+					supabaseAdmin.auth.admin.createUser
+				).not.toHaveBeenCalled();
+
+				// Verifica che i cookie di sessione siano stati emessi
+				expect(risposta.headers['set-cookie']).toBeDefined();
+			});
+
+			it('Dovrebbe REGISTRARE AUTOMATICAMENTE un utente se non esiste ancora nel DB', async () => {
+				cieService.getCieUserIdentity.mockResolvedValue({
+					codiceFiscale: 'NDALCU90A01H501X',
+					email: 'ndalcu90a01h501x@cie.internal',
+					nomeCompleto: 'Luca Neri'
+				});
+
+				// Il database dice che non c'è nessun utente con questa email (.single() restituisce errore/vuoto)
+				const mockSingle = jest.fn().mockResolvedValue({
+					data: null,
+					error: { message: 'No rows found' }
+				});
+				supabaseAdmin.from.mockReturnValue({
+					select: jest.fn(() => ({
+						eq: jest.fn(() => ({
+							single: mockSingle
+						}))
+					}))
+				});
+
+				// Mockiamo la creazione dell'utente da parte dell'Admin di Supabase
+				supabaseAdmin.auth.admin.createUser.mockResolvedValue({
+					data: { user: { id: 'nuovo-uuid-generato' } },
+					error: null
+				});
+
+				const risposta = await request(app)
+					.get('/api/auth/cie/callback')
+					.query({ code: 'codice_nuovo_utente', state: 'state_ok' })
+					.set('Cookie', [
+						'cie_state=state_ok',
+						'cie_nonce=nonce_ok'
+					]);
+
+				expect(risposta.statusCode).toBe(302);
+				// Verifica che l'admin sia stato effettivamente interpellato per creare l'anagrafica protetta dello Stato
+				expect(
+					supabaseAdmin.auth.admin.createUser
+				).toHaveBeenCalledTimes(1);
+			});
+
+			it('Dovrebbe restituire 500 se lo scambio di identità ministeriale fallisce', async () => {
+				// Simuliamo un errore di rete o di firma del token del server CIE
+				cieService.getCieUserIdentity.mockRejectedValue(
+					new Error('CIE Token Signature Invalid')
+				);
+
+				const risposta = await request(app)
+					.get('/api/auth/cie/callback')
+					.query({ code: 'codice_corrotto', state: 'state_ok' })
+					.set('Cookie', ['cie_state=state_ok']);
+
+				expect(risposta.statusCode).toBe(500);
+				expect(risposta.body.error).toBe(
+					'Errore interno durante il login CIE'
+				);
+			});
 		});
 	});
 });
