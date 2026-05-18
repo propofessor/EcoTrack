@@ -6,7 +6,7 @@
 		"docs:generate": "node docs/generate-swagger.js",
 		"dev": "nodemon src/index.js",
 		"start": "node src/index.js",
-		"test": "jest --detectOpenHandles --forceExit --coverage",
+		"test": "jest --detectOpenHandles --forceExit --coverage --verbose=false --silent",
 		"test:watch": "jest --watch",
 		"test:coverage": "jest --verbose --coverage --detectOpenHandles --forceExit"
 	},

@@ -155,6 +155,7 @@ router.get('/cie', async (req, res) => {
 });
 router.get('/cie/callback', async (req, res) => {
 	try {
+		console.log('✅ Callback CIE ricevuta con query:', req.query);
 		const { code, state, error: cieError } = req.query;
 		const savedState = req.cookies.cie_state;
 
@@ -164,11 +165,9 @@ router.get('/cie/callback', async (req, res) => {
 
 		// Controllo validità dello stato anti-CSRF e presenza del codice
 		if (cieError || !state || state !== savedState || !code) {
-			return res
-				.status(400)
-				.json({
-					error: 'Richiesta non valida o controlli di sicurezza falliti'
-				});
+			return res.status(400).json({
+				error: 'Richiesta non valida o controlli di sicurezza falliti'
+			});
 		}
 
 		// Chiediamo al service di scambiare il codice con l'identità digitale del cittadino
@@ -201,11 +200,9 @@ router.get('/cie/callback', async (req, res) => {
 					'❌ Errore creazione utente CIE in Supabase:',
 					createError.message
 				);
-				return res
-					.status(500)
-					.json({
-						error: "Errore durante la registrazione dell'utente CIE"
-					});
+				return res.status(500).json({
+					error: "Errore durante la registrazione dell'utente CIE"
+				});
 			}
 			userId = newUser.user.id;
 		} else {

@@ -1,7 +1,7 @@
 // src/routes/history.js
 const express = require('express');
 const router = express.Router();
-const { db } = require('../db'); // <--- IMPORTANTE: Destrutturato come { db } per coordinarsi con il middleware!
+const { supabaseAdmin } = require('../db'); // <--- IMPORTANTE: Destrutturato come { db } per coordinarsi con il middleware!
 const requireAuth = require('../middleware/authMiddleware');
 
 // Proteggiamo tutte le rotte: solo gli utenti autenticati possono accedere al proprio storico
@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 		const userId = req.user.id; // Estratto in modo sicuro dal token JWT del middleware
 
 		// Eseguiamo la query su Supabase ordinando per la data di inizio decrescente
-		const { data, error } = await db
+		const { data, error } = await supabaseAdmin
 			.from('history')
 			.select(
 				`
@@ -38,11 +38,9 @@ router.get('/', async (req, res) => {
 				'Errore nel recupero dello storico da Supabase:',
 				error.message
 			);
-			return res
-				.status(400)
-				.json({
-					error: 'Impossibile recuperare lo storico dei viaggi'
-				});
+			return res.status(400).json({
+				error: 'Impossibile recuperare lo storico dei viaggi'
+			});
 		}
 
 		return res.status(200).json({
@@ -83,7 +81,7 @@ router.post('/', async (req, res) => {
 		}
 
 		// Inseriamo il record nel database associandolo forzatamente all'utente loggato
-		const { data, error } = await db
+		const { data, error } = await supabaseAdmin
 			.from('history')
 			.insert([
 				{
@@ -102,11 +100,9 @@ router.post('/', async (req, res) => {
 				"Errore durante l'inserimento del viaggio su Supabase:",
 				error.message
 			);
-			return res
-				.status(400)
-				.json({
-					error: 'Impossibile salvare il viaggio nello storico'
-				});
+			return res.status(400).json({
+				error: 'Impossibile salvare il viaggio nello storico'
+			});
 		}
 
 		return res.status(201).json({
