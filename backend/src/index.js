@@ -1,6 +1,5 @@
 // index.js (o app.js)
 require('dotenv').config(); // Carica le variabili d'ambiente dal file .env come prima operazione
-
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
@@ -9,6 +8,7 @@ const usersRoutes = require('./routes/users');
 const mapsRoutes = require('./routes/maps');
 const historyRoutes = require('./routes/history');
 const exportRoutes = require('./routes/export'); // Importiamo la rotta di esportazione dati
+const dashboardRoutes = require('./routes/dashboard');
 
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
@@ -33,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/maps', mapsRoutes);
 app.use('/api/history', historyRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/export', exportRoutes); // Importiamo la rotta di esportazione dati
 
 const PORT = 3000;

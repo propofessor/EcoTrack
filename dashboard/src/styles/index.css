@@ -1,0 +1,58 @@
+/* src/styles/index.css */
+
+/* === TEMA CHIARO (DEFAULT) === */
+:root {
+  --bg-primary: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-widget: #ffffff;
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --border-color: #e2e8f0;
+  --accent: #38a169;        /* verde EcoTrack */
+  --accent-light: #c6f6d5;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* === TEMA SCURO === */
+[data-theme="dark"] {
+  --bg-primary: #0f1117;
+  --bg-surface: #1a1d2e;
+  --bg-widget: #1e2235;
+  --text-primary: #f7fafc;
+  --text-secondary: #a0aec0;
+  --border-color: #2d3748;
+  --accent: #68d391;
+  --accent-light: #22543d;
+  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* Animazioni utili */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
