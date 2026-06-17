@@ -49,7 +49,7 @@ export function ChartBar({ config }) {
   if (loading) return <div style={{ padding: 20, color: 'var(--text-secondary)' }}>Caricamento...</div>
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', minHeight: 200 }}>
+    <div style={{ width: '100%', height: '100%'}}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />

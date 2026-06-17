@@ -1,58 +1,101 @@
 /* src/styles/index.css */
+/* stylelint-disable at-rule-no-unknown */
+@import 'tailwindcss';
+@import './grid.css';
+/* stylelint-enable at-rule-no-unknown */
 
-/* === TEMA CHIARO (DEFAULT) === */
-:root {
-  --bg-primary: #f4f6f9;
-  --bg-surface: #ffffff;
-  --bg-widget: #ffffff;
-  --text-primary: #1a202c;
-  --text-secondary: #4a5568;
-  --border-color: #e2e8f0;
-  --accent: #38a169;        /* verde EcoTrack */
-  --accent-light: #c6f6d5;
-  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+@layer base {
+	/* === TEMA CHIARO (PREMIUM ZINC) === */
+	:root {
+		--bg-primary: #f4f4f5; /* Zinc 100 */
+		--bg-surface: #ffffff; /* Bianco puro per l'header */
+		--bg-widget: #ffffff; /* Sfondo widget */
+		--text-primary: #09090b; /* Zinc 950 */
+		--text-secondary: #71717a; /* Zinc 500 */
+		--border-color: #e4e4e7; /* Zinc 200 */
+		--accent: #18181b;
+		--accent-light: #f4f4f5; /* Zinc 900 per bottoni primari */
+		--accent-hover: #f4f4f5;
+		--shadow:
+			0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+	}
+
+	/* === TEMA SCURO (DARK OLED/ZINC) === */
+	[data-theme='dark'] {
+		--bg-primary: #09090b; /* Zinc 950 - Sfondo scurissimo e pulito */
+		--bg-surface: #121214; /* Zinc 900 alternativo per dare profondità */
+		--bg-widget: #09090b; /* Sfondo widget scuro */
+		--text-primary: #f4f4f5; /* Zinc 100 */
+		--text-secondary: #a1a1aa; /* Zinc 400 */
+		--border-color: #27272a; /* Zinc 800 - Linee sottili ed eleganti */
+		--accent: #27272a;
+		--accent-light: #18181b; /* Zinc 800 - Sfondo scuretto e sobrio per i bottoni in dark mode */
+		--accent-hover: #18181b;
+		--shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+	}
+
+	body {
+		background-color: var(--bg-primary);
+		color: var(--text-primary);
+		font-family:
+			'Inter',
+			system-ui,
+			-apple-system,
+			sans-serif;
+		-webkit-font-smoothing: antialiased;
+	}
 }
 
-/* === TEMA SCURO === */
-[data-theme="dark"] {
-  --bg-primary: #0f1117;
-  --bg-surface: #1a1d2e;
-  --bg-widget: #1e2235;
-  --text-primary: #f7fafc;
-  --text-secondary: #a0aec0;
-  --border-color: #2d3748;
-  --accent: #68d391;
-  --accent-light: #22543d;
-  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+@layer components {
+	/* === SVOLTA TOTAL RE-STYLE PER LA TABELLA INTERNA === */
+	.widget-body-container table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.8125rem; /* 13px per massima leggibilità dei dati */
+		text-align: left;
+	}
+
+	.widget-body-container th {
+		padding: 0.75rem 1rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		border-bottom: 1px solid var(--border-color);
+		font-family: monospace; /* Mantiene l'estetica tech dei dati */
+		letter-spacing: -0.01em;
+	}
+
+	.widget-body-container td {
+		padding: 0.875rem 1rem;
+		color: var(--text-primary);
+		border-bottom: 1px solid rgba(228, 228, 231, 0.1); /* Linea di divisione leggerissima */
+	}
+
+	[data-theme='dark'] .widget-body-container td {
+		border-bottom: 1px solid rgba(39, 39, 42, 0.4);
+	}
+
+	.widget-body-container tr:hover td {
+		background-color: rgba(255, 255, 255, 0.02);
+	}
+
+	[data-theme='light'] .widget-body-container tr:hover td {
+		background-color: rgba(0, 0, 0, 0.01);
+	}
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Inter', system-ui, sans-serif;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-/* Animazioni utili */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+@layer utilities {
+	.animate-slide-up {
+		animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+	from {
+		opacity: 0;
+		transform: translateY(4px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
 }

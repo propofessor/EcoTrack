@@ -8,8 +8,8 @@ const DEMO_WIDGET = {
   i: "demo-chart-1",
   x: 0,
   y: 0,
-  w: 6,
-  h: 4,
+  w: 2,
+  h: 2,
   widgetType: "ChartBar",
   dataset: "co2_monthly",
   dateMode: "dynamic",
@@ -58,16 +58,16 @@ export function useDashboardLayout() {
   };
 
   // Aggiunge widget alla posizione cliccata, ritorna l'oggetto widget
-  const addWidgetAt = (col, row) => {
+  const addWidgetAt = (col, row, w, h) => {
     const newId = `w${Date.now()}`;
-    // Ensure x position is valid - widget has width 6
-    const x = Math.max(0, Math.min(col, GRID_COLS - 6));
+    // Ensure x position is valid - widget has width 2
+    const x = Math.max(0, Math.min(col, GRID_COLS - 2));
     const newWidget = {
       i: newId,
       x,
       y: row,
-      w: 6,
-      h: 4,
+      w: w,
+      h: h,
       widgetType: null,
       dataset: null,
     };

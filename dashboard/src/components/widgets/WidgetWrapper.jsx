@@ -1,149 +1,162 @@
-import { useState, useRef } from 'react'
-import { Settings, Download, Trash2, GripHorizontal } from 'lucide-react'
-import { WidgetConfigModal } from '../modals/WidgetConfigModal'
-import { exportWidgetAsImage, exportWidgetAsCsv } from '../../utils/exportUtils'
-import { ChartBar } from './ChartBar'
-import { ChartPie } from './ChartPie'
-import { ChartLine } from './ChartLine'
-import { DataTable } from './DataTable'
-import { MapWidget } from './MapWidget'
+import React, { useState, useRef } from 'react';
+import { Settings, Download, Trash2, GripHorizontal } from 'lucide-react';
+import { WidgetConfigModal } from '../modals/WidgetConfigModal';
+import {
+	exportWidgetAsImage,
+	exportWidgetAsCsv
+} from '../../utils/exportUtils';
+import { ChartBar } from './ChartBar';
+import { ChartPie } from './ChartPie';
+import { ChartLine } from './ChartLine';
+import { DataTable } from './DataTable';
+import { MapWidget } from './MapWidget';
 
-const WIDGET_COMPONENTS = { ChartBar, ChartPie, ChartLine, DataTable, MapWidget }
+const WIDGET_COMPONENTS = {
+	ChartBar,
+	ChartPie,
+	ChartLine,
+	DataTable,
+	MapWidget
+};
 
-export function WidgetWrapper({ widgetConfig, onUpdate, onRemove }) {
-  const [showConfig, setShowConfig] = useState(false)
-  const [showExportMenu, setShowExportMenu] = useState(false)
-  const widgetRef = useRef(null)
+function WidgetWrapperComponent({ widgetConfig, onUpdate, onRemove }) {
+	console.log(
+		`[RENDER] Widget ${widgetConfig.i} - Tipo: ${widgetConfig.widgetType}`
+	);
+	const [showConfig, setShowConfig] = useState(false);
+	const [showExportMenu, setShowExportMenu] = useState(false);
+	const widgetRef = useRef(null);
 
-  const WidgetComponent = WIDGET_COMPONENTS[widgetConfig.widgetType]
-  const isTable = widgetConfig.widgetType === 'DataTable'
+	const WidgetComponent = WIDGET_COMPONENTS[widgetConfig.widgetType];
+	const isTable = widgetConfig.widgetType === 'DataTable';
 
-  const handleExport = async (format) => {
-    setShowExportMenu(false)
-    if (format === 'image') {
-      await exportWidgetAsImage(widgetRef.current, `widget-${widgetConfig.i}`)
-    } else if (format === 'csv') {
-      exportWidgetAsCsv(widgetConfig.dataset, widgetConfig)
-    }
-  }
+	const handleExport = async (format) => {
+		setShowExportMenu(false);
+		if (format === 'image') {
+			await exportWidgetAsImage(
+				widgetRef.current,
+				`widget-${widgetConfig.i}`
+			);
+		} else if (format === 'csv') {
+			exportWidgetAsCsv(widgetConfig.dataset, widgetConfig);
+		}
+	};
 
-  return (
-    <div
-      ref={widgetRef}
-      style={{
-        background: 'var(--bg-widget)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '10px',
-        boxShadow: 'var(--shadow)',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Header: area trascinabile — NON ha classe no-drag */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '8px 12px',
-        borderBottom: '1px solid var(--border-color)',
-        cursor: 'grab',
-        background: 'var(--bg-surface)',
-        gap: '8px',
-        userSelect: 'none',
-        flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
-          <GripHorizontal size={14} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
-          <span style={{
-            fontWeight: '600', fontSize: '12px',
-            color: 'var(--text-secondary)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {widgetConfig.widgetType || 'Non configurato'}{widgetConfig.dataset ? ` — ${widgetConfig.dataset}` : ''}
-          </span>
-        </div>
+	return (
+		<div
+			ref={widgetRef}
+			className='flex flex-col h-full overflow-hidden rounded-xl border border-(--border-color) bg-(--bg-widget) shadow-(--shadow)'
+		>
+			{/* Header bilanciato con classi Tailwind standard (No inline styles) */}
+			<div className='flex items-center justify-between h-14 px-5 border-b border-(--border-color) bg-(--bg-surface) gap-3 select-none shrink-0 cursor-grab active:cursor-grabbing'>
+				<div className='flex items-center gap-3 flex-1 min-w-0'>
+					<GripHorizontal
+						size={16}
+						className='text-(--text-secondary) shrink-0 opacity-50 hover:opacity-100 transition-opacity'
+					/>
+					<span className='font-mono text-xs font-bold tracking-wider text-(--text-secondary) uppercase overflow-hidden text-ellipsis whitespace-nowrap'>
+						{widgetConfig.widgetType || 'NON CONFIGURATO'}
+						{widgetConfig.dataset
+							? ` // ${widgetConfig.dataset}`
+							: ''}
+					</span>
+				</div>
 
-        {/* Bottoni: no-drag impedisce che il click avvii un drag */}
-        <div className="no-drag" style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShowExportMenu(v => !v)}
-              style={iconButtonStyle}
-              title="Esporta"
-            >
-              <Download size={13} />
-            </button>
-            {showExportMenu && (
-              <div style={dropdownStyle}>
-                {isTable && (
-                  <button onClick={() => handleExport('csv')} style={dropdownItemStyle}>
-                    Scarica CSV
-                  </button>
-                )}
-                <button onClick={() => handleExport('image')} style={dropdownItemStyle}>
-                  Scarica PNG
-                </button>
-              </div>
-            )}
-          </div>
-          <button onClick={() => setShowConfig(true)} style={iconButtonStyle} title="Configura">
-            <Settings size={13} />
-          </button>
-          <button
-            onClick={() => onRemove(widgetConfig.i)}
-            style={{ ...iconButtonStyle, color: '#e53e3e' }}
-            title="Rimuovi"
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
-      </div>
+				{/* Pulsantiera controlli */}
+				<div className='no-drag flex items-center gap-1.5 shrink-0'>
+					<div className='relative flex items-center'>
+						<button
+							onClick={() => setShowExportMenu((v) => !v)}
+							className='flex items-center justify-center w-8 h-8 rounded-md bg-transparent border-none cursor-pointer text-(--text-secondary) transition-all duration-150 hover:bg-(--accent-hover) hover:text-(--text-primary)'
+							title='Esporta'
+						>
+							<Download size={15} />
+						</button>
 
-      {/* Body: no-drag impedisce drag accidentali interagendo con i grafici */}
-      <div className="no-drag" style={{ flex: 1, overflow: 'auto', padding: '10px', minHeight: 0, minWidth: 0 }}>
-        {WidgetComponent ? (
-          <WidgetComponent config={widgetConfig} />
-        ) : (
-          <div
-            onClick={() => setShowConfig(true)}
-            style={{
-              height: '100%', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', cursor: 'pointer',
-              color: 'var(--text-secondary)', flexDirection: 'column', gap: '8px',
-            }}
-          >
-            <Settings size={28} />
-            <span style={{ fontSize: '13px' }}>Clicca per configurare</span>
-          </div>
-        )}
-      </div>
+						{showExportMenu && (
+							<div className='absolute top-full right-0 mt-2 min-w-35 rounded-lg border border-(--border-color) bg-(--bg-surface) shadow-xl z-50 animate-slide-up overflow-hidden'>
+								{isTable && (
+									<button
+										onClick={() => handleExport('csv')}
+										className='block w-full px-4 py-2.5 text-left text-xs font-medium bg-transparent border-none cursor-pointer text-(--text-primary) transition-all duration-150 hover:bg-(--accent-hover)'
+									>
+										Scarica CSV
+									</button>
+								)}
+								<button
+									onClick={() => handleExport('image')}
+									className='block w-full px-4 py-2.5 text-left text-xs font-medium bg-transparent border-none cursor-pointer text-(--text-primary) transition-all duration-150 hover:bg-(--accent-hover)'
+								>
+									Scarica PNG
+								</button>
+							</div>
+						)}
+					</div>
 
-      {showConfig && (
-        <WidgetConfigModal
-          widget={widgetConfig}
-          onSave={(updates) => {
-            onUpdate(widgetConfig.i, updates)
-            setShowConfig(false)
-          }}
-          onClose={() => setShowConfig(false)}
-        />
-      )}
-    </div>
-  )
+					<button
+						onClick={() => setShowConfig(true)}
+						className='flex items-center justify-center w-8 h-8 rounded-md bg-transparent border-none cursor-pointer text-(--text-secondary) transition-all duration-150 hover:bg-(--accent-hover) hover:text-(--text-primary)'
+						title='Configura'
+					>
+						<Settings size={15} />
+					</button>
+
+					{/* Bidone rosso pulito con classi native */}
+					<button
+						onClick={() => onRemove(widgetConfig.i)}
+						className='flex items-center justify-center w-8 h-8 rounded-md bg-transparent border-none cursor-pointer text-red-500 dark:text-red-400 transition-all duration-150 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300'
+						title='Rimuovi'
+					>
+						<Trash2 size={15} />
+					</button>
+				</div>
+			</div>
+
+			{/* Body del Widget */}
+			<div className='widget-body-container no-drag flex-1 overflow-auto p-3 min-h-0 min-w-0'>
+				{WidgetComponent ? (
+					<WidgetComponent config={widgetConfig} />
+				) : (
+					<div
+						onClick={() => setShowConfig(true)}
+						className='h-full flex flex-col items-center justify-center gap-2.5 cursor-pointer rounded-lg border border-dashed border-(--border-color) bg-(--bg-primary)/30 text-(--text-secondary) transition-all duration-200 hover:border-(--text-secondary) hover:bg-(--bg-primary)/60 hover:text-(--text-primary)'
+					>
+						<Settings
+							size={20}
+							className='animate-pulse opacity-60'
+						/>
+						<span className='text-xs font-medium'>
+							Configura Widget
+						</span>
+					</div>
+				)}
+			</div>
+
+			{showConfig && (
+				<WidgetConfigModal
+					widget={widgetConfig}
+					onSave={(updates) => {
+						onUpdate(widgetConfig.i, updates);
+						setShowConfig(false);
+					}}
+					onClose={() => setShowConfig(false)}
+				/>
+			)}
+		</div>
+	);
 }
 
-const iconButtonStyle = {
-  background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
-  color: 'var(--text-secondary)', borderRadius: '4px',
-  display: 'flex', alignItems: 'center',
-}
-const dropdownStyle = {
-  position: 'absolute', top: '100%', right: 0, background: 'var(--bg-surface)',
-  border: '1px solid var(--border-color)', borderRadius: '6px', zIndex: 100,
-  minWidth: '140px', boxShadow: 'var(--shadow)',
-}
-const dropdownItemStyle = {
-  display: 'block', width: '100%', padding: '8px 12px', background: 'none',
-  border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '13px',
-  color: 'var(--text-primary)',
-}
+const areEqual = (prevProps, nextProps) => {
+	const prev = prevProps.widgetConfig;
+	const next = nextProps.widgetConfig;
+
+	return (
+		prev.widgetType === next.widgetType &&
+		prev.dataset === next.dataset &&
+		prev.w === next.w &&
+		prev.h === next.h &&
+		JSON.stringify(prev.props || {}) === JSON.stringify(next.props || {})
+	);
+};
+
+export const WidgetWrapper = React.memo(WidgetWrapperComponent, areEqual);
