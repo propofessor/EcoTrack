@@ -18,12 +18,14 @@ const WIDGET_COMPONENTS = {
 	DataTable,
 	MapWidget
 };
-
-function WidgetWrapperComponent({ widgetConfig, onUpdate, onRemove }) {
+// 1. Aggiungi "onEdit" tra le props
+function WidgetWrapperComponent({ widgetConfig, onUpdate, onRemove, onEdit }) {
 	console.log(
 		`[RENDER] Widget ${widgetConfig.i} - Tipo: ${widgetConfig.widgetType}`
 	);
-	const [showConfig, setShowConfig] = useState(false);
+
+	// 2. RIMUOVI lo stato showConfig
+	// const [showConfig, setShowConfig] = useState(false);
 	const [showExportMenu, setShowExportMenu] = useState(false);
 	const widgetRef = useRef(null);
 
@@ -94,7 +96,7 @@ function WidgetWrapperComponent({ widgetConfig, onUpdate, onRemove }) {
 					</div>
 
 					<button
-						onClick={() => setShowConfig(true)}
+						onClick={() => onEdit(widgetConfig.i)} // <- QUI
 						className='flex items-center justify-center w-8 h-8 rounded-md bg-transparent border-none cursor-pointer text-(--text-secondary) transition-all duration-150 hover:bg-(--accent-hover) hover:text-(--text-primary)'
 						title='Configura'
 					>
@@ -118,7 +120,7 @@ function WidgetWrapperComponent({ widgetConfig, onUpdate, onRemove }) {
 					<WidgetComponent config={widgetConfig} />
 				) : (
 					<div
-						onClick={() => setShowConfig(true)}
+						onClick={() => onEdit(widgetConfig.i)} // <- QUI (anche nello stato vuoto)
 						className='h-full flex flex-col items-center justify-center gap-2.5 cursor-pointer rounded-lg border border-dashed border-(--border-color) bg-(--bg-primary)/30 text-(--text-secondary) transition-all duration-200 hover:border-(--text-secondary) hover:bg-(--bg-primary)/60 hover:text-(--text-primary)'
 					>
 						<Settings
@@ -132,16 +134,7 @@ function WidgetWrapperComponent({ widgetConfig, onUpdate, onRemove }) {
 				)}
 			</div>
 
-			{showConfig && (
-				<WidgetConfigModal
-					widget={widgetConfig}
-					onSave={(updates) => {
-						onUpdate(widgetConfig.i, updates);
-						setShowConfig(false);
-					}}
-					onClose={() => setShowConfig(false)}
-				/>
-			)}
+			{/* 4. RIMUOVI COMPLETAMENTE il blocco {showConfig && <WidgetConfigModal ... />} da qui */}
 		</div>
 	);
 }

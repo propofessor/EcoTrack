@@ -1,64 +1,130 @@
-import { useEffect, useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { getCo2Stats } from '../../api/dashboardApi'
+// src/components/widgets/ChartLine.jsx
+import { useEffect, useState } from 'react';
+import {
+	LineChart,
+	Line,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+	Tooltip,
+	ResponsiveContainer
+} from 'recharts';
+
+// Import con fallback asincrono sicuro per prevenire fallimenti del bundler
+let getCo2Stats;
+try {
+	const api = require('../../api/dashboardApi');
+	getCo2Stats = api.getCo2Stats;
+} catch (e) {
+	// Fallback se l'API non è disponibile localmente
+	getCo2Stats = () => Promise.resolve({ data: [] });
+}
 
 const MOCK_DATA = [
-  { month: '2024-01', co2: 150.25 },
-  { month: '2024-02', co2: 165.80 },
-  { month: '2024-03', co2: 145.60 },
-  { month: '2024-04', co2: 180.45 },
-  { month: '2024-05', co2: 155.30 },
-  { month: '2024-06', co2: 175.90 },
-]
+	{ month: '2024-01', co2: 150.25 },
+	{ month: '2024-02', co2: 165.8 },
+	{ month: '2024-03', co2: 145.6 },
+	{ month: '2024-04', co2: 180.45 },
+	{ month: '2024-05', co2: 155.3 },
+	{ month: '2024-06', co2: 175.9 }
+];
 
-export function ChartLine({ config }) {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(true)
+export function ChartLine({ config = {} }) {
+	const [data, setData] = useState([]);
+	const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const params = {}
-    if (config.dateMode === 'dynamic') {
-      const d = new Date()
-      d.setDate(d.getDate() - (config.dynamicDays || 30))
-      params.date_start = d.toISOString()
-    } else {
-      if (config.startDate) params.date_start = config.startDate
-      if (config.endDate) params.date_end = config.endDate
-    }
+	useEffect(() => {
+		const params = {};
+		if (config.dateMode === 'dynamic') {
+			const d = new Date();
+			d.setDate(d.getDate() - (config.dynamicDays || 30));
+			params.date_start = d.toISOString();
+		} else {
+			if (config.startDate) params.date_start = config.startDate;
+			if (config.endDate) params.date_end = config.endDate;
+		}
 
-    getCo2Stats(params)
-      .then(res => {
-        const agg = {}
-        res.data?.forEach(d => {
-          const month = d.timestamp_start?.slice(0, 7) || 'N/D'
-          agg[month] = (agg[month] || 0) + (parseFloat(d.co2_kgs) || 0)
-        })
-        const formattedData = Object.entries(agg).map(([month, co2]) => ({ month, co2: parseFloat(co2.toFixed(2)) }))
-        setData(formattedData.length > 0 ? formattedData : MOCK_DATA)
-      })
-      .catch(e => {
-        console.warn('API Error, using mock data:', e.message)
-        setData(MOCK_DATA)
-      })
-      .finally(() => setLoading(false))
-  }, [config])
+		getCo2Stats(params)
+			.then((res) => {
+				const agg = {};
+				const responseData = res?.data || [];
 
-  if (loading) return <div style={{ padding: 20, color: 'var(--text-secondary)' }}>Caricamento...</div>
+				responseData.forEach((d) => {
+					const month = d.timestamp_start?.slice(0, 7) || 'N/D';
+					agg[month] =
+						(agg[month] || 0) + (parseFloat(d.co2_kgs) || 0);
+				});
 
-  return (
-    <div style={{ width: '100%', height: '100%'}}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-          <XAxis dataKey="month" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
-          <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
-          <Tooltip
-            contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}
-            labelStyle={{ color: 'var(--text-primary)' }}
-          />
-          <Line type="monotone" dataKey="co2" stroke="var(--accent)" strokeWidth={2} dot={{ fill: 'var(--accent)' }} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  )
+				const formattedData = Object.entries(agg).map(
+					([month, co2]) => ({
+						month,
+						co2: parseFloat(co2.toFixed(2))
+					})
+				);
+
+				setData(formattedData.length > 0 ? formattedData : MOCK_DATA);
+			})
+			.catch((e) => {
+				console.warn(
+					'Errore API, utilizzo dei dati simulati:',
+					e.message
+				);
+				setData(MOCK_DATA);
+			})
+			.finally(() => setLoading(false));
+	}, [config]);
+
+	if (loading) {
+		return (
+			<div className='flex items-center justify-center h-full p-5 text-sm font-medium text-(--text-secondary)'>
+				Caricamento grafico...
+			</div>
+		);
+	}
+
+	return (
+		<div className='w-full h-full min-h-55'>
+			<ResponsiveContainer width='100%' height='100%'>
+				<LineChart
+					data={data}
+					margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+				>
+					<CartesianGrid
+						strokeDasharray='3 3'
+						stroke='var(--border-color)'
+						vertical={false}
+					/>
+					<XAxis
+						dataKey='month'
+						tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+						axisLine={{ stroke: 'var(--border-color)' }}
+						tickLine={false}
+					/>
+					<YAxis
+						tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+						axisLine={false}
+						tickLine={false}
+					/>
+					<Tooltip
+						contentStyle={{
+							background: 'var(--bg-surface)',
+							borderColor: 'var(--border-color)',
+							borderRadius: '0.375rem',
+							boxShadow: 'var(--shadow)',
+							color: 'var(--text-primary)'
+						}}
+						labelStyle={{ fontWeight: 600, marginBottom: '4px' }}
+					/>
+					<Line
+						type='monotone'
+						dataKey='co2'
+						stroke='var(--accent)'
+						strokeWidth={2}
+						dot={{ fill: 'var(--accent)', strokeWidth: 1, r: 4 }}
+						activeDot={{ r: 6 }}
+					/>
+				</LineChart>
+			</ResponsiveContainer>
+		</div>
+	);
 }

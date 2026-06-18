@@ -1,3 +1,4 @@
+// src/components/widgets/ChartPie.jsx
 import { useEffect, useState } from 'react';
 import {
 	PieChart,
@@ -9,7 +10,8 @@ import {
 } from 'recharts';
 import { getCo2Stats } from '../../api/dashboardApi';
 
-const COLORS = ['#38a169', '#3182ce', '#d69e2e', '#e53e3e', '#805ad5'];
+// Colori moderni per Tailwind integration
+const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 const MOCK_DATA = [
 	{ name: 'Auto', value: 240 },
@@ -25,7 +27,6 @@ export function ChartPie({ config }) {
 	useEffect(() => {
 		getCo2Stats({})
 			.then((res) => {
-				// Aggrega per tipo di mezzo
 				const agg = {};
 				res.data?.forEach((d) => {
 					const label = d.movement_types?.label || 'altro';
@@ -47,45 +48,57 @@ export function ChartPie({ config }) {
 			.finally(() => setLoading(false));
 	}, [config]);
 
-	if (loading)
+	if (loading) {
 		return (
-			<div style={{ padding: 20, color: 'var(--text-secondary)' }}>
-				Caricamento...
+			<div className='flex items-center justify-center h-full p-5 text-sm font-medium text-(--text-secondary)'>
+				Caricamento grafico...
 			</div>
 		);
+	}
 
 	return (
-		<div style={{ width: '100%', height: '100%' }}>
+		<div className='w-full h-full min-h-55'>
 			<ResponsiveContainer width='100%' height='100%'>
-				<PieChart>
+				<PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
 					<Pie
 						data={data}
 						cx='50%'
-						cy='50%'
-						outerRadius='70%'
+						cy='45%'
+						outerRadius='75%'
 						dataKey='value'
 						label={({ name, percent }) =>
 							`${name} ${(percent * 100).toFixed(0)}%`
 						}
+						labelLine={false}
 					>
 						{data.map((_, index) => (
 							<Cell
 								key={index}
 								fill={COLORS[index % COLORS.length]}
+								className='stroke-(--bg-widget) stroke-2'
 							/>
 						))}
 					</Pie>
 					<Tooltip
 						contentStyle={{
 							background: 'var(--bg-surface)',
-							border: '1px solid var(--border-color)'
+							borderColor: 'var(--border-color)',
+							borderRadius: '0.375rem',
+							boxShadow: 'var(--shadow)',
+							color: 'var(--text-primary)'
 						}}
-						formatter={(value) => [`${value} kg CO2`, '']}
+						formatter={(value) => [`${value} kg CO2`, 'Impatto']}
 					/>
 					<Legend
+						layout='horizontal'
+						verticalAlign='bottom'
+						align='center'
+						iconType='circle'
+						iconSize={8}
 						wrapperStyle={{
 							color: 'var(--text-secondary)',
-							fontSize: 12
+							fontSize: 11,
+							paddingTop: '10px'
 						}}
 					/>
 				</PieChart>

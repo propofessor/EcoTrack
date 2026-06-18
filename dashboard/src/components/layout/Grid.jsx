@@ -1,99 +1,143 @@
-import { useState } from 'react'; // <-- Ricordati di importare useState!
-
+import { useState, useMemo } from 'react';
 import { GridBackground } from 'react-grid-layout/extras';
-
 import { Responsive, useContainerWidth } from 'react-grid-layout';
-
-import { noCompactor } from 'react-grid-layout/core';
-
 import _ from 'lodash';
+import { Plus } from 'lucide-react';
 
 import { WidgetWrapper } from '../widgets/WidgetWrapper.jsx';
-
-export default function Grid(props) {
+import { WidgetConfigModal } from '../modals/WidgetConfigModal.jsx';
+export default function Grid({ items, setItems, ...props }) {
+	// <-- MODIFICATO: accetta le props
 	const gridConfig = { rowHeight: 60, margin: [10, 10] };
-
 	const { width, containerRef, mounted } = useContainerWidth();
 
-	// 1. Niente più "const state = {}". Usiamo gli hook di React!
-
-	const [items, setItems] = useState([
-		{ i: '0', x: 0, y: 0, w: 2, h: 2, add: true }
-	]);
-
-	const [newCounter, setNewCounter] = useState(0);
-
 	const [cols, setCols] = useState(12);
-
-	// Questi forse non ti servono strictamente nello state se non li leggi da qualche parte,
-
-	// ma li mettiamo per completezza rispetto al tuo codice originale
-
 	const [breakpoint, setBreakpoint] = useState('lg');
+	const [newCounter, setNewCounter] = useState(1);
+	const [editingWidgetId, setEditingWidgetId] = useState(null);
+	const [configuringPlaceholderId, setConfiguringPlaceholderId] =
+		useState(null);
+	// Stato iniziale con un placeholder predefinito.
+	// Usiamo y: 0 per farlo partire in alto, la griglia lo compatterà correttamente.
 
-	const [layout, setLayout] = useState([]);
-
-	const createElement = function (el) {
-		const i = el.add ? '+' : el.i;
-
-		const widgetConfig = {
-			i: i,
-
-			widgetType: 'DataTable'
-		};
-
-		return (
-			<div key={i} data-grid={el}>
-				<WidgetWrapper widgetConfig={widgetConfig} />
-			</div>
-		);
-	};
-
-	const onAddItem = function () {
-		console.log('adding', 'n' + newCounter);
-
-		// 2. Modifica lo stato usando le funzioni "set" (setItems, setNewCounter)
-
-		setItems((prevItems) =>
-			prevItems.concat({
-				i: 'n' + newCounter,
-
-				x: (prevItems.length * 2) % cols,
-
-				y: Infinity, // lo sbatte in fondo
-
-				w: 2,
-
-				h: 2
-			})
-		);
-
-		setNewCounter((prevCounter) => prevCounter + 1);
+	// Sincronizza lo stato degli `items` con la posizione reale nella griglia (drag & drop)
+	const onLayoutChange = function (newLayout) {
+		setItems((prevItems) => {
+			return prevItems.map((item) => {
+				const layoutItem = newLayout.find((l) => l.i === item.i);
+				if (layoutItem) {
+					return {
+						...item,
+						x: layoutItem.x,
+						y: layoutItem.y,
+						w: layoutItem.w,
+						h: layoutItem.h
+					};
+				}
+				return item;
+			});
+		});
 	};
 
 	const onBreakpointChange = function (newBreakpoint, newCols) {
 		setBreakpoint(newBreakpoint);
-
 		setCols(newCols);
 	};
 
-	const onLayoutChange = function (newLayout) {
-		console.log('layout changed', newLayout);
-
-		setLayout(newLayout);
+	// Aggiornamento configurazione widget esistenti
+	const handleUpdateWidget = (id, updates) => {
+		setItems((prev) =>
+			prev.map((item) => (item.i === id ? { ...item, ...updates } : item))
+		);
 	};
 
-	const onRemoveItem = function (i) {
-		console.log('removing', i);
-
-		setItems((prevItems) => _.reject(prevItems, { i: i }));
+	// Rimozione widget esistenti
+	const handleRemoveWidget = (id) => {
+		setItems((prev) => prev.filter((item) => item.i !== id));
 	};
+
+	// Salvataggio dal WidgetConfigModal aperto da un placeholder
+	const handleSaveNewWidget = (updates) => {
+		setItems((prevItems) => {
+			const updatedItems = [...prevItems];
+			const index = updatedItems.findIndex(
+				(i) => i.i === configuringPlaceholderId
+			);
+
+			if (index !== -1) {
+				// 1. Converti il placeholder in un widget effettivo
+				updatedItems[index] = {
+					...updatedItems[index],
+					...updates
+				};
+				delete updatedItems[index].isAddPlaceholder;
+
+				// 2. Calcola il prossimo ID per il nuovo placeholder
+				const nextId = 'placeholder_' + newCounter;
+				setNewCounter((c) => c + 1);
+
+				// 3. Aggiungi il nuovo placeholder alla fine.
+				// RGL con compactType="vertical" prenderà y: 999 e lo "tirerà su"
+				// fino al primo spazio vuoto disponibile in fondo alla griglia.
+				updatedItems.push({
+					i: nextId,
+					x: 0,
+					y: 999, // Forza l'elemento in fondo, ci pensa il compattatore
+					w: 2,
+					h: 2,
+					isAddPlaceholder: true
+				});
+			}
+
+			return updatedItems;
+		});
+
+		setConfiguringPlaceholderId(null);
+	};
+
+	const handleEditWidget = (id) => {
+		setEditingWidgetId(id);
+	};
+
+	const createElement = function (el) {
+		// Se è un placeholder per aggiungere widget
+		if (el.isAddPlaceholder) {
+			return (
+				<div key={el.i} data-grid={el} className='flex h-full w-full'>
+					<div
+						onClick={() => setConfiguringPlaceholderId(el.i)}
+						className='flex flex-1 flex-col items-center justify-center gap-2 cursor-pointer rounded-xl border-2 border-dashed border-(--border-color) bg-(--bg-primary)/30 text-(--text-secondary) transition-all duration-200 hover:border-(--text-secondary) hover:bg-(--bg-primary)/60 hover:text-(--text-primary)'
+					>
+						<Plus size={32} className='opacity-60' />
+						<span className='text-sm font-medium'>
+							Aggiungi Widget
+						</span>
+					</div>
+				</div>
+			);
+		}
+
+		return (
+			<div key={el.i} data-grid={el}>
+				<WidgetWrapper
+					widgetConfig={el}
+					onUpdate={handleUpdateWidget}
+					onRemove={handleRemoveWidget}
+					onEdit={handleEditWidget} // 3. PASSA LA PROP onEdit QUI
+				/>
+			</div>
+		);
+	};
+
+	// Identifica la config in fase di edit per pre-popolare il modal
+	const configuringWidget = useMemo(
+		() => items.find((i) => i.i === configuringPlaceholderId),
+		[items, configuringPlaceholderId]
+	);
 
 	return (
 		<div>
-			<button onClick={onAddItem}>Add Item</button>
-
-			<div ref={containerRef} className='relative border border-red-500'>
+			<div ref={containerRef} className='relative mt-4'>
 				{mounted && (
 					<>
 						<GridBackground
@@ -109,13 +153,9 @@ export default function Grid(props) {
 						<Responsive
 							breakpoints={{
 								lg: 1200,
-
 								md: 996,
-
 								sm: 768,
-
 								xs: 480,
-
 								xxs: 0
 							}}
 							cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
@@ -123,16 +163,34 @@ export default function Grid(props) {
 							width={width}
 							onLayoutChange={onLayoutChange}
 							onBreakpointChange={onBreakpointChange}
-							compactor={noCompactor}
-							preventCollision={true}
+							/*compactor={
+								horizontalCompactor
+							} /* <-- Abilita esplicitamente il compattatore verticale */
 						>
-							{/* Usa direttamente 'items' invece di 'state.items' */}
-
 							{_.map(items, (el) => createElement(el))}
 						</Responsive>
 					</>
 				)}
 			</div>
+
+			{/* Renderizza il Modale solo quando un Add Placeholder viene cliccato */}
+			{configuringPlaceholderId && (
+				<WidgetConfigModal
+					widget={configuringWidget}
+					onSave={handleSaveNewWidget}
+					onClose={() => setConfiguringPlaceholderId(null)}
+				/>
+			)}
+			{editingWidgetId && (
+				<WidgetConfigModal
+					widget={items.find((i) => i.i === editingWidgetId)}
+					onSave={(updates) => {
+						handleUpdateWidget(editingWidgetId, updates);
+						setEditingWidgetId(null);
+					}}
+					onClose={() => setEditingWidgetId(null)}
+				/>
+			)}
 		</div>
 	);
 }

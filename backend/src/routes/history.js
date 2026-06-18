@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { supabaseAdmin } = require('../db'); // <--- IMPORTANTE: Destrutturato come { db } per coordinarsi con il middleware!
 const requireAuth = require('../middleware/authMiddleware');
+const { calculateRawPoints } = require('../services/scoreEngine');
+const { recalculateDailyScore } = require('../services/gamificationService');
 
 // Proteggiamo tutte le rotte: solo gli utenti autenticati possono accedere al proprio storico
 router.use(requireAuth);
@@ -104,6 +106,29 @@ router.post('/', async (req, res) => {
 				error: 'Impossibile salvare il viaggio nello storico'
 			});
 		}
+
+		// [RF11 - Gamification] Ricalcoliamo il punteggio giornaliero
+		// dell'utente in real-time, come richiesto da RF11.1 ("Il calcolo
+		// deve avvenire real time per ogni attività dell'utente").
+		//
+		// IMPORTANTE: questo NON sovrascrive il campo `points` salvato
+		// sopra in `history` (che resta quello del payload, per non
+		// rompere il contratto esistente di questa rotta). Il punteggio
+		// "autorevole" per voto/classifica vive separatamente in
+		// `daily_scores`, popolato da scoreEngine a partire dai dati
+		// reali in `history`, non dal valore che il client invia.
+		//
+		// Eseguito in modo "best effort": un fallimento qui non deve
+		// impedire il salvataggio del viaggio già avvenuto con successo,
+		// quindi logghiamo ma non propaghiamo un errore HTTP al client
+		// per questo passo accessorio.
+		const scoreDate = timestamp_start.slice(0, 10);
+		recalculateDailyScore(userId, scoreDate).catch((scoreErr) => {
+			console.error(
+				'Errore nel ricalcolo del punteggio giornaliero (RF11) dopo il salvataggio del viaggio:',
+				scoreErr
+			);
+		});
 
 		return res.status(201).json({
 			message: 'Viaggio salvato nello storico con successo',

@@ -28,7 +28,7 @@
 		--text-primary: #f4f4f5; /* Zinc 100 */
 		--text-secondary: #a1a1aa; /* Zinc 400 */
 		--border-color: #27272a; /* Zinc 800 - Linee sottili ed eleganti */
-		--accent: #27272a;
+		--accent: #f4f4f5;
 		--accent-light: #18181b; /* Zinc 800 - Sfondo scuretto e sobrio per i bottoni in dark mode */
 		--accent-hover: #18181b;
 		--shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
@@ -47,7 +47,7 @@
 }
 
 @layer components {
-	/* === SVOLTA TOTAL RE-STYLE PER LA TABELLA INTERNA === */
+	/* === RESTYLING TABELLA === */
 	.widget-body-container table {
 		width: 100%;
 		border-collapse: collapse;
