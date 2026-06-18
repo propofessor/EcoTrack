@@ -122,13 +122,15 @@ router.post('/', async (req, res) => {
 		// impedire il salvataggio del viaggio già avvenuto con successo,
 		// quindi logghiamo ma non propaghiamo un errore HTTP al client
 		// per questo passo accessorio.
-		const scoreDate = timestamp_start.slice(0, 10);
-		recalculateDailyScore(userId, scoreDate).catch((scoreErr) => {
-			console.error(
-				'Errore nel ricalcolo del punteggio giornaliero (RF11) dopo il salvataggio del viaggio:',
-				scoreErr
-			);
-		});
+		if (typeof timestamp_start === 'string' && timestamp_start.length >= 10) {
+			const scoreDate = timestamp_start.slice(0, 10);
+			recalculateDailyScore(userId, scoreDate).catch((scoreErr) => {
+				console.error(
+					'Errore nel ricalcolo del punteggio giornaliero (RF11) dopo il salvataggio del viaggio:',
+					scoreErr
+				);
+			});
+		}
 
 		return res.status(201).json({
 			message: 'Viaggio salvato nello storico con successo',

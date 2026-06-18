@@ -2,5 +2,9 @@
   "editor.formatOnSave": true,
   "css.validate": false,
   "less.validate": false,
-  "scss.validate": false
+  "scss.validate": false,
+  "tailwindCSS.experimental.configFile": {
+    "mobile/**": "mobile/tailwind.config.js",
+    "dashboard/src/**": "dashboard/src/styles/index.css"
+  }
 }

@@ -1,0 +1,16 @@
+/*
+  EcoTrack Mobile — Tailwind entry point
+  ───────────────────────────────────────
+  NativeWind 4.x requires Tailwind CSS v3. Tailwind v4 support for React Native
+  is planned for NativeWind v5 (currently preview-only). When NativeWind v5
+  stabilises, replace the three directives below with:
+      @import "tailwindcss";
+
+  This file is intentionally empty of custom component definitions.
+  All layout classes are composed directly in each component's className prop,
+  following Tailwind's utility-first philosophy (no @apply).
+*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

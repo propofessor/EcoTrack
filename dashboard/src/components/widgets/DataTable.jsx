@@ -33,7 +33,7 @@ export function DataTable({ config }) {
 
 	if (loading) {
 		return (
-			<div className='flex items-center justify-center h-full p-5 text-sm font-medium text-(--text-secondary)'>
+			<div className='table-empty flex items-center justify-center h-full p-5'>
 				Caricamento tabella...
 			</div>
 		);
@@ -41,56 +41,50 @@ export function DataTable({ config }) {
 
 	if (data.length === 0) {
 		return (
-			<div className='flex items-center justify-center h-full p-5 text-sm font-medium text-(--text-secondary)'>
+			<div className='table-empty flex items-center justify-center h-full p-5'>
 				Nessun dato disponibile
 			</div>
 		);
 	}
 
 	const columns = ['Data Inizio', 'CO2 (kg)', 'Punti Guadagnati'];
-	const dataKeys = ['timestamp_start', 'co2_kgs', 'points'];
 
 	return (
-		<div className='overflow-x-auto h-full w-full rounded-md border border-(--border-color)'>
-			<table className='w-full border-collapse text-left text-xs md:text-sm'>
+		<div className='table-wrapper h-full w-full'>
+			<table className='data-table w-full'>
 				<thead>
-					<tr className='border-b border-(--border-color) bg-(--bg-widget)'>
+					<tr className='data-table-head'>
 						{columns.map((col, index) => (
-							<th
-								key={index}
-								className='sticky top-0 px-4 py-3 font-semibold text-(--text-secondary) whitespace-nowrap bg-(--bg-widget) uppercase tracking-wider text-[10px]'
-							>
+							<th key={index} className='data-table-th px-4 py-3'>
 								{col}
 							</th>
 						))}
 					</tr>
 				</thead>
-				<tbody className='divide-y divide-(--border-color)'>
+				<tbody className='data-table-body'>
 					{data.map((row, i) => (
-						<tr
-							key={i}
-							className='hover:bg-black/2 dark:hover:bg-white/2 transition-colors odd:bg-transparent even:bg-[color:var(--bg-primary)]/40'
-						>
-							<td className='px-4 py-3 text-(--text-primary) whitespace-nowrap font-medium'>
+						<tr key={i} className='data-table-row'>
+							<td className='data-table-td px-4 py-3'>
 								{row.timestamp_start
-									? new Date(
-											row.timestamp_start
-										).toLocaleDateString('it-IT', {
-											day: '2-digit',
-											month: '2-digit',
-											year: 'numeric',
-											hour: '2-digit',
-											minute: '2-digit'
-										})
+									? new Date(row.timestamp_start).toLocaleDateString(
+											'it-IT',
+											{
+												day: '2-digit',
+												month: '2-digit',
+												year: 'numeric',
+												hour: '2-digit',
+												minute: '2-digit'
+											}
+										)
 									: '—'}
 							</td>
-							<td className='px-4 py-3 text-(--text-primary) whitespace-nowrap font-mono'>
+							<td className='data-table-td--mono px-4 py-3'>
 								{row.co2_kgs !== undefined
 									? `${parseFloat(row.co2_kgs).toFixed(2)} kg`
 									: '—'}
 							</td>
-							<td className='px-4 py-3 whitespace-nowrap'>
-								<span className='inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'>
+							<td className='data-table-td--plain px-4 py-3'>
+								<span className='status-badge inline-flex items-center px-2 py-0.5'>
 									+{row.points ?? '0'} pts
 								</span>
 							</td>

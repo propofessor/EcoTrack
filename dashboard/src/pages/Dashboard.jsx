@@ -1,31 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Header from '../components/layout/Header.jsx';
 import Grid from '../components/layout/Grid.jsx';
 
-// Spostiamo la funzione di lettura fuori dal componente per pulizia
-const getCookie = (name) => {
-	if (typeof document === 'undefined') return null;
-	const value = `; ${document.cookie}`;
-	const parts = value.split(`; ${name}=`);
-	if (parts.length === 2) return parts.pop().split(';').shift();
-	return null;
-};
+const LAYOUT_KEY = 'ecoTrack_layout';
 
 export default function Dashboard() {
-	// 1. INIZIALIZZAZIONE PIGRA: Lo stato legge il cookie PRIMA del primo render
+	// Lazy initializer: reads from localStorage before the first render
 	const [items, setItems] = useState(() => {
-		const savedCookie = getCookie('ecoTrack_layout');
-		if (savedCookie) {
-			try {
-				return JSON.parse(decodeURIComponent(savedCookie));
-			} catch (error) {
-				console.error(
-					"Errore nel parsing del cookie all'avvio:",
-					error
-				);
-			}
+		try {
+			const saved = localStorage.getItem(LAYOUT_KEY);
+			if (saved) return JSON.parse(saved);
+		} catch {
+			// corrupted entry — fall through to default
 		}
-		// Fallback iniziale se il cookie non esiste
 		return [
 			{
 				i: 'placeholder_0',
@@ -38,27 +25,9 @@ export default function Dashboard() {
 		];
 	});
 
-	// 2. EFFECT PULITO: Rinnova solo la scadenza del cookie, SENZA fare setState
-	useEffect(() => {
-		const savedCookie = getCookie('ecoTrack_layout');
-		if (savedCookie) {
-			// "Rolling Cookie": Estendi la durata per altri 30 giorni
-			const d = new Date();
-			d.setTime(d.getTime() + 30 * 24 * 60 * 60 * 1000);
-			const expires = 'expires=' + d.toUTCString();
-			document.cookie = `ecoTrack_layout=${savedCookie}; ${expires}; path=/`;
-		}
-	}, []);
-
-	// 3. Funzione BOTTONE SALVA: Salva lo stato attuale nel cookie
+	// Save button: persists current grid state to localStorage
 	const saveLayout = () => {
-		const d = new Date();
-		d.setTime(d.getTime() + 30 * 24 * 60 * 60 * 1000);
-		const expires = 'expires=' + d.toUTCString();
-
-		const jsonStr = encodeURIComponent(JSON.stringify(items));
-		document.cookie = `ecoTrack_layout=${jsonStr}; ${expires}; path=/`;
-
+		localStorage.setItem(LAYOUT_KEY, JSON.stringify(items));
 		alert('Layout e configurazioni salvati con successo!');
 	};
 
@@ -90,7 +59,7 @@ export default function Dashboard() {
 				if (Array.isArray(importedItems)) {
 					setItems(importedItems);
 					alert(
-						"Configurazione importata! Clicca 'Salva' se vuoi memorizzarla anche nei cookie."
+						"Configurazione importata! Clicca 'Salva' se vuoi memorizzarla in locale."
 					);
 				} else {
 					alert(

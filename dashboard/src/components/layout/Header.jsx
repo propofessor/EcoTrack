@@ -6,10 +6,10 @@ export default function Header({ saveLayout, exportConfig, handleImportFile }) {
 	return (
 		<div className='flex flex-wrap items-center justify-between gap-2.5 mb-5'>
 			<div>
-				<h1 className='text-[1.375rem] font-bold text-(--text-primary)'>
+				<h1 className='header-title'>
 					🌱 EcoTrack — Dashboard Comune
 				</h1>
-				<p className='text-[0.813rem] text-(--text-secondary)'>
+				<p className='header-subtitle'>
 					Trascina i widget per riordinare, ridimensiona dagli angoli
 				</p>
 			</div>
@@ -28,8 +28,7 @@ export default function Header({ saveLayout, exportConfig, handleImportFile }) {
 					onClick={exportConfig}
 				/>
 
-				{/* Usiamo la classe personalizzata definita nel CSS globale */}
-				<label className='btn-import'>
+				<label className='btn btn--default inline-flex items-center gap-1.5 px-3.5 py-1.75'>
 					<Upload size={14} /> Importa
 					<input
 						type='file'

@@ -1,22 +1,8 @@
 export function ActionButton({ icon, label, onClick, variant }) {
+  const variantClass = variant === 'accent' ? 'btn--accent' : 'btn--default';
   return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '7px 14px',
-        borderRadius: '8px',
-        border: '1px solid var(--border-color)',
-        cursor: 'pointer',
-        fontSize: '13px',
-        fontWeight: '500',
-        background: variant === 'accent' ? 'var(--accent)' : 'var(--bg-surface)',
-        color: variant === 'accent' ? 'white' : 'var(--text-primary)',
-      }}
-    >
+    <button onClick={onClick} className={`btn ${variantClass} inline-flex items-center gap-1.5 px-3.5 py-1.75`}>
       {icon} {label}
     </button>
-  )
+  );
 }

@@ -81,15 +81,26 @@ async function recalculateDailyScore(userId, dateOnly) {
 	// risultante), usiamo co2_kgs come proxy diretto del "comportamento
 	// virtuoso": più basso è, meglio è. Questo evita di richiedere una
 	// migrazione aggiuntiva sulla tabella `history` esistente.
+	// Average speeds (km/h) used to estimate distance for zero-emission trips
+	// whose co2_kgs=0 makes the CO2-based proxy unusable.
+	const ZERO_EMISSION_SPEEDS_KMH = { walking: 5, bicycling: 15, transit: 20 };
+
 	const movements = (dayHistory || []).map((entry) => {
 		const co2Grams = (parseFloat(entry.co2_kgs) || 0) * 1000;
-		// Distanza implicita: assumiamo il fattore medio nazionale come
-		// riferimento per stimare i km equivalenti dal solo dato di CO2,
-		// quando la distanza non è disponibile. Questo mantiene
-		// `computeDailyScore` riusabile anche da contesti che la distanza
-		// reale invece la conoscono (vedi calculateAndPersistTripScore).
 		const movementLabel = entry.movement_types?.label || 'unknown';
-		const impliedKm = co2Grams > 0 ? co2Grams / 110 : 1;
+
+		let impliedKm;
+		if (co2Grams > 0) {
+			// Non-zero CO2: reverse-engineer distance from emission / baseline factor
+			impliedKm = co2Grams / 110;
+		} else {
+			// Zero-emission trip: estimate distance from elapsed time × mode speed
+			const durationHours =
+				(new Date(entry.timestamp_end) - new Date(entry.timestamp_start)) /
+				3_600_000;
+			const speed = ZERO_EMISSION_SPEEDS_KMH[movementLabel] ?? 8;
+			impliedKm = Math.max(0.1, durationHours * speed);
+		}
 
 		return { movementLabel, distanceKm: impliedKm, co2Grams };
 	});
@@ -163,7 +174,9 @@ async function getWeeklyScoreForUser(userId, referenceDate = new Date()) {
 			weekStart,
 			weekEnd,
 			weeklyScore: Math.round(weeklyScore * 10) / 10,
-			daysWithActivity: (data || []).length
+			daysWithActivity: (data || []).filter(
+			(r) => (parseFloat(r.normalized_score) || 0) > 0
+		).length
 		},
 		error: null
 	};
@@ -185,9 +198,10 @@ async function getWeeklyScoreForUser(userId, referenceDate = new Date()) {
  */
 async function getCurrentWeekLeaderboard({
 	limit = 20,
-	requestingUserId
+	requestingUserId,
+	referenceDate
 } = {}) {
-	const { weekStart, weekEnd } = getIsoWeekRange();
+	const { weekStart, weekEnd } = getIsoWeekRange(referenceDate);
 
 	const { data: scores, error: scoresError } = await supabaseAdmin
 		.from('daily_scores')
@@ -215,7 +229,7 @@ async function getCurrentWeekLeaderboard({
 	const userIds = [...totalsByUser.keys()];
 	if (userIds.length === 0) {
 		return {
-			data: { weekStart, weekEnd, leaderboard: [], personalRank: null },
+			data: { weekStart, weekEnd, podium: [], leaderboard: [], personalRank: null },
 			error: null
 		};
 	}
@@ -285,11 +299,11 @@ function resolveDisplayName(userRow) {
 	if (visibility === 'anonymous') return 'Utente anonimo';
 	if (visibility === 'full_name') return userRow.name || 'Utente EcoTrack';
 
-	// 'nickname': mostra solo la prima parola del nome + iniziale, una
-	// anonimizzazione parziale ragionevole senza richiedere un campo
-	// nickname dedicato non presente nello schema attuale.
-	const firstName = (userRow.name || 'Utente').split(' ')[0];
-	return `${firstName} ${(userRow.name || '').split(' ')[1]?.[0] || ''}.`.trim();
+	// 'nickname': first name + last initial (e.g. "Mario R.").
+	// Single-word names are returned as-is to avoid trailing punctuation.
+	const parts = (userRow.name || 'Utente').split(' ').filter(Boolean);
+	if (parts.length === 1) return parts[0];
+	return `${parts[0]} ${parts[1][0]}.`;
 }
 
 // ============================================================
@@ -318,7 +332,7 @@ const REWARD_LABELS = {
  */
 async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 	const { data: leaderboardData, error: leaderboardError } =
-		await getCurrentWeekLeaderboard({ limit: 9999 });
+		await getCurrentWeekLeaderboard({ limit: 9999, referenceDate });
 
 	if (leaderboardError) {
 		return { data: null, error: leaderboardError };
@@ -366,6 +380,19 @@ async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 
 	let rewardsAwarded = 0;
 	if (rewardRows.length > 0) {
+		// Idempotency guard: skip if rewards were already assigned for these snapshots
+		const snapshotIds = topThreeSnapshots.map((s) => s.id).filter(Boolean);
+		if (snapshotIds.length > 0) {
+			const { data: existing } = await supabaseAdmin
+				.from('rewards')
+				.select('id')
+				.in('weekly_leaderboard_history_id', snapshotIds)
+				.limit(1);
+			if (existing?.length > 0) {
+				return { data: { weekStart, weekEnd, rewardsAwarded: 0 }, error: null };
+			}
+		}
+
 		const { data: insertedRewards, error: rewardError } =
 			await supabaseAdmin.from('rewards').insert(rewardRows).select();
 

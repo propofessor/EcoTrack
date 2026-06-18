@@ -10,7 +10,6 @@ import {
 } from 'recharts';
 import { getCo2Stats } from '../../api/dashboardApi';
 
-// Colori moderni per Tailwind integration
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 const MOCK_DATA = [
@@ -50,14 +49,14 @@ export function ChartPie({ config }) {
 
 	if (loading) {
 		return (
-			<div className='flex items-center justify-center h-full p-5 text-sm font-medium text-(--text-secondary)'>
+			<div className='chart-empty flex items-center justify-center h-full p-5'>
 				Caricamento grafico...
 			</div>
 		);
 	}
 
 	return (
-		<div className='w-full h-full min-h-55'>
+		<div className='chart-container w-full h-full'>
 			<ResponsiveContainer width='100%' height='100%'>
 				<PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
 					<Pie
@@ -75,7 +74,7 @@ export function ChartPie({ config }) {
 							<Cell
 								key={index}
 								fill={COLORS[index % COLORS.length]}
-								className='stroke-(--bg-widget) stroke-2'
+								className='pie-cell-stroke'
 							/>
 						))}
 					</Pie>
