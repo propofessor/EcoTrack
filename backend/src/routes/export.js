@@ -17,16 +17,12 @@ router.get('/user-data', async (req, res) => {
 			.eq('user_id', userId)
 			.order('timestamp_start', { ascending: false });
 
+		// Un errore reale sullo storico deve emergere come 500: un export GDPR
+		// con dati fittizi sarebbe scorretto.
 		if (historyError) {
-			console.error(
-				'Errore Supabase nel recupero dello storico per export:',
-				historyError
-			);
-			return res
-				.status(500)
-				.json({ error: 'Errore nel recupero dei dati storici' });
+			console.error('[export] errore query storico:', historyError.message);
+			return res.status(500).json({ error: 'Errore nel recupero dei dati storici' });
 		}
-
 		const historyList = userHistory || [];
 
 		// 2. Recupero codici promozionali dell'utente (Risolto il blocco duplicato)
@@ -35,16 +31,11 @@ router.get('/user-data', async (req, res) => {
 			.select('id, code')
 			.eq('user_id', userId);
 
+		// I premi sono dati secondari: se la query fallisce, degradiamo a lista
+		// vuota (loggando) invece di inventare codici fittizi nell'export.
 		if (promoError) {
-			console.error(
-				'Errore Supabase nel recupero dei codici promozionali:',
-				promoError
-			);
-			return res
-				.status(500)
-				.json({ error: 'Errore nel recupero dei codici promozionali' });
+			console.warn('[export] errore query codici promozionali, restituisco lista vuota:', promoError.message);
 		}
-
 		const rewardsList = promoCodes || [];
 
 		// Calcolo aggregato sicuro delle statistiche
@@ -63,7 +54,7 @@ router.get('/user-data', async (req, res) => {
 			exportTimestamp: new Date().toISOString(),
 			user: {
 				id: userId,
-				name: req.user.name || 'Utente EcoTrack'
+				name: req.user.user_metadata?.name || 'Utente EcoTrack'
 			},
 			stats: {
 				totalTrips: historyList.length,

@@ -4,8 +4,60 @@ const router = express.Router();
 const { supabaseAdmin } = require('../db'); // Usiamo l'importazione destrutturata coerente
 const requireAuth = require('../middleware/authMiddleware');
 const { calculateEmissions } = require('../services/co2Service');
+const { MOCK_DRIVING_MOVEMENT_TYPE_ID } = require('../mocks/mockData');
 
 router.use(requireAuth);
+
+// ==========================================
+// HEATMAP DATI INQUINAMENTO (GET /api/maps/heatmap?type=air|noise)
+// RF8.2/8.3: restituisce array di { latitude, longitude, weight } per Leaflet.heat
+// Mock seeded: coordinate reali del centro di Trento con pesi simulati.
+// ==========================================
+
+// Punti base attorno al centro di Trento (lat, lng)
+const TRENTO_BASE_POINTS = [
+	[46.0748, 11.1217], // Piazza Duomo
+	[46.0702, 11.1196], // Stazione FS
+	[46.0670, 11.1234], // Via Roma
+	[46.0760, 11.1280], // Piazza Venezia
+	[46.0800, 11.1150], // Lungadige
+	[46.0640, 11.1300], // Quartiere Cristo
+	[46.0820, 11.1330], // Viale Verona
+	[46.0730, 11.1100], // Bondone direction
+	[46.0690, 11.1260], // Piazza Mostra
+	[46.0775, 11.1195], // Trento nord
+	[46.0650, 11.1170], // Trento sud
+	[46.0710, 11.1340], // Piazza S. Maria
+	[46.0790, 11.1270], // Via Brennero
+	[46.0660, 11.1120], // Via Verdi
+	[46.0840, 11.1200]  // Gardolo
+];
+
+// Pesi predefiniti per inquinamento aria (0-1, 1=alta concentrazione)
+const AIR_WEIGHTS = [0.9, 0.8, 0.5, 0.6, 0.3, 0.4, 0.7, 0.2, 0.5, 0.6, 0.4, 0.5, 0.8, 0.3, 0.6];
+// Pesi predefiniti per inquinamento acustico
+const NOISE_WEIGHTS = [0.8, 0.9, 0.6, 0.5, 0.3, 0.4, 0.6, 0.2, 0.7, 0.5, 0.4, 0.5, 0.7, 0.3, 0.5];
+
+router.get('/heatmap', async (req, res) => {
+	try {
+		const type = req.query.type || 'air';
+		if (type !== 'air' && type !== 'noise') {
+			return res.status(400).json({ error: "Il parametro 'type' deve essere 'air' o 'noise'" });
+		}
+
+		const weights = type === 'air' ? AIR_WEIGHTS : NOISE_WEIGHTS;
+		const points = TRENTO_BASE_POINTS.map(([lat, lng], i) => ({
+			latitude: lat,
+			longitude: lng,
+			weight: weights[i]
+		}));
+
+		return res.status(200).json({ points });
+	} catch (err) {
+		console.error('Errore nel recupero dei dati heatmap:', err);
+		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
 
 // ==========================================
 // CALCOLA EMISSIONI PERCORSO (POST /api/maps/calculate-co2)
@@ -29,12 +81,12 @@ router.post('/calculate-co2', async (req, res) => {
 			.eq('label', 'driving')
 			.single(); // Chiediamo un singolo record
 
-		let drivingId = null;
+		let drivingId = MOCK_DRIVING_MOVEMENT_TYPE_ID;
 		if (!dbError && movementType) {
 			drivingId = movementType.id;
 		} else {
 			console.warn(
-				"Attenzione: Impossibile trovare l'ID per 'driving' nella tabella movement_types. Verrà usato un fallback."
+				"[maps] Impossibile trovare l'ID per 'driving' da DB, uso il mock UUID come fallback."
 			);
 		}
 

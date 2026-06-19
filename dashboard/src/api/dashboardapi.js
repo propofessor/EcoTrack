@@ -37,11 +37,6 @@ async function fetchData(endpoint, params = {}) {
 // ENDPOINT SPECIFICI (RF3.2 – uno per ogni dataset)
 // ============================================================
 
-// Storico viaggi con filtri opzionali
-export const getHistory = (params = {}) =>
-  fetchData("/export/user-data", params);
-// NB: puoi creare endpoint dedicati nel backend, es. /api/dashboard/history
-
 // Statistiche aggregate CO2
 export const getCo2Stats = (params = {}) =>
   fetchData("/dashboard/co2-stats", params);

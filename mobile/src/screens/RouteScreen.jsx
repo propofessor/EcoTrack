@@ -3,9 +3,11 @@
  * Origin–destination inputs → calculate CO2 for 4 transport modes.
  *
  * RF9.1: define route (origin/destination).
- * RF9.2: Google Maps Directions API provides distances.
+ * RF9.2: getMockDirections provides distances and travel times (mock; replace with
+ *        real Directions API when a paid key is available).
  * RF9.3: CO2 calculation via POST /api/maps/calculate-co2.
- * RF9.4: comparative results with "best" mode highlighted.
+ * RF9.4: comparative results with distance, travel time, CO2, and "best" mode highlighted.
+ * RF9.5: "Mostra su mappa" button sends the mock polyline to MapScreen.
  */
 import { useState } from 'react';
 import {
@@ -19,10 +21,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculateCo2 } from '../api/maps';
+import { getMockDirections } from '../api/directions';
 import TransportCard from '../components/TransportCard';
-
-// Static distance fallback — replace with Google Maps Directions API call in production.
-const MOCK_DISTANCES_KM = { walking: 2.1, bicycling: 2.3, transit: 3.8, driving: 2.8 };
 
 const MODE_LABELS = {
   walking: 'A piedi',
@@ -33,11 +33,21 @@ const MODE_LABELS = {
 
 const MODE_ICONS = { walking: '🚶', bicycling: '🚴', transit: '🚌', driving: '🚗' };
 
-export default function RouteScreen() {
+// Static mock polyline for Trento — same waypoints used in MapScreen.
+// In production this would come from the Directions API response polyline.
+const MOCK_POLYLINE = [
+  [46.0748, 11.1217],
+  [46.0730, 11.1210],
+  [46.0720, 11.1205],
+  [46.0710, 11.1200],
+  [46.0702, 11.1196],
+];
+
+export default function RouteScreen({ navigation }) {
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [results, setResults] = useState(null);
-  const [distances, setDistances] = useState(null);
+  const [directions, setDirections] = useState(null);
   const [loading, setLoading] = useState(false);
 
   async function handleCalculate() {
@@ -48,8 +58,17 @@ export default function RouteScreen() {
     setLoading(true);
     setResults(null);
     try {
-      const distancesKm = MOCK_DISTANCES_KM;
-      setDistances(distancesKm);
+      // RF9.2: resolve distances and travel times per mode
+      const dir = getMockDirections(origin, destination);
+      setDirections(dir);
+
+      const distancesKm = {
+        walking: dir.walking.distanceKm,
+        bicycling: dir.bicycling.distanceKm,
+        transit: dir.transit.distanceKm,
+        driving: dir.driving.distanceKm,
+      };
+
       const data = await calculateCo2({ distances: distancesKm });
       setResults(data.emissions);
     } catch (err) {
@@ -71,18 +90,20 @@ export default function RouteScreen() {
   const modes = ['walking', 'bicycling', 'transit', 'driving'];
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="screen flex-1">
       <ScrollView className="flex-1">
         <View className="px-4 pt-4 pb-8">
-          <Text>Calcolo percorso CO2</Text>
-          <Text>Confronta l'impatto ambientale dei diversi mezzi di trasporto</Text>
+          <Text className="heading">Calcolo percorso CO2</Text>
+          <Text className="text-muted mb-4">
+            Confronta l'impatto ambientale dei diversi mezzi di trasporto
+          </Text>
 
           {/* Route inputs — RF9.1 */}
-          <View className="rounded-2xl p-4 gap-3 mb-4">
+          <View className="card rounded-2xl p-4 gap-3 mb-4">
             <View className="flex-row items-center gap-3">
               <Text>🟢</Text>
               <TextInput
-                className="flex-1 rounded-xl px-3 py-2"
+                className="input flex-1 rounded-xl px-3 py-2"
                 placeholder="Partenza (indirizzo o città)"
                 value={origin}
                 onChangeText={setOrigin}
@@ -91,12 +112,12 @@ export default function RouteScreen() {
             </View>
 
             {/* Visual connector between origin and destination */}
-            <View className="w-px ml-4 my-1 h-5" />
+            <View className="divider w-px ml-4 my-1 h-5" />
 
             <View className="flex-row items-center gap-3">
               <Text>🔴</Text>
               <TextInput
-                className="flex-1 rounded-xl px-3 py-2"
+                className="input flex-1 rounded-xl px-3 py-2"
                 placeholder="Destinazione (indirizzo o città)"
                 value={destination}
                 onChangeText={setDestination}
@@ -106,27 +127,39 @@ export default function RouteScreen() {
           </View>
 
           <TouchableOpacity
-            className="rounded-xl py-4 items-center mb-4"
+            className="btn-primary rounded-xl py-4 items-center mb-4"
             onPress={handleCalculate}
             disabled={loading}
           >
-            {loading ? <ActivityIndicator /> : <Text>Calcola emissioni</Text>}
+            {loading
+              ? <ActivityIndicator color="#ffffff" />
+              : <Text className="btn-primary-text">Calcola emissioni</Text>
+            }
           </TouchableOpacity>
 
           {/* Results — RF9.4 */}
           {results && (
             <View className="gap-3">
-              <Text>Confronto emissioni</Text>
+              <Text className="subheading mb-1">Confronto emissioni</Text>
               {modes.map((mode) => (
                 <TransportCard
                   key={mode}
                   icon={MODE_ICONS[mode]}
                   label={MODE_LABELS[mode]}
-                  distanceKm={distances?.[mode] ?? 0}
+                  distanceKm={directions?.[mode]?.distanceKm ?? 0}
+                  durationMin={directions?.[mode]?.durationMin ?? null}
                   co2Kg={results[mode]?.co2_kg ?? 0}
                   isBest={mode === bestMode}
                 />
               ))}
+
+              {/* RF9.5: route visualization on map */}
+              <TouchableOpacity
+                className="btn-ghost rounded-xl py-3 items-center mt-2"
+                onPress={() => navigation.navigate('Mappa', { polyline: MOCK_POLYLINE })}
+              >
+                <Text className="btn-ghost-text">🗺️ Mostra percorso su mappa</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>

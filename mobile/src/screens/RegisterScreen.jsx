@@ -16,6 +16,12 @@ import { useAuth } from '../context/AuthContext';
 // Italian plate format: 2 letters + 3 digits + 2 letters (e.g. AB123CD)
 const PLATE_REGEX = /^[A-Z]{2}\d{3}[A-Z]{2}$/i;
 
+// RF6.4: must match the backend policy exactly (utils/validation.js) — min 8
+// chars, lowercase, uppercase, digit and special char — otherwise a password
+// that passes the client checks gets rejected by the server.
+const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+
 export default function RegisterScreen({ navigation }) {
   const { login } = useAuth();
 
@@ -30,9 +36,10 @@ export default function RegisterScreen({ navigation }) {
     const e = {};
     if (!name.trim()) e.name = 'Il nome è obbligatorio.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Email non valida.';
-    if (password.length < 8) e.password = 'La password deve avere almeno 8 caratteri.';
-    if (!/[A-Z]/.test(password)) e.password = 'Usa almeno una lettera maiuscola.';
-    if (!/\d/.test(password)) e.password = 'Usa almeno un numero.';
+    if (!PASSWORD_REGEX.test(password)) {
+      e.password =
+        'La password deve avere almeno 8 caratteri, una maiuscola, una minuscola, un numero e un carattere speciale.';
+    }
     if (plate && !PLATE_REGEX.test(plate)) e.plate = 'Formato targa non valido (es. AB123CD).';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -42,12 +49,19 @@ export default function RegisterScreen({ navigation }) {
     if (!validate()) return;
     setLoading(true);
     try {
-      await apiRegister({
+      const result = await apiRegister({
         name: name.trim(),
         email: email.trim(),
         password,
         plate: plate.trim().toUpperCase() || undefined,
       });
+
+      // RF6.5: if email confirmation is enabled on Supabase, there is no session yet
+      if (result?.email_verification_required) {
+        navigation.navigate('EmailVerification', { email: email.trim() });
+        return;
+      }
+
       const userData = await getMe();
       login(userData);
     } catch (err) {
@@ -59,7 +73,7 @@ export default function RegisterScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="screen flex-1">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -70,27 +84,27 @@ export default function RegisterScreen({ navigation }) {
             {/* Brand */}
             <View className="items-center mb-10">
               <Text>🌿</Text>
-              <Text>Crea il tuo account</Text>
+              <Text className="heading text-center">Crea il tuo account</Text>
             </View>
 
             {/* Form */}
-            <View className="rounded-3xl p-6 gap-4">
+            <View className="card rounded-3xl p-6 gap-4">
 
               <View className="flex-col gap-1">
-                <Text>Nome e cognome</Text>
+                <Text className="text-label">Nome e cognome</Text>
                 <TextInput
-                  className="w-full rounded-xl px-4 py-3"
+                  className="input w-full rounded-xl px-4 py-3"
                   placeholder="Mario Rossi"
                   value={name}
                   onChangeText={setName}
                 />
-                {errors.name && <Text className="mt-1 pl-1">{errors.name}</Text>}
+                {errors.name && <Text className="text-error mt-1 pl-1">{errors.name}</Text>}
               </View>
 
               <View className="flex-col gap-1">
-                <Text>Email</Text>
+                <Text className="text-label">Email</Text>
                 <TextInput
-                  className="w-full rounded-xl px-4 py-3"
+                  className="input w-full rounded-xl px-4 py-3"
                   placeholder="nome@esempio.it"
                   value={email}
                   onChangeText={setEmail}
@@ -98,50 +112,52 @@ export default function RegisterScreen({ navigation }) {
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
-                {errors.email && <Text className="mt-1 pl-1">{errors.email}</Text>}
+                {errors.email && <Text className="text-error mt-1 pl-1">{errors.email}</Text>}
               </View>
 
               <View className="flex-col gap-1">
-                <Text>Password</Text>
+                <Text className="text-label">Password</Text>
                 <TextInput
-                  className="w-full rounded-xl px-4 py-3"
-                  placeholder="Almeno 8 caratteri, 1 maiuscola, 1 numero"
+                  className="input w-full rounded-xl px-4 py-3"
+                  placeholder="Min 8: maiuscola, minuscola, numero, speciale"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
                 />
-                {errors.password && <Text className="mt-1 pl-1">{errors.password}</Text>}
+                {errors.password && <Text className="text-error mt-1 pl-1">{errors.password}</Text>}
               </View>
 
               <View className="flex-col gap-1">
-                <Text>Targa veicolo (opzionale)</Text>
+                <Text className="text-label">Targa veicolo (opzionale)</Text>
                 <TextInput
-                  className="w-full rounded-xl px-4 py-3"
+                  className="input w-full rounded-xl px-4 py-3"
                   placeholder="AB123CD"
                   value={plate}
                   onChangeText={setPlate}
                   autoCapitalize="characters"
                   maxLength={7}
                 />
-                {errors.plate && <Text className="mt-1 pl-1">{errors.plate}</Text>}
+                {errors.plate && <Text className="text-error mt-1 pl-1">{errors.plate}</Text>}
               </View>
 
               <View className="mt-2 gap-3">
                 <TouchableOpacity
-                  className="w-full rounded-xl py-4 items-center"
+                  className="btn-primary w-full rounded-xl py-4 items-center"
                   onPress={handleRegister}
                   disabled={loading}
                 >
-                  <Text>{loading ? 'Registrazione…' : 'Registrati'}</Text>
+                  <Text className="btn-primary-text">
+                    {loading ? 'Registrazione…' : 'Registrati'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Login link */}
             <View className="flex-row justify-center gap-1 mt-4">
-              <Text>Hai già un account?</Text>
+              <Text className="text-muted">Hai già un account?</Text>
               <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text>Accedi</Text>
+                <Text className="link">Accedi</Text>
               </TouchableOpacity>
             </View>
           </View>

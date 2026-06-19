@@ -6,10 +6,9 @@ import { View, Text } from 'react-native';
 
 export default function StatCard({ label, value }) {
   return (
-    // Compact rounded tile: small padding, vertical stack, small gap
-    <View className="rounded-xl p-3 flex-col gap-1 flex-1">
-      <Text>{label}</Text>
-      <Text className="mt-1">{value}</Text>
+    <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
+      <Text className="text-label">{label}</Text>
+      <Text className="stat-value mt-1">{value}</Text>
     </View>
   );
 }

@@ -76,13 +76,7 @@ export default function Dashboard() {
 	};
 
 	return (
-		<div
-			style={{
-				padding: '20px',
-				minHeight: '100vh',
-				background: 'var(--bg-primary)'
-			}}
-		>
+		<div className='dashboard-page p-5'>
 			<Header
 				className='w-full'
 				saveLayout={saveLayout}

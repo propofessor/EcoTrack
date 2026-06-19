@@ -1,0 +1,55 @@
+{
+  "header": {
+    "title": "EcoTrack Dashboard",
+    "subtitle": "Kommunales Kontrollpanel",
+    "save": "Layout speichern",
+    "export": "Exportieren",
+    "import": "Importieren"
+  },
+  "widget": {
+    "configure": "Konfigurieren",
+    "delete": "Widget entfernen",
+    "downloadCsv": "CSV herunterladen",
+    "downloadPng": "PNG herunterladen",
+    "addWidget": "Widget hinzufügen",
+    "types": {
+      "bar": "Balkendiagramm",
+      "line": "Liniendiagramm",
+      "pie": "Kreisdiagramm",
+      "table": "Datentabelle",
+      "map": "Karte"
+    }
+  },
+  "configModal": {
+    "title": "Widget konfigurieren",
+    "chartType": "Diagrammtyp",
+    "dataset": "Datensatz",
+    "dateFrom": "Von Datum",
+    "dateTo": "Bis Datum",
+    "apply": "Anwenden",
+    "cancel": "Abbrechen"
+  },
+  "exportModal": {
+    "title": "Daten exportieren",
+    "csv": "CSV",
+    "png": "PNG-Bild"
+  },
+  "charts": {
+    "co2Monthly": "Monatliches CO2 (kg)",
+    "co2ByMode": "CO2 nach Verkehrsmittel",
+    "modes": {
+      "auto": "Auto",
+      "bus": "Bus",
+      "bike": "Fahrrad",
+      "train": "Zug"
+    }
+  },
+  "table": {
+    "date": "Startdatum",
+    "co2": "CO2 (kg)",
+    "points": "Punkte"
+  },
+  "darkMode": {
+    "toggle": "Design wechseln"
+  }
+}

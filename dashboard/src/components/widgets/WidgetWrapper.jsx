@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Settings, Download, Trash2, GripHorizontal } from 'lucide-react';
+import { Settings, Download, Trash2, GripHorizontal, WifiOff } from 'lucide-react';
 import {
 	exportWidgetAsImage,
 	exportWidgetAsCsv
 } from '../../utils/exportUtils';
+import { useWidgetData } from '../../hooks/useWidgetData.js';
 import { ChartBar } from './ChartBar';
 import { ChartPie } from './ChartPie';
 import { ChartLine } from './ChartLine';
@@ -19,12 +20,13 @@ const WIDGET_COMPONENTS = {
 };
 
 function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
-	console.log(
-		`[RENDER] Widget ${widgetConfig.i} - Tipo: ${widgetConfig.widgetType}`
-	);
-
 	const [showExportMenu, setShowExportMenu] = useState(false);
 	const widgetRef = useRef(null);
+
+	// Data is fetched here (once per widget) and passed down, so the export
+	// action can serialize exactly what is displayed (RF2) and we can surface
+	// a fallback indicator (RNF4).
+	const { data, loading, usingFallback } = useWidgetData(widgetConfig);
 
 	const WidgetComponent = WIDGET_COMPONENTS[widgetConfig.widgetType];
 	const isTable = widgetConfig.widgetType === 'DataTable';
@@ -37,7 +39,7 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 				`widget-${widgetConfig.i}`
 			);
 		} else if (format === 'csv') {
-			exportWidgetAsCsv(widgetConfig.dataset, widgetConfig);
+			exportWidgetAsCsv(widgetConfig.dataset, data);
 		}
 	};
 
@@ -46,7 +48,7 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 
 			{/* Header bar */}
 			<div className='widget-header flex items-center justify-between h-14 px-5 gap-3 shrink-0'>
-				<div className='flex items-center gap-3 flex-1 min-w-0'>
+				<div className='drag-handle flex items-center gap-3 flex-1 min-w-0 cursor-grab'>
 					<GripHorizontal
 						size={16}
 						className='widget-icon shrink-0'
@@ -55,10 +57,22 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 						{widgetConfig.widgetType || 'NON CONFIGURATO'}
 						{widgetConfig.dataset ? ` // ${widgetConfig.dataset}` : ''}
 					</span>
+					{usingFallback && (
+						<span
+							className='inline-flex items-center gap-1 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium'
+							style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
+							title='Backend non raggiungibile: vengono mostrati dati di esempio.'
+						>
+							<WifiOff size={11} /> offline
+						</span>
+					)}
 				</div>
 
 				{/* Action buttons */}
-				<div className='no-drag flex items-center gap-1.5 shrink-0'>
+				<div
+					className='no-drag flex items-center gap-1.5 shrink-0'
+					onMouseDown={(e) => e.stopPropagation()}
+				>
 					<div className='relative flex items-center'>
 						<button
 							onClick={() => setShowExportMenu((v) => !v)}
@@ -107,9 +121,12 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 			</div>
 
 			{/* Widget body */}
-			<div className='widget-body-container no-drag flex-1 overflow-auto p-3 min-h-0 min-w-0'>
+			<div
+				className='widget-body-container no-drag flex-1 overflow-auto p-3 min-h-0 min-w-0'
+				onMouseDown={(e) => e.stopPropagation()}
+			>
 				{WidgetComponent ? (
-					<WidgetComponent config={widgetConfig} />
+					<WidgetComponent config={widgetConfig} data={data} loading={loading} />
 				) : (
 					<div
 						onClick={() => onEdit(widgetConfig.i)}
@@ -129,11 +146,14 @@ const areEqual = (prevProps, nextProps) => {
 	const next = nextProps.widgetConfig;
 
 	return (
-		prev.widgetType === next.widgetType &&
-		prev.dataset === next.dataset &&
-		prev.w === next.w &&
-		prev.h === next.h &&
-		JSON.stringify(prev.props || {}) === JSON.stringify(next.props || {})
+		prev.widgetType  === next.widgetType  &&
+		prev.dataset     === next.dataset     &&
+		prev.w           === next.w           &&
+		prev.h           === next.h           &&
+		prev.dateMode    === next.dateMode    &&
+		prev.dynamicDays === next.dynamicDays &&
+		prev.startDate   === next.startDate   &&
+		prev.endDate     === next.endDate
 	);
 };
 

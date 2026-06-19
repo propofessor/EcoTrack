@@ -1,6 +1,5 @@
 // __tests__/history.test.js
 const request = require('supertest');
-const { calculateEmissions } = require('../src/services/co2Service');
 
 // Configura l'oggetto globale finto per gestire le chiamate concatenate di Supabase
 const mockChain = {
@@ -34,6 +33,12 @@ jest.mock('../src/middleware/authMiddleware', () => {
 		next();
 	};
 });
+
+// 3. MOCKIAMO IL SERVICE DI GAMIFICATION per evitare che il ricalcolo
+// asincrono "best-effort" dopo il POST faccia query sullo stesso mock chain
+jest.mock('../src/services/gamificationService', () => ({
+	recalculateDailyScore: jest.fn().mockResolvedValue({ data: null, error: null })
+}));
 
 // Importiamo l'app SOLO DOPO aver configurato i mock
 const app = require('../src/index');
@@ -96,7 +101,7 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 			);
 		});
 
-		it('Dovrebbe restituire 400 se il database riscontra un errore', async () => {
+		it('Dovrebbe restituire 500 se il database riscontra un errore', async () => {
 			mockChain.order.mockResolvedValue({
 				data: null,
 				error: { message: 'Timeout della query' }
@@ -106,7 +111,7 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 				.get('/api/history')
 				.set('Cookie', ['access_token=token_valido']);
 
-			expect(risposta.statusCode).toBe(400);
+			expect(risposta.statusCode).toBe(500);
 			expect(risposta.body.error).toBe(
 				'Impossibile recuperare lo storico dei viaggi'
 			);
@@ -167,7 +172,7 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 			);
 		});
 
-		it("Dovrebbe restituire 400 se Supabase supera un errore o rifiuta l'inserimento", async () => {
+		it("Dovrebbe restituire 500 se Supabase supera un errore o rifiuta l'inserimento", async () => {
 			mockChain.select.mockResolvedValue({
 				data: null,
 				error: { message: 'Foreign key constraint violation' }
@@ -178,7 +183,7 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 				.set('Cookie', ['access_token=token_valido'])
 				.send(fintoViaggioInput);
 
-			expect(risposta.statusCode).toBe(400);
+			expect(risposta.statusCode).toBe(500);
 			expect(risposta.body.error).toBe(
 				'Impossibile salvare il viaggio nello storico'
 			);

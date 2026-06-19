@@ -1,4 +1,5 @@
 /* src/styles/index.css */
+@import '../../../shared/tokens.css';
 /* stylelint-disable at-rule-no-unknown */
 @import 'tailwindcss';
 @import './grid.css';
@@ -6,25 +7,39 @@
 
 /* ============================================================
    BASE LAYER — Design tokens and global defaults
+   Shared palette (--bg-primary … --accent-light) comes from
+   ../../../shared/tokens.css, which also provides a system-level
+   @media (prefers-color-scheme: dark) baseline.
    ============================================================ */
 @layer base {
-	/* ── LIGHT THEME (PREMIUM ZINC) ── */
+	/* ── DASHBOARD-ONLY LIGHT TOKENS ── */
 	:root {
-		--bg-primary:     #f4f4f5; /* Zinc 100 — page background */
-		--bg-surface:     #ffffff; /* Pure white — header / cards */
-		--bg-widget:      #ffffff; /* Widget background */
-		--text-primary:   #09090b; /* Zinc 950 — body copy */
-		--text-secondary: #71717a; /* Zinc 500 — labels / muted text */
-		--border-color:   #e4e4e7; /* Zinc 200 — all borders */
-		--accent:         #18181b; /* Zinc 900 — primary action colour */
-		--accent-light:   #f4f4f5; /* Zinc 100 — accent background */
-		--accent-hover:   #f4f4f5; /* Hover tint for ghost buttons */
+		--bg-widget:    #ffffff; /* Widget background */
+		--accent-hover: #f4f4f5; /* Hover tint for ghost buttons */
 		--shadow:
 			0 1px 3px 0 rgba(0, 0, 0, 0.05),
 			0 1px 2px -1px rgba(0, 0, 0, 0.05);
 	}
 
-	/* ── DARK THEME (OLED / ZINC) ── */
+	/* ── LIGHT THEME — explicit override beats the prefers-color-scheme
+	   media-query baseline from shared/tokens.css when the user has
+	   manually chosen light mode on a dark-preference OS.              */
+	[data-theme='light'] {
+		--bg-primary:     #f4f4f5;
+		--bg-surface:     #ffffff;
+		--bg-widget:      #ffffff;
+		--text-primary:   #09090b;
+		--text-secondary: #71717a;
+		--border-color:   #e4e4e7;
+		--accent:         #18181b;
+		--accent-light:   #f4f4f5;
+		--accent-hover:   #f4f4f5;
+		--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+	}
+
+	/* ── DARK THEME — explicit override for the manual toggle ──
+	   Higher specificity than the media-query baseline in shared/tokens.css,
+	   so this always wins when data-theme='dark' is present.           */
 	[data-theme='dark'] {
 		--bg-primary:     #09090b; /* Zinc 950 — near-black page */
 		--bg-surface:     #121214; /* Zinc 900 alt — depth layer */
@@ -138,7 +153,7 @@
 	/* Filled accent — primary "Salva" action */
 	.btn--accent {
 		background-color: var(--accent);
-		color: white;
+		color: var(--bg-primary);
 	}
 	.btn--accent:hover {
 		opacity: 0.9;
@@ -515,6 +530,197 @@
 	.pie-cell-stroke {
 		stroke: var(--bg-widget);
 		stroke-width: 2;
+	}
+
+
+	/* ----------------------------------------------------------
+	   DARK MODE TOGGLE
+	   Theme toggle button shown in the header toolbar.
+	   ---------------------------------------------------------- */
+
+	/* Button shell — surface fill, border, rounded corners */
+	.dark-mode-toggle {
+		background-color: var(--bg-surface);
+		border: 1px solid var(--border-color);
+		border-radius: 0.5rem;
+		cursor: pointer;
+		color: var(--text-primary);
+	}
+
+
+	/* ----------------------------------------------------------
+	   DASHBOARD PAGE
+	   Top-level page wrapper rendered by Dashboard.jsx.
+	   ---------------------------------------------------------- */
+
+	/* Full-height container with the page background colour */
+	.dashboard-page {
+		background-color: var(--bg-primary);
+		min-height: 100vh;
+	}
+
+
+	/* ----------------------------------------------------------
+	   WIDGET CONFIGURATION MODAL
+	   Dialog that lets a user set the widget type, dataset,
+	   and date range for a grid cell.
+	   ---------------------------------------------------------- */
+
+	/* Fixed full-screen semi-transparent backdrop */
+	.modal-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 1000;
+	}
+
+	/* Modal dialog card */
+	.modal {
+		background-color: var(--bg-surface);
+		border-radius: 0.75rem;
+		width: 30rem;
+		max-width: 95vw;
+		max-height: 90vh;
+		overflow: auto;
+		border: 1px solid var(--border-color);
+	}
+
+	/* Modal header bar — bottom border divider */
+	.modal-header {
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	/* Modal heading text */
+	.modal-heading {
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	/* Close (×) icon button in the modal header */
+	.modal-close-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--text-secondary);
+	}
+
+	/* Form field label inside the modal body */
+	.modal-label {
+		display: block;
+		font-weight: 500;
+		font-size: 0.875rem;
+		color: var(--text-secondary);
+	}
+
+	/* Input and select fields inside the modal */
+	.modal-input {
+		width: 100%;
+		border-radius: 0.375rem;
+		border: 1px solid var(--border-color);
+		background-color: var(--bg-primary);
+		color: var(--text-primary);
+		font-size: 0.875rem;
+	}
+
+	/* Base modal action button */
+	.modal-btn {
+		border-radius: 0.375rem;
+		border: none;
+		cursor: pointer;
+		font-weight: 500;
+	}
+
+	/* Cancel / secondary modal action */
+	.modal-btn--cancel {
+		background-color: var(--border-color);
+		color: var(--text-primary);
+	}
+
+	/* Confirm / primary modal action */
+	.modal-btn--save {
+		background-color: var(--accent);
+		color: var(--bg-primary);
+	}
+
+
+	/* ----------------------------------------------------------
+	   GRID BACKGROUND CELL
+	   Interactive backdrop cell shown on the next available
+	   empty grid slot. Hover state is handled entirely in CSS
+	   so the component needs no JS hover state.
+	   ---------------------------------------------------------- */
+
+	/* Clickable dashed cell — absolute-positioned by the parent via inline style */
+	.grid-bg-cell {
+		position: absolute;
+		border: 2px dashed transparent;
+		border-radius: 0.5rem;
+		background: transparent;
+		transition: border-color 0.2s ease, background-color 0.2s ease;
+		cursor: pointer;
+		box-sizing: border-box;
+		pointer-events: auto;
+	}
+	.grid-bg-cell:hover {
+		border-color: var(--accent);
+		background-color: var(--accent-light);
+	}
+
+	/* Plus icon inside the cell — invisible until hovered */
+	.grid-bg-cell-icon {
+		color: var(--accent);
+		opacity: 0;
+		transition: opacity 0.2s ease, transform 0.2s ease;
+		pointer-events: none;
+	}
+	.grid-bg-cell:hover .grid-bg-cell-icon {
+		opacity: 1;
+		transform: scale(1.2);
+	}
+
+	/* "Aggiungi" label inside the cell — invisible until hovered */
+	.grid-bg-cell-label {
+		font-size: 0.6875rem;
+		font-weight: 500;
+		color: var(--accent);
+		opacity: 0;
+		transition: opacity 0.2s ease;
+		pointer-events: none;
+	}
+	.grid-bg-cell:hover .grid-bg-cell-label {
+		opacity: 0.8;
+	}
+
+
+	/* ----------------------------------------------------------
+	   MAP POPUP
+	   Leaflet marker popup content rendered inside MapWidget.
+	   ---------------------------------------------------------- */
+
+	/* Popup wrapper — small inner padding */
+	.map-popup {
+		padding: 0.25rem;
+	}
+
+	/* Popup location title */
+	.map-popup-title {
+		display: block;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #18181b; /* zinc-900 */
+	}
+	[data-theme='dark'] .map-popup-title {
+		color: var(--text-primary);
+	}
+
+	/* Popup description text */
+	.map-popup-desc {
+		font-size: 0.75rem;
+		color: #71717a; /* zinc-500 */
+	}
+	[data-theme='dark'] .map-popup-desc {
+		color: var(--text-secondary);
 	}
 }
 

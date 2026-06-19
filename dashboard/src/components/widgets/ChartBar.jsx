@@ -1,4 +1,3 @@
-// src/components/widgets/ChartBar.jsx
 import {
 	BarChart,
 	Bar,
@@ -8,55 +7,68 @@ import {
 	Tooltip,
 	ResponsiveContainer
 } from 'recharts';
-import { useMonthlyCo2Stats } from '../../hooks/useMonthlyCo2Stats.js';
+import { useElementSize } from '../../hooks/useElementSize.js';
 
-export function ChartBar({ config = {} }) {
-	const { data, loading } = useMonthlyCo2Stats(config);
+// Dataset → axis / label mapping
+const DATASET_CONFIG = {
+	co2_monthly:     { xKey: 'month',  yKey: 'co2',    yUnit: ' kg', yLabel: 'CO2 (kg)' },
+	transport_split: { xKey: 'name',   yKey: 'co2',    yUnit: ' kg', yLabel: 'CO2 (kg)' },
+	leaderboard:     { xKey: 'label',  yKey: 'points', yUnit: ' pt', yLabel: 'Punti'    },
+};
 
-	if (loading) {
-		return (
-			<div className='chart-empty flex items-center justify-center h-full p-5'>
-				Caricamento grafico...
-			</div>
-		);
-	}
+export function ChartBar({ config = {}, data = [], loading = false }) {
+	const [containerRef, { width, height }] = useElementSize();
+
+	const { xKey, yKey, yUnit, yLabel } = DATASET_CONFIG[config.dataset] || DATASET_CONFIG.co2_monthly;
+
+	const tooltipStyle = {
+		contentStyle: {
+			background:   'var(--bg-surface)',
+			borderColor:  'var(--border-color)',
+			borderRadius: '0.375rem',
+			boxShadow:    'var(--shadow)',
+			color:        'var(--text-primary)',
+		},
+		labelStyle: { fontWeight: 600, marginBottom: '4px' },
+	};
 
 	return (
-		<div className='chart-container w-full h-full'>
-			<ResponsiveContainer width='100%' height='100%'>
-				<BarChart
-					data={data}
-					margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-				>
-					<CartesianGrid
-						strokeDasharray='3 3'
-						stroke='var(--border-color)'
-						vertical={false}
-					/>
-					<XAxis
-						dataKey='month'
-						tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
-						axisLine={{ stroke: 'var(--border-color)' }}
-						tickLine={false}
-					/>
-					<YAxis
-						tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
-						axisLine={false}
-						tickLine={false}
-					/>
-					<Tooltip
-						contentStyle={{
-							background: 'var(--bg-surface)',
-							borderColor: 'var(--border-color)',
-							borderRadius: '0.375rem',
-							boxShadow: 'var(--shadow)',
-							color: 'var(--text-primary)'
-						}}
-						labelStyle={{ fontWeight: 600, marginBottom: '4px' }}
-					/>
-					<Bar dataKey='co2' fill='var(--accent)' radius={[4, 4, 0, 0]} />
-				</BarChart>
-			</ResponsiveContainer>
+		<div ref={containerRef} className='chart-container w-full h-full'>
+			{!loading && width > 0 && height > 0 && (
+				<ResponsiveContainer width={width} height={height}>
+					<BarChart
+						data={data}
+						margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+					>
+						<CartesianGrid
+							strokeDasharray='3 3'
+							stroke='var(--border-color)'
+							vertical={false}
+						/>
+						<XAxis
+							dataKey={xKey}
+							tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+							axisLine={{ stroke: 'var(--border-color)' }}
+							tickLine={false}
+						/>
+						<YAxis
+							tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+							axisLine={false}
+							tickLine={false}
+						/>
+						<Tooltip
+							{...tooltipStyle}
+							formatter={value => [`${value}${yUnit}`, yLabel]}
+						/>
+						<Bar dataKey={yKey} fill='var(--accent)' radius={[4, 4, 0, 0]} />
+					</BarChart>
+				</ResponsiveContainer>
+			)}
+			{loading && (
+				<div className='chart-empty flex items-center justify-center h-full p-5'>
+					Caricamento grafico...
+				</div>
+			)}
 		</div>
 	);
 }

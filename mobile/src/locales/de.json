@@ -1,0 +1,191 @@
+{
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "back": "← Zurück",
+    "error": "Fehler",
+    "loading": "Laden…",
+    "retry": "Erneut versuchen",
+    "logout": "Abmelden",
+    "or": "oder"
+  },
+  "login": {
+    "title": "EcoTrack",
+    "subtitle": "Überwache deinen ökologischen Fußabdruck",
+    "emailLabel": "E-Mail",
+    "emailPlaceholder": "name@beispiel.de",
+    "passwordLabel": "Passwort",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Anmelden",
+    "submitting": "Anmeldung läuft…",
+    "forgotPassword": "Passwort vergessen?",
+    "continueWithGoogle": "Mit Google fortfahren",
+    "continueWithCie": "Mit CIE anmelden",
+    "noAccount": "Noch kein Konto?",
+    "register": "Registrieren",
+    "failed": "Anmeldung fehlgeschlagen"
+  },
+  "register": {
+    "title": "Konto erstellen",
+    "nameLabel": "Vor- und Nachname",
+    "namePlaceholder": "Max Mustermann",
+    "emailLabel": "E-Mail",
+    "emailPlaceholder": "name@beispiel.de",
+    "passwordLabel": "Passwort",
+    "passwordPlaceholder": "Mind. 8 Zeichen, 1 Großbuchstabe, 1 Zahl",
+    "plateLabel": "Fahrzeugkennzeichen (optional)",
+    "platePlaceholder": "AB123CD",
+    "submit": "Registrieren",
+    "submitting": "Registrierung läuft…",
+    "hasAccount": "Bereits ein Konto?",
+    "signIn": "Anmelden",
+    "failed": "Registrierung fehlgeschlagen",
+    "errors": {
+      "name": "Name ist erforderlich.",
+      "email": "Ungültige E-Mail.",
+      "password": "Passwort muss mindestens 8 Zeichen haben.",
+      "passwordUpper": "Mindestens einen Großbuchstaben verwenden.",
+      "passwordNumber": "Mindestens eine Zahl verwenden.",
+      "plate": "Ungültiges Kennzeichenformat (z.B. AB123CD)."
+    }
+  },
+  "forgotPassword": {
+    "title": "Passwort zurücksetzen",
+    "step1Description": "Gib deine E-Mail ein. Wir senden dir einen Code zum Zurücksetzen.",
+    "emailLabel": "E-Mail",
+    "emailPlaceholder": "name@beispiel.de",
+    "submit": "Wiederherstellungslink senden",
+    "submitting": "Senden…",
+    "step2Description": "Überprüfe deine E-Mail und gib den erhaltenen Code sowie das neue Passwort ein.",
+    "tokenLabel": "Wiederherstellungscode",
+    "tokenPlaceholder": "Code aus der E-Mail einfügen",
+    "newPasswordLabel": "Neues Passwort",
+    "confirmPasswordLabel": "Passwort bestätigen",
+    "resetSubmit": "Passwort zurücksetzen",
+    "resetting": "Aktualisierung…",
+    "resendCode": "Keinen Code erhalten? Erneut senden",
+    "backToLogin": "← Zurück zur Anmeldung"
+  },
+  "emailVerification": {
+    "title": "E-Mail bestätigen",
+    "message": "Wir haben einen Bestätigungslink gesendet an",
+    "instruction": "Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.",
+    "resend": "Bestätigungs-E-Mail erneut senden",
+    "sending": "Senden…",
+    "backToLogin": "Zurück zur Anmeldung"
+  },
+  "profile": {
+    "title": "Profil",
+    "personalData": "Persönliche Daten",
+    "edit": "Bearbeiten",
+    "nameLabel": "Vor- und Nachname",
+    "emailLabel": "E-Mail",
+    "plateLabel": "Fahrzeugkennzeichen",
+    "plateEmpty": "Nicht eingegeben",
+    "saveChanges": "Änderungen speichern",
+    "saving": "Speichern…",
+    "saved": "Gespeichert",
+    "profileUpdated": "Profil erfolgreich aktualisiert.",
+    "saveFailed": "Änderungen konnten nicht gespeichert werden.",
+    "changePassword": "Passwort ändern",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "updatePassword": "Passwort aktualisieren",
+    "passwordChanged": "Passwort erfolgreich geändert.",
+    "passwordMismatch": "Passwörter stimmen nicht überein.",
+    "passwordInvalid": "Muss mindestens 8 Zeichen, einen Großbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
+    "preferences": "Einstellungen",
+    "logoutConfirmTitle": "Abmelden",
+    "logoutConfirmMessage": "Möchtest du dich abmelden?",
+    "deleteAccount": "Konto dauerhaft löschen",
+    "deleteConfirmTitle": "Konto löschen",
+    "deleteConfirmMessage": "Diese Aktion ist unwiderruflich. Alle deine Daten werden dauerhaft gelöscht (DSGVO).",
+    "deleteConfirm": "Dauerhaft löschen",
+    "deleteFailed": "Konto konnte nicht gelöscht werden. Bitte versuche es erneut."
+  },
+  "preferences": {
+    "title": "Einstellungen",
+    "notifications": "Benachrichtigungen",
+    "dailyGrade": "Tägliche Note",
+    "dailyGradeDesc": "Erhalte deine tägliche Note als Push-Benachrichtigung",
+    "language": "Sprache",
+    "leaderboardPrivacy": "Ranglisten-Datenschutz",
+    "leaderboardPrivacyDesc": "Wie dein Name in der Rangliste erscheint",
+    "theme": "Design",
+    "themeLight": "☀️ Hell",
+    "themeDark": "🌙 Dunkel",
+    "visibility": {
+      "nickname": "Spitzname (z.B. \"Mario R.\")",
+      "anonymous": "Anonym",
+      "full_name": "Vollständiger Name"
+    },
+    "saveFailed": "Einstellungen konnten nicht gespeichert werden."
+  },
+  "home": {
+    "greeting": "Hallo, {{name}}!",
+    "greetingDefault": "Hallo!",
+    "weeklyScore": "Wochenpunktzahl",
+    "activeDays": "Aktive Tage",
+    "todayGrade": "Heutige Note",
+    "quickActions": "Schnellaktionen",
+    "calculateRoute": "Route berechnen",
+    "viewHistory": "Verlauf",
+    "viewMap": "Umweltkarte"
+  },
+  "route": {
+    "title": "CO2-Routenrechner",
+    "subtitle": "Vergleiche die Umweltauswirkungen verschiedener Verkehrsmittel",
+    "originPlaceholder": "Startpunkt (Adresse oder Stadt)",
+    "destinationPlaceholder": "Ziel (Adresse oder Stadt)",
+    "calculate": "Emissionen berechnen",
+    "calculating": "Berechnung…",
+    "resultsTitle": "Emissionsvergleich",
+    "modes": {
+      "walking": "Zu Fuß",
+      "bicycling": "Fahrrad",
+      "transit": "Öffentliche Verkehrsmittel",
+      "driving": "Auto"
+    },
+    "ecoBadge": "🌿 Umweltfreundlichste Option",
+    "co2Zero": "0 g CO₂",
+    "errorFill": "Bitte Start und Ziel eingeben.",
+    "errorCalc": "Emissionen konnten nicht berechnet werden."
+  },
+  "history": {
+    "title": "Emissionsverlauf",
+    "periods": {
+      "day": "Tag",
+      "week": "Woche",
+      "month": "Monat",
+      "year": "Jahr",
+      "all": "Gesamt"
+    },
+    "stats": {
+      "total": "Gesamt",
+      "average": "Durchschnitt",
+      "best": "Bestes",
+      "worst": "Schlechtestes"
+    }
+  },
+  "gamification": {
+    "title": "Rangliste",
+    "weeklyScore": "Wochenpunktzahl",
+    "activeDays": "Aktive Tage",
+    "top10": "Top 10",
+    "top20": "Top 20",
+    "yourRank": "Deine Position",
+    "weeklyHistory": "Wochenverlauf",
+    "you": "Du"
+  },
+  "map": {
+    "air": "Luft",
+    "noise": "Lärm",
+    "loading": "Laden…",
+    "airQuality": "Luftqualität",
+    "noiseLevel": "Lärm (dB)",
+    "low": "Niedrig",
+    "high": "Hoch",
+    "locationDenied": "Berechtigung verweigert",
+    "locationDeniedMsg": "Aktiviere den Standortzugriff in den Einstellungen."
+  }
+}

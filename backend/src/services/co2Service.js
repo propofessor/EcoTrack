@@ -1,6 +1,4 @@
 // src/services/co2Service.js
-const axios = require('axios');
-
 const EMISSION_FACTORS = {
 	bus: 104,
 	car_average: 110

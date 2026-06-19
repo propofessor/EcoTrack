@@ -2,8 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
-const { supabaseAdmin } = require('../db'); // Importiamo solo l'admin che ci serve qui
-const cieService = require('../services/cieService'); // Il nostro nuovo service
+const { supabaseAdmin } = require('../db');
+const cieService = require('../services/cieService');
+
+// RF6.4: regole di complessità password centralizzate in utils/validation.js
+const { PASSWORD_REGEX, PASSWORD_ERROR_MESSAGE } = require('../utils/validation');
 
 // --- AUTHENTICATION TAG[cite: 1] ---
 
@@ -11,8 +14,21 @@ const cieService = require('../services/cieService'); // Il nostro nuovo service
 router.post('/register', async (req, res) => {
 	try {
 		// 1. Estraiamo i dati dalla richiesta del client.
-		// Il tuo file YAML richiede email, password e name, e opzionalmente plate e preferences[cite: 1]
 		const { email, password, name, plate, preferences } = req.body;
+
+		// Validazione campi obbligatori (RF6)
+		if (!email || !password || !name) {
+			return res.status(400).json({
+				error: 'Email, password e nome sono obbligatori'
+			});
+		}
+
+		// RF6.4: controllo complessità password
+		if (!PASSWORD_REGEX.test(password)) {
+			return res.status(400).json({
+				error: PASSWORD_ERROR_MESSAGE
+			});
+		}
 
 		// 2. Chiamiamo Supabase per creare l'utente
 		const { data, error } = await db.auth.signUp({
@@ -37,24 +53,25 @@ router.post('/register', async (req, res) => {
 			return res.status(400).json({ error: error.message }); // Risposta 400 come da YAML[cite: 1]
 		}
 
-		// 4. Se va tutto bene, estraiamo i token dalla sessione
+		// 4. Se va tutto bene, gestiamo la sessione (o la verifica email)
 		const session = data.session;
-		/*if (!session) {
-			// Nota: a volte Supabase richiede la conferma dell'email.
-			// Se hai la conferma email attiva, la sessione qui sarà null.
+
+		// RF6.5: se la conferma email è attiva su Supabase, session sarà null
+		// e Supabase ha già inviato l'email di verifica all'utente.
+		if (!session) {
 			return res.status(201).json({
-				message: "Controlla la tua email per confermare l'account."
+				message: "Controlla la tua email per confermare l'account.",
+				email_verification_required: true
 			});
-		}*/
+		}
 
 		const accessToken = session.access_token;
 		const refreshToken = session.refresh_token;
 
 		// 5. Impostiamo i cookie HttpOnly per sicurezza[cite: 1]
-		// Un cookie HttpOnly non può essere letto da JavaScript nel browser, prevenendo attacchi hacker.
 		res.cookie('access_token', accessToken, {
 			httpOnly: true,
-			secure: process.env.NODE_ENV === 'production', // Usa HTTPS in produzione
+			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
 			maxAge: 3600000 // 1 ora di validità
 		});
@@ -66,7 +83,7 @@ router.post('/register', async (req, res) => {
 			maxAge: 7 * 24 * 3600000 // 7 giorni di validità
 		});
 
-		// 6. Restituiamo il codice di successo 201 come descritto nel tuo file YAML[cite: 1]
+		// 6. Restituiamo il codice di successo 201[cite: 1]
 		return res.status(201).json({ message: 'Utente creato con successo' });
 	} catch (err) {
 		console.error('Errore del server:', err);
@@ -209,29 +226,55 @@ router.get('/cie/callback', async (req, res) => {
 			userId = existingUser.id;
 		}
 
-		// Generiamo un link/token di sessione sicuro per far accedere l'utente in Supabase
-		await supabaseAdmin.auth.admin.generateLink({
-			type: 'signup',
-			email: cieUser.email
-		});
+		// Generiamo un magic link token per ottenere una sessione Supabase reale
+		const { data: linkData, error: linkError } =
+			await supabaseAdmin.auth.admin.generateLink({
+				type: 'magiclink',
+				email: cieUser.email
+			});
 
-		// Impostiamo i cookie crittografati HttpOnly di sessione per il browser dell'utente
-		res.cookie('access_token', 'finto_access_token_cie', {
+		if (linkError || !linkData?.properties?.hashed_token) {
+			console.error(
+				'Errore nella generazione del link CIE:',
+				linkError?.message
+			);
+			return res
+				.status(500)
+				.json({ error: 'Impossibile generare la sessione CIE' });
+		}
+
+		// Scambiamo il token hash con una sessione reale
+		const { data: sessionData, error: sessionError } =
+			await db.auth.verifyOtp({
+				token_hash: linkData.properties.hashed_token,
+				type: 'magiclink'
+			});
+
+		if (sessionError || !sessionData?.session) {
+			console.error(
+				'Errore nella verifica OTP CIE:',
+				sessionError?.message
+			);
+			return res
+				.status(500)
+				.json({ error: 'Impossibile avviare la sessione CIE' });
+		}
+
+		res.cookie('access_token', sessionData.session.access_token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
 			maxAge: 3600000
 		});
 
-		res.cookie('refresh_token', 'finto_refresh_token_cie', {
+		res.cookie('refresh_token', sessionData.session.refresh_token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
 			maxAge: 7 * 24 * 3600000
 		});
 
-		// Autenticazione completata con successo, reindirizziamo alla Home/Dashboard
-		return res.redirect('/');
+		return res.redirect(process.env.FRONTEND_URL || '/');
 	} catch (err) {
 		console.error('❌ Errore critico nel callback CIE:', err);
 		return res
@@ -386,7 +429,203 @@ router.get('/me', async (req, res) => {
 	}
 });
 
+// --- EMAIL VERIFICATION TAG (RF6.5) ---
+
+// POST /api/auth/resend-verification
+// Resends a signup confirmation email for accounts pending verification.
+router.post('/resend-verification', async (req, res) => {
+	try {
+		const { email } = req.body;
+		if (!email) {
+			return res.status(400).json({ error: 'Email obbligatoria' });
+		}
+
+		const { error } = await supabaseAdmin.auth.admin.generateLink({
+			type: 'signup',
+			email
+		});
+
+		// Always 200 to prevent enumeration
+		if (error) {
+			console.warn('resend-verification warning:', error.message);
+		}
+
+		return res.status(200).json({
+			message: "Email di verifica inviata. Controlla la tua casella di posta."
+		});
+	} catch (err) {
+		console.error('Errore in /auth/resend-verification:', err);
+		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
+
+// --- PASSWORD RECOVERY TAG (RF5.5) ---
+
+// POST /api/auth/forgot-password
+// Generates a Supabase recovery link which triggers a reset-email to the user.
+router.post('/forgot-password', async (req, res) => {
+	try {
+		const { email } = req.body;
+		if (!email) {
+			return res.status(400).json({ error: 'Email obbligatoria' });
+		}
+
+		// generateLink triggers Supabase's built-in email delivery if SMTP is configured.
+		// The response includes the hashed_token inside the link for manual flows.
+		const { error } = await supabaseAdmin.auth.admin.generateLink({
+			type: 'recovery',
+			email
+		});
+
+		// Always respond 200 to prevent email enumeration attacks
+		if (error) {
+			console.warn('generateLink recovery warning:', error.message);
+		}
+
+		return res.status(200).json({
+			message:
+				'Se esiste un account con questa email, riceverai un link di ripristino.'
+		});
+	} catch (err) {
+		console.error('Errore in /auth/forgot-password:', err);
+		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
+
+// POST /api/auth/reset-password
+// Body: { token_hash, newPassword }
+// Verifies the recovery OTP from the email link, then updates the password.
+router.post('/reset-password', async (req, res) => {
+	try {
+		const { token_hash, newPassword } = req.body;
+		if (!token_hash || !newPassword) {
+			return res
+				.status(400)
+				.json({ error: 'token_hash e newPassword sono obbligatori' });
+		}
+
+		if (!PASSWORD_REGEX.test(newPassword)) {
+			return res.status(400).json({
+				error: PASSWORD_ERROR_MESSAGE
+			});
+		}
+
+		// Exchange the recovery token for a session
+		const { data: sessionData, error: otpError } = await db.auth.verifyOtp({
+			token_hash,
+			type: 'recovery'
+		});
+
+		if (otpError || !sessionData?.session) {
+			return res
+				.status(400)
+				.json({ error: 'Token non valido o scaduto. Richiedi un nuovo link.' });
+		}
+
+		// Update the password using the verified session
+		const { error: updateError } =
+			await supabaseAdmin.auth.admin.updateUserById(
+				sessionData.session.user.id,
+				{ password: newPassword }
+			);
+
+		if (updateError) {
+			console.error('Errore aggiornamento password:', updateError.message);
+			return res
+				.status(500)
+				.json({ error: "Impossibile aggiornare la password" });
+		}
+
+		return res
+			.status(200)
+			.json({ message: 'Password aggiornata con successo. Puoi ora accedere.' });
+	} catch (err) {
+		console.error('Errore in /auth/reset-password:', err);
+		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
+
 // --- SSO TAG ---
+
+// CIE mobile endpoints — return JSON instead of redirects so expo-web-browser can handle the flow
+router.get('/cie/mobile-url', (req, res) => {
+	try {
+		const { url, state, nonce } = cieService.getAuthorizationUrl();
+		return res.status(200).json({ url, state, nonce });
+	} catch (err) {
+		console.error('Errore /cie/mobile-url:', err);
+		return res.status(500).json({ error: 'Impossibile avviare il flusso CIE' });
+	}
+});
+
+router.get('/cie/mobile-callback', async (req, res) => {
+	try {
+		const { code, state } = req.query;
+		if (!code || !state) {
+			return res.status(400).json({ error: 'Parametri mancanti' });
+		}
+
+		const cieUser = await cieService.getCieUserIdentity(code);
+
+		let { data: existingUser } = await supabaseAdmin
+			.from('users')
+			.select('id')
+			.eq('email', cieUser.email)
+			.single();
+
+		if (!existingUser) {
+			const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+				email: cieUser.email,
+				email_confirm: true,
+				user_metadata: {
+					name: cieUser.nomeCompleto,
+					fiscal_number: cieUser.codiceFiscale,
+					provider: 'cie'
+				}
+			});
+			if (createError) {
+				return res.status(500).json({ error: 'Errore registrazione CIE' });
+			}
+		}
+
+		const { data: linkData, error: linkError } =
+			await supabaseAdmin.auth.admin.generateLink({
+				type: 'magiclink',
+				email: cieUser.email
+			});
+
+		if (linkError || !linkData?.properties?.hashed_token) {
+			return res.status(500).json({ error: 'Impossibile generare la sessione CIE' });
+		}
+
+		const { data: sessionData, error: sessionError } = await db.auth.verifyOtp({
+			token_hash: linkData.properties.hashed_token,
+			type: 'magiclink'
+		});
+
+		if (sessionError || !sessionData?.session) {
+			return res.status(500).json({ error: 'Impossibile avviare la sessione CIE' });
+		}
+
+		res.cookie('access_token', sessionData.session.access_token, {
+			httpOnly: true, secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict', maxAge: 3600000
+		});
+		res.cookie('refresh_token', sessionData.session.refresh_token, {
+			httpOnly: true, secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict', maxAge: 7 * 24 * 3600000
+		});
+
+		return res.status(200).json({
+			message: 'Login CIE effettuato',
+			access_token: sessionData.session.access_token,
+			refresh_token: sessionData.session.refresh_token
+		});
+	} catch (err) {
+		console.error('Errore /cie/mobile-callback:', err);
+		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
 
 // 1. Endpoint per avviare il flusso Google OAuth 2.0 (VERSIONE DEBUG)
 router.get('/google', async (req, res) => {
@@ -394,7 +633,7 @@ router.get('/google', async (req, res) => {
 		const { data, error } = await db.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: 'http://localhost:3000/api/auth/google/callback',
+				redirectTo: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/api/auth/google/callback',
 				queryParams: {
 					access_type: 'offline',
 					prompt: 'consent'
@@ -411,6 +650,50 @@ router.get('/google', async (req, res) => {
 
 		res.redirect(data.url);
 	} catch (err) {
+		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
+
+// Mobile-specific endpoint: exchange a Google id_token for a Supabase session (RF5.2)
+// Used by expo-auth-session on Android/iOS; returns tokens as JSON (not cookies).
+router.post('/google/token', async (req, res) => {
+	try {
+		const { id_token } = req.body;
+		if (!id_token) {
+			return res.status(400).json({ error: 'id_token obbligatorio' });
+		}
+
+		const { data, error } = await db.auth.signInWithIdToken({
+			provider: 'google',
+			token: id_token
+		});
+
+		if (error || !data.session) {
+			console.error('Errore signInWithIdToken:', error?.message);
+			return res.status(401).json({ error: 'Autenticazione Google fallita' });
+		}
+
+		// For mobile: set cookies AND return tokens in body so the app can store them
+		res.cookie('access_token', data.session.access_token, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict',
+			maxAge: 3600000
+		});
+		res.cookie('refresh_token', data.session.refresh_token, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 3600000
+		});
+
+		return res.status(200).json({
+			message: 'Login con Google effettuato',
+			access_token: data.session.access_token,
+			refresh_token: data.session.refresh_token
+		});
+	} catch (err) {
+		console.error('Errore in /auth/google/token:', err);
 		return res.status(500).json({ error: 'Errore interno del server' });
 	}
 });
@@ -461,6 +744,56 @@ router.get('/google/callback', async (req, res) => {
 	} catch (err) {
 		console.error('Errore del server in /auth/google/callback:', err);
 		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
+
+// GET /api/auth/google/mobile-url — returns Supabase OAuth URL for mobile WebBrowser flow
+router.get('/google/mobile-url', async (req, res) => {
+	try {
+		const { data, error } = await db.auth.signInWithOAuth({
+			provider: 'google',
+			options: {
+				redirectTo: 'http://localhost:3000/api/auth/google/mobile-callback',
+				queryParams: { access_type: 'offline', prompt: 'consent' },
+			},
+		});
+
+		if (error || !data?.url) {
+			console.error('Errore signInWithOAuth mobile:', error?.message);
+			return res.status(500).json({ error: 'Impossibile avviare il login con Google' });
+		}
+
+		return res.status(200).json({ url: data.url });
+	} catch (err) {
+		console.error('Errore /google/mobile-url:', err);
+		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
+
+// GET /api/auth/google/mobile-callback — exchanges Supabase code for session, redirects to app scheme
+router.get('/google/mobile-callback', async (req, res) => {
+	try {
+		const { code } = req.query;
+
+		if (!code) {
+			return res.redirect('ecotrack://auth/google?error=missing_code');
+		}
+
+		const { data, error } = await db.auth.exchangeCodeForSession(code);
+
+		if (error || !data?.session) {
+			console.error('Errore exchangeCodeForSession Google mobile:', error?.message);
+			return res.redirect('ecotrack://auth/google?error=auth_failed');
+		}
+
+		const params = new URLSearchParams({
+			access_token: data.session.access_token,
+			refresh_token: data.session.refresh_token,
+		});
+		return res.redirect(`ecotrack://auth/google?${params.toString()}`);
+	} catch (err) {
+		console.error('Errore /google/mobile-callback:', err);
+		return res.redirect('ecotrack://auth/google?error=server_error');
 	}
 });
 

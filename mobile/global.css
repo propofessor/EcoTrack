@@ -6,11 +6,466 @@
   stabilises, replace the three directives below with:
       @import "tailwindcss";
 
-  This file is intentionally empty of custom component definitions.
-  All layout classes are composed directly in each component's className prop,
-  following Tailwind's utility-first philosophy (no @apply).
+  Design tokens mirror ../shared/tokens.css (zinc premium palette).
+  Values are inlined here rather than @imported to avoid PostCSS
+  resolution issues in Metro's bundling pipeline.
+
+  Component classes use plain CSS only — no @apply, no Tailwind utilities.
+  Layout (flex, gap, padding, sizing, border-radius) stays inline in
+  each component's className prop following utility-first conventions.
 */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* ============================================================
+   BASE LAYER — Design tokens
+   Values are identical to ../shared/tokens.css.
+   ============================================================ */
+@layer base {
+
+  /* ── LIGHT THEME (default) ── */
+  :root {
+    --bg-primary:     #f4f4f5; /* Zinc 100 */
+    --bg-surface:     #ffffff;
+    --text-primary:   #09090b; /* Zinc 950 */
+    --text-secondary: #71717a; /* Zinc 500 */
+    --border-color:   #e4e4e7; /* Zinc 200 */
+    --accent:         #18181b; /* Zinc 900 */
+    --accent-light:   #f4f4f5; /* Zinc 100 */
+  }
+
+  /* ── DARK THEME (system preference) ── */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary:     #09090b; /* Zinc 950 */
+      --bg-surface:     #121214; /* Zinc 900 alt */
+      --text-primary:   #f4f4f5; /* Zinc 100 */
+      --text-secondary: #a1a1aa; /* Zinc 400 */
+      --border-color:   #27272a; /* Zinc 800 */
+      --accent:         #f4f4f5;
+      --accent-light:   #18181b; /* Zinc 800 */
+    }
+  }
+}
+
+
+/* ============================================================
+   COMPONENTS LAYER — Named classes for mobile UI elements.
+   No @apply. No Tailwind utility classes. Pure CSS only.
+   ============================================================ */
+@layer components {
+
+  /* ----------------------------------------------------------
+     SCREEN
+     Applied to SafeAreaView / root screen container.
+  ---------------------------------------------------------- */
+
+  .screen {
+    background-color: var(--bg-primary);
+  }
+
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY
+  ---------------------------------------------------------- */
+
+  /* Primary page heading — mirrors dashboard .header-title */
+  .heading {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  /* Section / card heading */
+  .subheading {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Standard body copy */
+  .text-body {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+  }
+
+  /* Muted / secondary — mirrors dashboard .header-subtitle */
+  .text-muted {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  /* Form field labels and small metadata */
+  .text-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  /* Monospace uppercase chip — mirrors dashboard .widget-title */
+  .text-mono {
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  /* Tappable navigation / action link */
+  .link {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  /* Inline validation error */
+  .text-error {
+    font-size: 0.75rem;
+    color: #ef4444; /* red-500 */
+  }
+  @media (prefers-color-scheme: dark) {
+    .text-error { color: #f87171; /* red-400 */ }
+  }
+
+
+  /* ----------------------------------------------------------
+     CARD / SURFACE
+     Rounded bordered surface — mirrors dashboard .widget.
+  ---------------------------------------------------------- */
+
+  .card {
+    background-color: var(--bg-surface);
+    border-radius: 1rem;       /* overridden by rounded-2xl / rounded-3xl utilities */
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border-color);
+  }
+
+  /* Bottom-divided row inside a card (profile fields, settings rows) */
+  .card-row {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--border-color);
+  }
+
+
+  /* ----------------------------------------------------------
+     DIVIDER
+  ---------------------------------------------------------- */
+
+  .divider {
+    background-color: var(--border-color);
+  }
+
+
+  /* ----------------------------------------------------------
+     INPUT FIELD — mirrors dashboard .modal-input
+  ---------------------------------------------------------- */
+
+  .input {
+    background-color: var(--bg-primary);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+  }
+
+
+  /* ----------------------------------------------------------
+     BUTTONS — mirrors dashboard .btn / .btn--accent / .btn--default
+  ---------------------------------------------------------- */
+
+  /* Filled primary CTA */
+  .btn-primary {
+    background-color: var(--accent);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--accent);
+  }
+
+  .btn-primary-text {
+    color: #ffffff;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+  @media (prefers-color-scheme: dark) {
+    /* In dark mode --accent is light (#f4f4f5), so text must be dark */
+    .btn-primary-text { color: #09090b; }
+  }
+
+  /* Ghost / surface secondary action */
+  .btn-ghost {
+    background-color: var(--bg-surface);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border-color);
+  }
+
+  .btn-ghost-text {
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  /* Destructive action text */
+  .btn-danger-text {
+    color: #ef4444; /* red-500 */
+    font-weight: 500;
+  }
+  @media (prefers-color-scheme: dark) {
+    .btn-danger-text { color: #f87171; /* red-400 */ }
+  }
+
+
+  /* ----------------------------------------------------------
+     AVATAR — profile / leaderboard / podium initials circle
+  ---------------------------------------------------------- */
+
+  .avatar {
+    background-color: var(--accent);
+  }
+
+  .avatar-letter {
+    color: #ffffff;
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+  @media (prefers-color-scheme: dark) {
+    /* --accent is light in dark mode, so letter must be dark */
+    .avatar-letter { color: #09090b; }
+  }
+
+
+  /* ----------------------------------------------------------
+     GRADE CARD — ecological grade display (GradeCard.jsx)
+  ---------------------------------------------------------- */
+
+  .grade-card {
+    background-color: var(--bg-surface);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border-color);
+  }
+
+  .grade-letter {
+    font-size: 4.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .grade-points {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .grade-stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .grade-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+
+  /* ----------------------------------------------------------
+     STAT CARD — compact metric tile (StatCard.jsx)
+  ---------------------------------------------------------- */
+
+  .stat-card {
+    background-color: var(--bg-surface);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border-color);
+  }
+
+  .stat-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+
+  /* ----------------------------------------------------------
+     LEADERBOARD ROW (LeaderboardRow.jsx)
+  ---------------------------------------------------------- */
+
+  .leaderboard-row {
+    background-color: var(--bg-surface);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border-color);
+  }
+
+  /* Current-user highlight */
+  .leaderboard-row--self {
+    background-color: var(--accent-light);
+    border-color: var(--accent);
+  }
+
+  .rank-badge-text {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .leaderboard-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .leaderboard-self-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .leaderboard-score {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+
+  /* ----------------------------------------------------------
+     PODIUM (PodiumDisplay.jsx)
+  ---------------------------------------------------------- */
+
+  .podium-block-1 { background-color: #fbbf24; } /* amber-400 — gold   */
+  .podium-block-2 { background-color: #a1a1aa; } /* zinc-400 — silver  */
+  .podium-block-3 { background-color: #cd9a5c; } /* warm bronze        */
+
+  .podium-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .podium-score {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+  }
+
+
+  /* ----------------------------------------------------------
+     TRANSPORT CARD (TransportCard.jsx / RouteScreen.jsx)
+  ---------------------------------------------------------- */
+
+  .transport-card {
+    background-color: var(--bg-surface);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--border-color);
+  }
+
+  /* Best-option highlight — emerald accent */
+  .transport-card--best {
+    border-color: #10b981;                   /* emerald-500 */
+    background-color: rgba(209, 250, 229, 0.3); /* emerald-100 / 30% */
+  }
+  @media (prefers-color-scheme: dark) {
+    .transport-card--best {
+      border-color: #34d399;                  /* emerald-400 */
+      background-color: rgba(2, 44, 34, 0.2);
+    }
+  }
+
+  .transport-mode-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .eco-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #059669; /* emerald-600 */
+  }
+  @media (prefers-color-scheme: dark) {
+    .eco-badge { color: #34d399; /* emerald-400 */ }
+  }
+
+  .transport-stat {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .transport-co2 {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+
+  /* ----------------------------------------------------------
+     PERIOD SELECTOR (HistoryScreen.jsx)
+  ---------------------------------------------------------- */
+
+  .period-btn {
+    border-radius: 0.75rem;
+  }
+
+  .period-btn--active {
+    background-color: var(--accent);
+  }
+
+  .period-btn-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .period-btn-text--active {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    .period-btn-text--active { color: #09090b; }
+  }
+
+
+  /* ----------------------------------------------------------
+     STATUS BADGE — mirrors dashboard .status-badge
+  ---------------------------------------------------------- */
+
+  .status-badge {
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background-color: #d1fae5; /* emerald-100 */
+    color: #047857;             /* emerald-700 */
+  }
+  @media (prefers-color-scheme: dark) {
+    .status-badge {
+      background-color: rgba(2, 44, 34, 0.4);
+      color: #34d399; /* emerald-400 */
+    }
+  }
+
+
+  /* ----------------------------------------------------------
+     TREND INDICATORS (HistoryScreen.jsx)
+  ---------------------------------------------------------- */
+
+  .trend-positive {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #10b981; /* emerald-500 — improvement */
+  }
+
+  .trend-negative {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ef4444; /* red-500 — worsening */
+  }
+
+}

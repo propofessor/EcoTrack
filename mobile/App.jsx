@@ -1,4 +1,5 @@
 import './global.css';
+import './src/i18n'; // RNF: i18n initialization (must run before first render)
 
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';

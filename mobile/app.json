@@ -2,6 +2,7 @@
   "expo": {
     "name": "EcoTrack",
     "slug": "ecotrack-mobile",
+    "scheme": "ecotrack",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,13 +13,17 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
+      "package": "com.ecotrack.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -28,6 +33,11 @@
           "locationAlwaysAndWhenInUsePermission": "EcoTrack ha bisogno della tua posizione per centrare la mappa."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e5aaf888-03a8-4585-859a-002fd83c0ac7"
+      }
+    }
   }
 }

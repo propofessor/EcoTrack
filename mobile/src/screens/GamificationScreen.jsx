@@ -65,40 +65,40 @@ export default function GamificationScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="screen flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="screen flex-1">
       <ScrollView
         className="flex-1"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View className="px-4 pt-4 pb-8">
-          <Text>Gamification</Text>
-          <Text>
+          <Text className="heading">Gamification</Text>
+          <Text className="text-muted mb-4">
             Settimana {leaderboard?.weekStart} – {leaderboard?.weekEnd}
           </Text>
 
           {/* Daily grade — RF11.2 */}
           <View className="mb-6">
-            <Text>Il tuo voto di oggi</Text>
+            <Text className="subheading mb-3">Il tuo voto di oggi</Text>
             <GradeCard score={daily} compact />
           </View>
 
           {/* Weekly score summary — RF11.3 */}
           <View className="mb-6">
             <View className="flex-row flex-wrap gap-3">
-              <View className="rounded-xl p-3 flex-col gap-1 flex-1">
-                <Text>Punteggio settimana</Text>
-                <Text className="mt-1">{weekly?.weeklyScore ?? '—'}</Text>
+              <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
+                <Text className="text-label">Punteggio settimana</Text>
+                <Text className="stat-value mt-1">{weekly?.weeklyScore ?? '—'}</Text>
               </View>
-              <View className="rounded-xl p-3 flex-col gap-1 flex-1">
-                <Text>Giorni attivi</Text>
-                <Text className="mt-1">{weekly?.daysWithActivity ?? '—'} / 7</Text>
+              <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
+                <Text className="text-label">Giorni attivi</Text>
+                <Text className="stat-value mt-1">{weekly?.daysWithActivity ?? '—'} / 7</Text>
               </View>
             </View>
           </View>
@@ -106,7 +106,7 @@ export default function GamificationScreen() {
           {/* Podium — RF11.4 */}
           {leaderboard?.podium?.length > 0 && (
             <View className="mb-6">
-              <Text>Podio settimana</Text>
+              <Text className="subheading mb-2">Podio settimana</Text>
               <PodiumDisplay podium={leaderboard.podium} />
             </View>
           )}
@@ -114,7 +114,7 @@ export default function GamificationScreen() {
           {/* Personal rank — RF11.4 */}
           {leaderboard?.personalRank && (
             <View className="mb-6">
-              <Text>La tua posizione</Text>
+              <Text className="subheading mb-3">La tua posizione</Text>
               <View className="gap-2">
                 {leaderboard.personalRank.neighbors.map((entry) => (
                   <LeaderboardRow
@@ -130,9 +130,9 @@ export default function GamificationScreen() {
           {/* Full leaderboard — RF11.4 */}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-3">
-              <Text>Classifica {showTop20 ? 'Top 20' : 'Top 10'}</Text>
+              <Text className="subheading">Classifica {showTop20 ? 'Top 20' : 'Top 10'}</Text>
               <TouchableOpacity onPress={() => setShowTop20((p) => !p)}>
-                <Text>{showTop20 ? 'Mostra Top 10' : 'Mostra Top 20'}</Text>
+                <Text className="link">{showTop20 ? 'Mostra Top 10' : 'Mostra Top 20'}</Text>
               </TouchableOpacity>
             </View>
             <View className="gap-2">
@@ -145,7 +145,7 @@ export default function GamificationScreen() {
               ))}
               {!leaderboard?.leaderboard?.length && (
                 <View className="flex-1 items-center justify-center gap-3 px-8">
-                  <Text>Nessun dato disponibile per questa settimana.</Text>
+                  <Text className="text-muted">Nessun dato disponibile per questa settimana.</Text>
                 </View>
               )}
             </View>
@@ -154,21 +154,21 @@ export default function GamificationScreen() {
           {/* Weekly history — RF11.6 */}
           {weeklyHistory.length > 0 && (
             <View className="mb-6">
-              <Text>Storico settimane</Text>
+              <Text className="subheading mb-3">Storico settimane</Text>
               <View className="flex-col gap-2">
                 {weeklyHistory.map((week) => (
                   <View
                     key={week.week_start}
-                    className="rounded-2xl p-4 flex-row items-center justify-between"
+                    className="card rounded-2xl p-4 flex-row items-center justify-between"
                   >
                     <View>
-                      <Text>{week.week_start} – {week.week_end}</Text>
-                      <Text>Posizione: #{week.rank}</Text>
+                      <Text className="text-body">{week.week_start} – {week.week_end}</Text>
+                      <Text className="text-muted">Posizione: #{week.rank}</Text>
                     </View>
                     <View className="items-end">
-                      <Text>{week.weekly_score} pt</Text>
+                      <Text className="subheading">{week.weekly_score} pt</Text>
                       {week.rewards?.length > 0 && (
-                        <Text>{week.rewards[0].reward_label}</Text>
+                        <Text className="text-label">{week.rewards[0].reward_label}</Text>
                       )}
                     </View>
                   </View>

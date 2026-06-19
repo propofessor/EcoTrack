@@ -13,7 +13,6 @@ export default function Grid({ items, setItems }) {
 
 	const [cols, setCols] = useState(12);
 	const [, setBreakpoint] = useState('lg');
-	const [newCounter, setNewCounter] = useState(1);
 	const [editingWidgetId, setEditingWidgetId] = useState(null);
 	const [configuringPlaceholderId, setConfiguringPlaceholderId] =
 		useState(null);
@@ -52,26 +51,28 @@ export default function Grid({ items, setItems }) {
 	};
 
 	const handleSaveNewWidget = (updates) => {
-		// Read counter synchronously before setItems to avoid calling a state
-		// setter inside another state setter's callback (React StrictMode would
-		// invoke the updater twice, incrementing the counter by 2 instead of 1).
-		const nextId = 'placeholder_' + newCounter;
-
 		setItems((prevItems) => {
 			const updatedItems = [...prevItems];
 			const index = updatedItems.findIndex(
 				(i) => i.i === configuringPlaceholderId
 			);
 
-			if (index !== -1) {
+			if (index !== -1 && updatedItems[index].isAddPlaceholder) {
 				updatedItems[index] = {
 					...updatedItems[index],
 					...updates
 				};
 				delete updatedItems[index].isAddPlaceholder;
 
+				// Derive next ID from prevItems so it's always unique, regardless
+				// of any external counter state that could be stale or reset.
+				const maxN = prevItems.reduce((max, item) => {
+					const m = /^placeholder_(\d+)$/.exec(item.i);
+					return m ? Math.max(max, Number(m[1])) : max;
+				}, -1);
+
 				updatedItems.push({
-					i: nextId,
+					i: 'placeholder_' + (maxN + 1),
 					x: 0,
 					y: 999,
 					w: 2,
@@ -83,7 +84,6 @@ export default function Grid({ items, setItems }) {
 			return updatedItems;
 		});
 
-		setNewCounter((c) => c + 1);
 		setConfiguringPlaceholderId(null);
 	};
 
@@ -107,7 +107,7 @@ export default function Grid({ items, setItems }) {
 		}
 
 		return (
-			<div key={el.i} data-grid={el}>
+			<div key={el.i} data-grid={el} className='h-full'>
 				<WidgetWrapper
 					widgetConfig={el}
 					onUpdate={handleUpdateWidget}
@@ -151,6 +151,7 @@ export default function Grid({ items, setItems }) {
 							width={width}
 							onLayoutChange={onLayoutChange}
 							onBreakpointChange={onBreakpointChange}
+							draggableHandle=".drag-handle"
 						>
 							{_.map(items, (el) => createElement(el))}
 						</Responsive>

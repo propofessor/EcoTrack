@@ -14,29 +14,28 @@ export default function GradeCard({ score, compact = false }) {
   const co2Saved = score?.co2SavedKgs ?? 0;
 
   return (
-    // Rounded container, horizontal padding, tall vertical padding, centred children
-    <View className="rounded-2xl px-4 py-8 items-center">
+    <View className="grade-card rounded-2xl px-4 py-8 items-center">
 
-      {/* Large grade letter — 96×96 centred placeholder */}
+      {/* Large grade letter */}
       <View className="items-center justify-center w-24 h-24">
-        <Text>{grade}</Text>
+        <Text className="grade-letter">{grade}</Text>
       </View>
 
-      {/* Numeric score below the letter */}
+      {/* Numeric score */}
       <View className="mt-3">
-        <Text>{points.toFixed(1)} pt</Text>
+        <Text className="grade-points">{points.toFixed(1)} pt</Text>
       </View>
 
       {/* Secondary stats — hidden in compact mode */}
       {!compact && (
         <View className="flex-row justify-around w-full mt-6 pt-4">
           <View className="items-center">
-            <Text>{km.toFixed(1)} km</Text>
-            <Text>Percorsi</Text>
+            <Text className="grade-stat-value">{km.toFixed(1)} km</Text>
+            <Text className="grade-stat-label">Percorsi</Text>
           </View>
           <View className="items-center">
-            <Text>{co2Saved.toFixed(2)} kg</Text>
-            <Text>CO2 risparmiata</Text>
+            <Text className="grade-stat-value">{co2Saved.toFixed(2)} kg</Text>
+            <Text className="grade-stat-label">CO2 risparmiata</Text>
           </View>
         </View>
       )}

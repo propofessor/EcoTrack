@@ -1,6 +1,7 @@
 // index.js (o app.js)
 require('dotenv').config(); // Carica le variabili d'ambiente dal file .env come prima operazione
 const express = require('express');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const authRoutes = require('./routes/auth');
@@ -18,6 +19,17 @@ const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 
 const app = express();
+
+const allowedOrigins = process.env.CORS_ORIGINS
+	? process.env.CORS_ORIGINS.split(',')
+	: ['http://localhost:5173', 'http://localhost:3000'];
+
+app.use(
+	cors({
+		origin: allowedOrigins,
+		credentials: true
+	})
+);
 
 // Middleware per far capire a Express i dati in formato JSON
 app.use(express.json());

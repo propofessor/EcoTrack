@@ -20,3 +20,9 @@ export async function deleteAccount() {
   const res = await client.delete('/users/me');
   return res.data;
 }
+
+/** PUT /api/users/me/password — RF7.2: change password. */
+export async function changePassword({ newPassword }) {
+  const res = await client.put('/users/me/password', { newPassword });
+  return res.data;
+}

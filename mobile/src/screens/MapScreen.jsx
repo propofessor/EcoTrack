@@ -1,45 +1,112 @@
 /**
  * MapScreen — RF8
- * Google Maps with mutually-exclusive air-pollution / noise-pollution overlays.
- * RF8.1: integrates Google Maps.
- * RF8.2/8.3: air and noise overlays rendered as weighted heatmap points.
+ * Leaflet (OpenStreetMap) map with mutually-exclusive air-pollution / noise-pollution overlays.
+ * RF8.1: integrates Leaflet via WebView.
+ * RF8.2/8.3: air and noise overlays rendered as Leaflet.heat heatmap.
  * RF8.4: only one overlay active at a time.
  * RF8.5: colour legend.
  */
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Heatmap, PROVIDER_GOOGLE } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import client from '../api/client';
 
 const OVERLAY = { NONE: 'none', AIR: 'air', NOISE: 'noise' };
 
-const AIR_GRADIENT = {
-  colors: ['rgba(0,255,0,0)', 'rgba(255,255,0,0.6)', 'rgba(255,0,0,0.9)'],
-  startPoints: [0, 0.4, 1],
-  colorMapSize: 256,
-};
+const TRENTO = { lat: 46.0748, lng: 11.1217, zoom: 13 };
 
-const NOISE_GRADIENT = {
-  colors: ['rgba(0,0,255,0)', 'rgba(255,165,0,0.6)', 'rgba(255,0,0,0.9)'],
-  startPoints: [0, 0.4, 1],
-  colorMapSize: 256,
-};
+// Leaflet.heat gradient format: { stop: 'color' }
+const AIR_GRADIENT = { 0.0: 'rgba(0,255,0,0)', 0.4: 'rgba(255,255,0,0.6)', 1.0: 'rgba(255,0,0,0.9)' };
+const NOISE_GRADIENT = { 0.0: 'rgba(0,0,255,0)', 0.4: 'rgba(255,165,0,0.6)', 1.0: 'rgba(255,0,0,0.9)' };
 
-const TRENTO_REGION = {
-  latitude: 46.0748,
-  longitude: 11.1217,
-  latitudeDelta: 0.08,
-  longitudeDelta: 0.08,
-};
+const MAP_HTML = `<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; }
+    .leaflet-control-attribution { font-size: 8px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script>
+    var map = L.map('map', { zoomControl: true }).setView([${TRENTO.lat}, ${TRENTO.lng}], ${TRENTO.zoom});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(map);
 
-export default function MapScreen() {
-  const mapRef = useRef(null);
-  const [region, setRegion] = useState(TRENTO_REGION);
+    var heatLayer = null;
+    var routeLayer = null;
+
+    function updateHeatmap(points, gradient) {
+      if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+      if (points && points.length > 0) {
+        heatLayer = L.heatLayer(points, {
+          radius: 30,
+          blur: 20,
+          gradient: gradient,
+          max: 1.0
+        }).addTo(map);
+      }
+    }
+
+    // RF9.5: draw a route polyline on the map
+    function drawPolyline(latlngs, color) {
+      if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+      if (latlngs && latlngs.length > 1) {
+        routeLayer = L.polyline(latlngs, { color: color || '#2563EB', weight: 5, opacity: 0.85 }).addTo(map);
+        map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+      }
+    }
+
+    function handleMessage(event) {
+      try {
+        var msg = JSON.parse(event.data);
+        if (msg.type === 'heatmap') {
+          updateHeatmap(msg.points, msg.gradient);
+        } else if (msg.type === 'panTo') {
+          map.setView([msg.lat, msg.lng], msg.zoom || map.getZoom());
+        } else if (msg.type === 'polyline') {
+          drawPolyline(msg.latlngs, msg.color);
+        }
+      } catch (e) {}
+    }
+
+    // Both listeners needed: document for Android, window for iOS
+    document.addEventListener('message', handleMessage);
+    window.addEventListener('message', handleMessage);
+  </script>
+</body>
+</html>`;
+
+// Static mock polyline for Trento (Piazza Duomo → Stazione FS) — RF9.5
+// Replace with decoded Directions API polyline when a paid key is available.
+const MOCK_ROUTE_LATLNGS = [
+  [46.0748, 11.1217], // Piazza Duomo
+  [46.0730, 11.1210], // Via Roma nord
+  [46.0720, 11.1205], // Via Roma centro
+  [46.0710, 11.1200], // Via Roma sud
+  [46.0702, 11.1196], // Stazione FS
+];
+
+export default function MapScreen({ route: navRoute }) {
+  const webViewRef = useRef(null);
   const [overlay, setOverlay] = useState(OVERLAY.NONE);
-  const [heatmapPoints, setHeatmapPoints] = useState([]);
   const [loading, setLoading] = useState(false);
+  const routePolyline = navRoute?.params?.polyline ?? null;
+
+  function sendPolyline(latlngs) {
+    webViewRef.current?.postMessage(
+      JSON.stringify({ type: 'polyline', latlngs, color: '#2563EB' })
+    );
+  }
 
   async function locateMe() {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -48,26 +115,29 @@ export default function MapScreen() {
       return;
     }
     const loc = await Location.getCurrentPositionAsync({});
-    const next = {
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-      latitudeDelta: 0.04,
-      longitudeDelta: 0.04,
-    };
-    setRegion(next);
-    mapRef.current?.animateToRegion(next, 600);
+    webViewRef.current?.postMessage(
+      JSON.stringify({ type: 'panTo', lat: loc.coords.latitude, lng: loc.coords.longitude, zoom: 15 })
+    );
   }
 
   useEffect(() => {
     if (overlay === OVERLAY.NONE) {
-      setHeatmapPoints([]);
+      webViewRef.current?.postMessage(JSON.stringify({ type: 'heatmap', points: [], gradient: {} }));
       return;
     }
     setLoading(true);
     client
       .get('/maps/heatmap', { params: { type: overlay } })
-      .then((res) => setHeatmapPoints(res.data?.points || []))
-      .catch(() => setHeatmapPoints([]))
+      .then((res) => {
+        const raw = res.data?.points || [];
+        // Transform {latitude, longitude, weight} → [lat, lng, intensity] for Leaflet.heat
+        const pts = raw.map((p) => [p.latitude, p.longitude, p.weight ?? 1]);
+        const gradient = overlay === OVERLAY.AIR ? AIR_GRADIENT : NOISE_GRADIENT;
+        webViewRef.current?.postMessage(JSON.stringify({ type: 'heatmap', points: pts, gradient }));
+      })
+      .catch(() =>
+        webViewRef.current?.postMessage(JSON.stringify({ type: 'heatmap', points: [], gradient: {} }))
+      )
       .finally(() => setLoading(false));
   }, [overlay]);
 
@@ -75,64 +145,59 @@ export default function MapScreen() {
     setOverlay((prev) => (prev === type ? OVERLAY.NONE : type));
   }
 
-  const gradient = overlay === OVERLAY.AIR ? AIR_GRADIENT : NOISE_GRADIENT;
-
   return (
     <View className="flex-1">
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_GOOGLE}
+      <WebView
+        ref={webViewRef}
+        source={{ html: MAP_HTML }}
         style={{ flex: 1 }}
-        initialRegion={TRENTO_REGION}
-        region={region}
-        showsUserLocation
-        showsMyLocationButton={false}
-      >
-        {overlay !== OVERLAY.NONE && heatmapPoints.length > 0 && (
-          <Heatmap
-            points={heatmapPoints}
-            radius={40}
-            opacity={0.75}
-            gradient={gradient}
-          />
-        )}
-      </MapView>
+        javaScriptEnabled
+        domStorageEnabled
+        originWhitelist={['*']}
+        mixedContentMode="always"
+        onLoadEnd={() => {
+          // RF9.5: draw route polyline if navigated here from RouteScreen
+          if (routePolyline) {
+            sendPolyline(routePolyline);
+          }
+        }}
+      />
 
       {/* RF8.4: Layer toggle controls — floating top-right card */}
       <SafeAreaView
-        className="absolute top-16 right-4 rounded-2xl p-3 gap-2"
+        className="card absolute top-16 right-4 rounded-2xl p-3 gap-2"
         style={{ minWidth: 120 }}
       >
         <View className="flex-row items-center justify-between gap-2">
-          <Text>Aria</Text>
+          <Text className="text-label">Aria</Text>
           <Switch
             value={overlay === OVERLAY.AIR}
             onValueChange={() => toggleOverlay(OVERLAY.AIR)}
           />
         </View>
         <View className="flex-row items-center justify-between gap-2">
-          <Text>Rumore</Text>
+          <Text className="text-label">Rumore</Text>
           <Switch
             value={overlay === OVERLAY.NOISE}
             onValueChange={() => toggleOverlay(OVERLAY.NOISE)}
           />
         </View>
-        {loading && <Text>Caricamento…</Text>}
+        {loading && <Text className="text-muted">Caricamento…</Text>}
       </SafeAreaView>
 
       {/* RF8.5: Colour legend — anchored to bottom */}
       {overlay !== OVERLAY.NONE && (
-        <View className="absolute bottom-0 left-0 right-0 flex-row items-center px-4 py-3 gap-3">
-          <Text>{overlay === OVERLAY.AIR ? 'Qualità aria' : 'Rumore (dB)'}</Text>
+        <View className="card absolute bottom-0 left-0 right-0 flex-row items-center px-4 py-3 gap-3">
+          <Text className="text-label">{overlay === OVERLAY.AIR ? 'Qualità aria' : 'Rumore (dB)'}</Text>
           <View className="flex-1 h-3 rounded-full" />
-          <Text>Basso</Text>
-          <Text>Alto</Text>
+          <Text className="text-muted">Basso</Text>
+          <Text className="text-muted">Alto</Text>
         </View>
       )}
 
       {/* Locate-me button */}
       <TouchableOpacity
-        className="absolute bottom-24 right-4 rounded-full p-3"
+        className="card absolute bottom-24 right-4 rounded-full p-3"
         onPress={locateMe}
       >
         <Text>📍</Text>

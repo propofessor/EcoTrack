@@ -1,6 +1,7 @@
 // src/services/gamificationService.js
 const { supabaseAdmin } = require('../db');
 const { computeDailyScore } = require('./scoreEngine');
+const { notifyUser, notifyMany } = require('./notificationService');
 
 // ============================================================
 // HELPERS DI DATA (settimana ISO: lunedì-domenica, reset alla domenica
@@ -132,6 +133,15 @@ async function recalculateDailyScore(userId, dateOnly) {
 		);
 		return { data: null, error };
 	}
+
+	// RF11.2: notify user of their daily grade (fire-and-forget — don't block the response)
+	const grade = score.grade;
+	const gradeEmoji = grade === 'S' ? '🌟' : grade === 'A' ? '✅' : grade === 'B' ? '👍' : grade === 'C' ? '⚠️' : '📉';
+	notifyUser(
+		userId,
+		`Voto giornaliero: ${grade} ${gradeEmoji}`,
+		`Hai ottenuto un punteggio di ${score.normalizedScore.toFixed(0)}/100 oggi. Continua così!`
+	).catch(() => {});
 
 	return { data, error: null };
 }
@@ -406,6 +416,17 @@ async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 		rewardsAwarded = insertedRewards.length;
 	}
 
+	// RF11.7: notify all participants about their weekly result (fire-and-forget)
+	const allUserIds = leaderboard.map((e) => e.userId);
+	const rankByUserId = new Map(leaderboard.map((e) => [e.userId, e.rank]));
+	notifyMany(allUserIds, (userId) => {
+		const rank = rankByUserId.get(userId);
+		if (rank === 1) return { title: '🥇 Hai vinto la classifica!', body: `Sei arrivato 1° questa settimana. Complimenti!` };
+		if (rank === 2) return { title: '🥈 Ottimo risultato!', body: `Sei arrivato 2° in classifica questa settimana.` };
+		if (rank === 3) return { title: '🥉 Sul podio!', body: `Sei arrivato 3° in classifica questa settimana.` };
+		return { title: '📊 Risultati settimanali disponibili', body: `Questa settimana sei arrivato #${rank} in classifica. Continua!` };
+	}).catch(() => {});
+
 	return { data: { weekStart, weekEnd, rewardsAwarded }, error: null };
 }
 
@@ -442,6 +463,7 @@ async function getUserWeeklyHistory(userId, { limit = 12 } = {}) {
 
 module.exports = {
 	getIsoWeekRange,
+	resolveDisplayName,
 	recalculateDailyScore,
 	getWeeklyScoreForUser,
 	getCurrentWeekLeaderboard,

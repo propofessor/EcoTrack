@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { hasStoredToken, getMe, logout as apiLogout } from '../api/auth';
+import { registerPushNotifications } from '../utils/notifications';
 
 const AuthContext = createContext(null);
 
@@ -15,6 +16,8 @@ export function AuthProvider({ children }) {
         if (tokenExists) {
           const data = await getMe();
           setUser(data);
+          // RF11.7: register push token (no-op on simulator or if already registered)
+          registerPushNotifications().catch(() => {});
         }
       } catch {
         // Token is expired or invalid — silently drop it.
@@ -27,6 +30,8 @@ export function AuthProvider({ children }) {
 
   async function login(userData) {
     setUser(userData);
+    // RF11.7: register for push notifications after login
+    registerPushNotifications().catch(() => {});
   }
 
   async function logout() {

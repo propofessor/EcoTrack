@@ -107,31 +107,33 @@ export default function HistoryScreen() {
     : 0;
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="screen flex-1">
       <ScrollView
         className="flex-1"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View className="px-4 pt-4 pb-8">
-          <Text>Storico emissioni</Text>
-          <Text>La tua impronta ecologica nel tempo</Text>
+          <Text className="heading">Storico emissioni</Text>
+          <Text className="text-muted mb-4">La tua impronta ecologica nel tempo</Text>
 
           {/* Period selector — RF10.2 */}
           <View className="flex-row gap-1 mb-4">
             {PERIODS.map((p) => (
               <TouchableOpacity
                 key={p.key}
-                className="flex-1 items-center justify-center py-2 rounded-xl"
+                className={`flex-1 items-center justify-center py-2 period-btn${period === p.key ? ' period-btn--active' : ''}`}
                 onPress={() => setPeriod(p.key)}
               >
-                <Text>{p.label}</Text>
+                <Text className={period === p.key ? 'period-btn-text--active' : 'period-btn-text'}>
+                  {p.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           {/* Line chart — RF10.3 */}
           {loading ? (
-            <View className="flex-1 items-center justify-center">
+            <View className="screen flex-1 items-center justify-center">
               <ActivityIndicator />
             </View>
           ) : (
@@ -156,30 +158,32 @@ export default function HistoryScreen() {
 
           {/* Summary statistics — RF10.4 */}
           <View className="flex-row flex-wrap gap-3 mb-4">
-            <View className="rounded-xl p-3 flex-col gap-1 flex-1">
-              <Text>Totale</Text>
-              <Text className="mt-1">{stats.total} kg</Text>
+            <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
+              <Text className="text-label">Totale</Text>
+              <Text className="stat-value mt-1">{stats.total} kg</Text>
             </View>
-            <View className="rounded-xl p-3 flex-col gap-1 flex-1">
-              <Text>Media</Text>
-              <Text className="mt-1">{stats.avg} kg</Text>
+            <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
+              <Text className="text-label">Media</Text>
+              <Text className="stat-value mt-1">{stats.avg} kg</Text>
             </View>
-            <View className="rounded-xl p-3 flex-col gap-1 flex-1">
-              <Text>Migliore</Text>
-              <Text className="mt-1">{stats.min} kg</Text>
+            <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
+              <Text className="text-label">Migliore</Text>
+              <Text className="stat-value mt-1">{stats.min} kg</Text>
             </View>
-            <View className="rounded-xl p-3 flex-col gap-1 flex-1">
-              <Text>Peggiore</Text>
-              <Text className="mt-1">{stats.max} kg</Text>
+            <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
+              <Text className="text-label">Peggiore</Text>
+              <Text className="stat-value mt-1">{stats.max} kg</Text>
             </View>
           </View>
 
           {/* Trend indicator */}
           {values.length >= 2 && (
-            <View className="rounded-2xl p-4">
+            <View className="card rounded-2xl p-4">
               <View className="flex-row items-center gap-1 mt-1">
-                <Text>{trend < 0 ? '↘ ' : '↗ '}</Text>
-                <Text>
+                <Text className={trend < 0 ? 'trend-positive' : 'trend-negative'}>
+                  {trend < 0 ? '↘ ' : '↗ '}
+                </Text>
+                <Text className="text-body">
                   {Math.abs(trend).toFixed(1)}%{' '}
                   {trend < 0 ? 'in miglioramento' : 'in peggioramento'} rispetto al periodo precedente
                 </Text>

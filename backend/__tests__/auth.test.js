@@ -16,7 +16,8 @@ jest.mock('../src/db', () => {
 			signOut: jest.fn(),
 			refreshSession: jest.fn(),
 			signInWithOAuth: jest.fn(),
-			exchangeCodeForSession: jest.fn()
+			exchangeCodeForSession: jest.fn(),
+			verifyOtp: jest.fn()
 		},
 		from: jest.fn()
 	};
@@ -80,6 +81,28 @@ describe('Test delle rotte di Autenticazione', () => {
 		expect(db.auth.signUp).toHaveBeenCalledTimes(1);
 	});
 
+	// --- CASO: VALIDAZIONE (Campi obbligatori mancanti) ---
+	it('Dovrebbe restituire 400 se mancano email, password o nome', async () => {
+		const risposta = await request(app)
+			.post('/api/auth/register')
+			.send({ email: 'solo@email.it' }); // mancano password e name
+
+		expect(risposta.statusCode).toBe(400);
+		expect(risposta.body.error).toContain('obbligatori');
+		expect(db.auth.signUp).not.toHaveBeenCalled();
+	});
+
+	// --- CASO: VALIDAZIONE (Password debole, RF6.4) ---
+	it('Dovrebbe restituire 400 se la password non rispetta i requisiti di sicurezza (RF6.4)', async () => {
+		const risposta = await request(app)
+			.post('/api/auth/register')
+			.send({ email: 'test@esempio.com', password: 'debole', name: 'Mario' });
+
+		expect(risposta.statusCode).toBe(400);
+		expect(risposta.body.error).toContain('password');
+		expect(db.auth.signUp).not.toHaveBeenCalled();
+	});
+
 	// --- CASO 2: ERRORE (Utente già esistente) ---
 	it('Dovrebbe restituire 400 se Supabase segnala un errore (es. email già in uso)', async () => {
 		// Istruiamo la controfigura: "Questa volta fai finta che l'email esista già"
@@ -105,19 +128,15 @@ describe('Test delle rotte di Autenticazione', () => {
 
 	// --- CASO 3: ERRORE (Internal Server Error) ---
 	it("Dovrebbe restituire 500 se c'è un errore imprevisto (es. problema di connessione)", async () => {
-		// Istruiamo la controfigura: "Questa volta fai finta che ci sia un errore imprevisto"
 		db.auth.signUp.mockRejectedValue(
 			new Error('Database connection failed')
 		);
 
-		const nuovoUtente = {
+		// Inviamo il body direttamente (non annidato) per superare la validazione
+		const risposta = await request(app).post('/api/auth/register').send({
 			email: 'test_mock@esempio.com',
 			password: 'PasswordSicura123!',
 			name: 'Luigi Verdi'
-		};
-
-		const risposta = await request(app).post('/api/auth/register').send({
-			nuovoUtente
 		});
 		expect(risposta.statusCode).toBe(500);
 		expect(risposta.body.error).toBe('Errore interno del server');
@@ -682,6 +701,25 @@ describe('Test delle rotte di Autenticazione', () => {
 					}))
 				});
 
+				// 3. Mock per generateLink → hashed_token reale
+				supabaseAdmin.auth.admin.generateLink.mockResolvedValue({
+					data: {
+						properties: { hashed_token: 'finto_hashed_token_cie' }
+					},
+					error: null
+				});
+
+				// 4. Mock per verifyOtp → sessione reale
+				db.auth.verifyOtp.mockResolvedValue({
+					data: {
+						session: {
+							access_token: 'cie_access_token_reale',
+							refresh_token: 'cie_refresh_token_reale'
+						}
+					},
+					error: null
+				});
+
 				// Eseguiamo la chiamata inviando i cookie corretti accoppiati alla query
 				const risposta = await request(app)
 					.get('/api/auth/cie/callback')
@@ -702,8 +740,14 @@ describe('Test delle rotte di Autenticazione', () => {
 					supabaseAdmin.auth.admin.createUser
 				).not.toHaveBeenCalled();
 
-				// Verifica che i cookie di sessione siano stati emessi
-				expect(risposta.headers['set-cookie']).toBeDefined();
+				// Verifica che i cookie di sessione reali siano stati emessi
+				const setCookieHeaders = risposta.headers['set-cookie'];
+				expect(setCookieHeaders).toBeDefined();
+				expect(
+					setCookieHeaders.some((c) =>
+						c.includes('access_token=cie_access_token_reale')
+					)
+				).toBe(true);
 			});
 
 			it('Dovrebbe REGISTRARE AUTOMATICAMENTE un utente se non esiste ancora nel DB', async () => {
@@ -713,7 +757,7 @@ describe('Test delle rotte di Autenticazione', () => {
 					nomeCompleto: 'Luca Neri'
 				});
 
-				// Il database dice che non c'è nessun utente con questa email (.single() restituisce errore/vuoto)
+				// Il database dice che non c'è nessun utente con questa email
 				const mockSingle = jest.fn().mockResolvedValue({
 					data: null,
 					error: { message: 'No rows found' }
@@ -732,6 +776,23 @@ describe('Test delle rotte di Autenticazione', () => {
 					error: null
 				});
 
+				// Mock per generateLink + verifyOtp
+				supabaseAdmin.auth.admin.generateLink.mockResolvedValue({
+					data: {
+						properties: { hashed_token: 'finto_hashed_token_nuovo' }
+					},
+					error: null
+				});
+				db.auth.verifyOtp.mockResolvedValue({
+					data: {
+						session: {
+							access_token: 'cie_access_nuovo',
+							refresh_token: 'cie_refresh_nuovo'
+						}
+					},
+					error: null
+				});
+
 				const risposta = await request(app)
 					.get('/api/auth/cie/callback')
 					.query({ code: 'codice_nuovo_utente', state: 'state_ok' })
@@ -741,10 +802,79 @@ describe('Test delle rotte di Autenticazione', () => {
 					]);
 
 				expect(risposta.statusCode).toBe(302);
-				// Verifica che l'admin sia stato effettivamente interpellato per creare l'anagrafica protetta dello Stato
 				expect(
 					supabaseAdmin.auth.admin.createUser
 				).toHaveBeenCalledTimes(1);
+			});
+
+			it('Dovrebbe restituire 500 se generateLink fallisce', async () => {
+				cieService.getCieUserIdentity.mockResolvedValue({
+					codiceFiscale: 'RSSMRA80A01H501U',
+					email: 'rssmra80a01h501u@cie.internal',
+					nomeCompleto: 'Mario Rossi'
+				});
+				supabaseAdmin.from.mockReturnValue({
+					select: jest.fn(() => ({
+						eq: jest.fn(() => ({
+							single: jest.fn().mockResolvedValue({
+								data: { id: 'utente-uuid-esistente' },
+								error: null
+							})
+						}))
+					}))
+				});
+				supabaseAdmin.auth.admin.generateLink.mockResolvedValue({
+					data: null,
+					error: { message: 'Supabase key error' }
+				});
+
+				const risposta = await request(app)
+					.get('/api/auth/cie/callback')
+					.query({ code: 'code', state: 'st' })
+					.set('Cookie', ['cie_state=st']);
+
+				expect(risposta.statusCode).toBe(500);
+				expect(risposta.body.error).toBe(
+					'Impossibile generare la sessione CIE'
+				);
+			});
+
+			it('Dovrebbe restituire 500 se verifyOtp non restituisce una sessione valida', async () => {
+				cieService.getCieUserIdentity.mockResolvedValue({
+					codiceFiscale: 'RSSMRA80A01H501U',
+					email: 'rssmra80a01h501u@cie.internal',
+					nomeCompleto: 'Mario Rossi'
+				});
+				supabaseAdmin.from.mockReturnValue({
+					select: jest.fn(() => ({
+						eq: jest.fn(() => ({
+							single: jest.fn().mockResolvedValue({
+								data: { id: 'utente-uuid-esistente' },
+								error: null
+							})
+						}))
+					}))
+				});
+				supabaseAdmin.auth.admin.generateLink.mockResolvedValue({
+					data: {
+						properties: { hashed_token: 'tok' }
+					},
+					error: null
+				});
+				db.auth.verifyOtp.mockResolvedValue({
+					data: { session: null },
+					error: { message: 'OTP expired' }
+				});
+
+				const risposta = await request(app)
+					.get('/api/auth/cie/callback')
+					.query({ code: 'code', state: 'st' })
+					.set('Cookie', ['cie_state=st']);
+
+				expect(risposta.statusCode).toBe(500);
+				expect(risposta.body.error).toBe(
+					'Impossibile avviare la sessione CIE'
+				);
 			});
 
 			it('Dovrebbe restituire 500 se lo scambio di identità ministeriale fallisce', async () => {

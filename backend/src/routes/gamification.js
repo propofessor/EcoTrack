@@ -28,20 +28,20 @@ router.get('/daily-score', async (req, res) => {
 		);
 
 		if (error) {
-			return res.status(500).json({
-				error: 'Errore nel calcolo del punteggio giornaliero'
-			});
+			console.error('[gamification] daily-score errore servizio:', error.message ?? error);
+			return res.status(500).json({ error: 'Errore nel calcolo del punteggio giornaliero' });
 		}
+		const scoreData = data;
 
 		return res.status(200).json({
 			message: 'Punteggio giornaliero calcolato con successo',
 			score: {
 				date: today,
-				grade: data.grade,
-				normalizedScore: parseFloat(data.normalized_score),
-				rawPoints: parseFloat(data.raw_points),
-				totalKm: parseFloat(data.total_km),
-				co2SavedKgs: parseFloat(data.co2_saved_kgs)
+				grade: scoreData.grade,
+				normalizedScore: parseFloat(scoreData.normalized_score),
+				rawPoints: parseFloat(scoreData.raw_points),
+				totalKm: parseFloat(scoreData.total_km),
+				co2SavedKgs: parseFloat(scoreData.co2_saved_kgs)
 			}
 		});
 	} catch (err) {
@@ -65,14 +65,14 @@ router.get('/weekly-score', async (req, res) => {
 			await gamificationService.getWeeklyScoreForUser(userId);
 
 		if (error) {
-			return res.status(500).json({
-				error: 'Errore nel calcolo del punteggio settimanale'
-			});
+			console.error('[gamification] weekly-score errore servizio:', error.message ?? error);
+			return res.status(500).json({ error: 'Errore nel calcolo del punteggio settimanale' });
 		}
+		const weeklyData = data;
 
 		return res.status(200).json({
 			message: 'Punteggio settimanale calcolato con successo',
-			...data
+			...weeklyData
 		});
 	} catch (err) {
 		console.error(
@@ -105,14 +105,14 @@ router.get('/leaderboard', async (req, res) => {
 			});
 
 		if (error) {
-			return res.status(500).json({
-				error: 'Errore nel recupero della classifica'
-			});
+			console.error('[gamification] leaderboard errore servizio:', error.message ?? error);
+			return res.status(500).json({ error: 'Errore nel recupero della classifica' });
 		}
+		const leaderboardData = data;
 
 		return res.status(200).json({
 			message: 'Classifica recuperata con successo',
-			...data
+			...leaderboardData
 		});
 	} catch (err) {
 		console.error(
@@ -139,9 +139,8 @@ router.get('/history', async (req, res) => {
 		);
 
 		if (error) {
-			return res.status(500).json({
-				error: 'Errore nel recupero dello storico delle performance'
-			});
+			console.error('[gamification] history errore servizio:', error.message ?? error);
+			return res.status(500).json({ error: 'Errore nel recupero dello storico delle performance' });
 		}
 
 		return res.status(200).json({

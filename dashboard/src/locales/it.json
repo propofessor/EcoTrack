@@ -1,0 +1,55 @@
+{
+  "header": {
+    "title": "EcoTrack Dashboard",
+    "subtitle": "Pannello di controllo municipale",
+    "save": "Salva layout",
+    "export": "Esporta",
+    "import": "Importa"
+  },
+  "widget": {
+    "configure": "Configura",
+    "delete": "Rimuovi widget",
+    "downloadCsv": "Scarica CSV",
+    "downloadPng": "Scarica PNG",
+    "addWidget": "Aggiungi widget",
+    "types": {
+      "bar": "Grafico a barre",
+      "line": "Grafico a linee",
+      "pie": "Grafico a torta",
+      "table": "Tabella dati",
+      "map": "Mappa"
+    }
+  },
+  "configModal": {
+    "title": "Configura widget",
+    "chartType": "Tipo grafico",
+    "dataset": "Dataset",
+    "dateFrom": "Data inizio",
+    "dateTo": "Data fine",
+    "apply": "Applica",
+    "cancel": "Annulla"
+  },
+  "exportModal": {
+    "title": "Esporta dati",
+    "csv": "CSV",
+    "png": "Immagine PNG"
+  },
+  "charts": {
+    "co2Monthly": "CO2 mensile (kg)",
+    "co2ByMode": "CO2 per mezzo",
+    "modes": {
+      "auto": "Auto",
+      "bus": "Bus",
+      "bike": "Bici",
+      "train": "Treno"
+    }
+  },
+  "table": {
+    "date": "Data Inizio",
+    "co2": "CO2 (kg)",
+    "points": "Punti"
+  },
+  "darkMode": {
+    "toggle": "Cambia tema"
+  }
+}

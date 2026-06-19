@@ -1,0 +1,191 @@
+{
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "back": "← Indietro",
+    "error": "Errore",
+    "loading": "Caricamento…",
+    "retry": "Riprova",
+    "logout": "Logout",
+    "or": "oppure"
+  },
+  "login": {
+    "title": "EcoTrack",
+    "subtitle": "Monitora la tua impronta ecologica",
+    "emailLabel": "Email",
+    "emailPlaceholder": "nome@esempio.it",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Accedi",
+    "submitting": "Accesso in corso…",
+    "forgotPassword": "Password dimenticata?",
+    "continueWithGoogle": "Continua con Google",
+    "continueWithCie": "Accedi con CIE",
+    "noAccount": "Non hai un account?",
+    "register": "Registrati",
+    "failed": "Accesso fallito"
+  },
+  "register": {
+    "title": "Crea il tuo account",
+    "nameLabel": "Nome e cognome",
+    "namePlaceholder": "Mario Rossi",
+    "emailLabel": "Email",
+    "emailPlaceholder": "nome@esempio.it",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Almeno 8 caratteri, 1 maiuscola, 1 numero",
+    "plateLabel": "Targa veicolo (opzionale)",
+    "platePlaceholder": "AB123CD",
+    "submit": "Registrati",
+    "submitting": "Registrazione…",
+    "hasAccount": "Hai già un account?",
+    "signIn": "Accedi",
+    "failed": "Registrazione fallita",
+    "errors": {
+      "name": "Il nome è obbligatorio.",
+      "email": "Email non valida.",
+      "password": "La password deve avere almeno 8 caratteri.",
+      "passwordUpper": "Usa almeno una lettera maiuscola.",
+      "passwordNumber": "Usa almeno un numero.",
+      "plate": "Formato targa non valido (es. AB123CD)."
+    }
+  },
+  "forgotPassword": {
+    "title": "Recupera password",
+    "step1Description": "Inserisci la tua email. Ti invieremo un codice per reimpostare la password.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "nome@esempio.it",
+    "submit": "Invia link di recupero",
+    "submitting": "Invio in corso…",
+    "step2Description": "Controlla la tua email e inserisci il codice ricevuto insieme alla nuova password.",
+    "tokenLabel": "Codice di recupero",
+    "tokenPlaceholder": "Incolla qui il codice dall'email",
+    "newPasswordLabel": "Nuova password",
+    "confirmPasswordLabel": "Conferma password",
+    "resetSubmit": "Reimposta password",
+    "resetting": "Aggiornamento…",
+    "resendCode": "Non hai ricevuto il codice? Riprova",
+    "backToLogin": "← Torna al login"
+  },
+  "emailVerification": {
+    "title": "Verifica la tua email",
+    "message": "Abbiamo inviato un link di conferma a",
+    "instruction": "Clicca il link nell'email per attivare il tuo account.",
+    "resend": "Reinvia email di verifica",
+    "sending": "Invio…",
+    "backToLogin": "Torna al login"
+  },
+  "profile": {
+    "title": "Profilo",
+    "personalData": "Dati personali",
+    "edit": "Modifica",
+    "nameLabel": "Nome e cognome",
+    "emailLabel": "Email",
+    "plateLabel": "Targa veicolo",
+    "plateEmpty": "Non inserita",
+    "saveChanges": "Salva modifiche",
+    "saving": "Salvataggio…",
+    "saved": "Salvato",
+    "profileUpdated": "Profilo aggiornato con successo.",
+    "saveFailed": "Impossibile salvare le modifiche.",
+    "changePassword": "Cambia password",
+    "newPassword": "Nuova password",
+    "confirmPassword": "Conferma password",
+    "updatePassword": "Aggiorna password",
+    "passwordChanged": "Password cambiata con successo.",
+    "passwordMismatch": "Le password non coincidono.",
+    "passwordInvalid": "Deve avere almeno 8 caratteri, una maiuscola, un numero e un carattere speciale.",
+    "preferences": "Preferenze",
+    "logoutConfirmTitle": "Logout",
+    "logoutConfirmMessage": "Vuoi uscire dall'applicazione?",
+    "deleteAccount": "Elimina account definitivamente",
+    "deleteConfirmTitle": "Elimina account",
+    "deleteConfirmMessage": "Questa operazione è irreversibile. Tutti i tuoi dati verranno cancellati definitivamente (GDPR).",
+    "deleteConfirm": "Elimina definitivamente",
+    "deleteFailed": "Impossibile eliminare l'account. Riprova."
+  },
+  "preferences": {
+    "title": "Preferenze",
+    "notifications": "Notifiche",
+    "dailyGrade": "Voto giornaliero",
+    "dailyGradeDesc": "Ricevi il voto giornaliero via notifica",
+    "language": "Lingua",
+    "leaderboardPrivacy": "Privacy classifica",
+    "leaderboardPrivacyDesc": "Come appare il tuo nome in classifica",
+    "theme": "Tema",
+    "themeLight": "☀️ Chiaro",
+    "themeDark": "🌙 Scuro",
+    "visibility": {
+      "nickname": "Nickname (es. \"Mario R.\")",
+      "anonymous": "Anonimo",
+      "full_name": "Nome completo"
+    },
+    "saveFailed": "Impossibile salvare le preferenze."
+  },
+  "home": {
+    "greeting": "Ciao, {{name}}!",
+    "greetingDefault": "Ciao!",
+    "weeklyScore": "Punteggio settim.",
+    "activeDays": "Giorni attivi",
+    "todayGrade": "Voto di oggi",
+    "quickActions": "Azioni rapide",
+    "calculateRoute": "Calcola percorso",
+    "viewHistory": "Storico",
+    "viewMap": "Mappa inquinamento"
+  },
+  "route": {
+    "title": "Calcolo percorso CO2",
+    "subtitle": "Confronta l'impatto ambientale dei diversi mezzi di trasporto",
+    "originPlaceholder": "Partenza (indirizzo o città)",
+    "destinationPlaceholder": "Destinazione (indirizzo o città)",
+    "calculate": "Calcola emissioni",
+    "calculating": "Calcolo…",
+    "resultsTitle": "Confronto emissioni",
+    "modes": {
+      "walking": "A piedi",
+      "bicycling": "In bicicletta",
+      "transit": "Trasporto pubblico",
+      "driving": "Automobile"
+    },
+    "ecoBadge": "🌿 Opzione più ecologica",
+    "co2Zero": "0 g CO₂",
+    "errorFill": "Inserisci partenza e destinazione.",
+    "errorCalc": "Impossibile calcolare le emissioni."
+  },
+  "history": {
+    "title": "Storico emissioni",
+    "periods": {
+      "day": "Giorno",
+      "week": "Settimana",
+      "month": "Mese",
+      "year": "Anno",
+      "all": "Tutto"
+    },
+    "stats": {
+      "total": "Totale",
+      "average": "Media",
+      "best": "Migliore",
+      "worst": "Peggiore"
+    }
+  },
+  "gamification": {
+    "title": "Classifica",
+    "weeklyScore": "Punteggio settim.",
+    "activeDays": "Giorni attivi",
+    "top10": "Top 10",
+    "top20": "Top 20",
+    "yourRank": "La tua posizione",
+    "weeklyHistory": "Storico settimanale",
+    "you": "Tu"
+  },
+  "map": {
+    "air": "Aria",
+    "noise": "Rumore",
+    "loading": "Caricamento…",
+    "airQuality": "Qualità aria",
+    "noiseLevel": "Rumore (dB)",
+    "low": "Basso",
+    "high": "Alto",
+    "locationDenied": "Permesso negato",
+    "locationDeniedMsg": "Abilita la geolocalizzazione nelle impostazioni."
+  }
+}

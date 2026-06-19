@@ -106,7 +106,7 @@ describe('Test delle rotte del Profilo Utente (/api/users)', () => {
 				data: {
 					user: {
 						...fintoUtente,
-						user_metadata: { plate: 'NUOVA999' }
+						user_metadata: { plate: 'EF456GH' }
 					}
 				},
 				error: null
@@ -115,19 +115,71 @@ describe('Test delle rotte del Profilo Utente (/api/users)', () => {
 			const risposta = await request(app)
 				.put('/api/users/me')
 				.set('Cookie', ['access_token=token_valido'])
-				.send({ plate: 'NUOVA999' }); // I dati che stiamo inviando nel body
+				.send({ plate: 'EF456GH' });
 
 			expect(risposta.statusCode).toBe(200);
 			expect(risposta.body.message).toBe(
 				'Profilo aggiornato con successo'
 			);
 
-			// Verifichiamo che l'Admin sia stato chiamato con l'ID corretto e i nuovi dati
 			expect(
 				supabaseAdmin.auth.admin.updateUserById
 			).toHaveBeenCalledWith('utente-123', {
-				user_metadata: { plate: 'NUOVA999' }
+				user_metadata: { plate: 'EF456GH' }
 			});
+		});
+
+		it('Dovrebbe restituire 400 se la targa non rispetta il formato italiano (RF7.4)', async () => {
+			db.auth.getUser.mockResolvedValue({
+				data: { user: fintoUtente },
+				error: null
+			});
+
+			const risposta = await request(app)
+				.put('/api/users/me')
+				.set('Cookie', ['access_token=token_valido'])
+				.send({ plate: 'TARGA_INVALIDA' });
+
+			expect(risposta.statusCode).toBe(400);
+			expect(risposta.body.error).toContain('targa');
+			expect(supabaseAdmin.auth.admin.updateUserById).not.toHaveBeenCalled();
+		});
+
+		it('Dovrebbe restituire 400 se non vengono forniti campi da aggiornare', async () => {
+			db.auth.getUser.mockResolvedValue({
+				data: { user: fintoUtente },
+				error: null
+			});
+
+			const risposta = await request(app)
+				.put('/api/users/me')
+				.set('Cookie', ['access_token=token_valido'])
+				.send({});
+
+			expect(risposta.statusCode).toBe(400);
+			expect(risposta.body.error).toContain('aggiornare');
+			expect(supabaseAdmin.auth.admin.updateUserById).not.toHaveBeenCalled();
+		});
+
+		it('Dovrebbe restituire 400 se Supabase segnala un errore durante il salvataggio', async () => {
+			db.auth.getUser.mockResolvedValue({
+				data: { user: fintoUtente },
+				error: null
+			});
+			supabaseAdmin.auth.admin.updateUserById.mockResolvedValue({
+				data: null,
+				error: { message: 'Constraint violation' }
+			});
+
+			const risposta = await request(app)
+				.put('/api/users/me')
+				.set('Cookie', ['access_token=token_valido'])
+				.send({ name: 'Nuovo Nome' });
+
+			expect(risposta.statusCode).toBe(400);
+			expect(risposta.body.error).toBe(
+				'Impossibile aggiornare il profilo'
+			);
 		});
 	});
 
@@ -136,13 +188,10 @@ describe('Test delle rotte del Profilo Utente (/api/users)', () => {
 	// ==========================================
 	describe('DELETE /api/users/me', () => {
 		it("Dovrebbe eliminare l'utente, pulire i cookie e restituire 200", async () => {
-			// 1. Passiamo il controllo del middleware
 			db.auth.getUser.mockResolvedValue({
 				data: { user: fintoUtente },
 				error: null
 			});
-
-			// 2. Simuliamo la cancellazione avvenuta con successo
 			supabaseAdmin.auth.admin.deleteUser.mockResolvedValue({
 				error: null
 			});
@@ -155,19 +204,32 @@ describe('Test delle rotte del Profilo Utente (/api/users)', () => {
 			expect(risposta.body.message).toContain(
 				'Account eliminato definitivamente'
 			);
-
-			// Verifichiamo che l'Admin abbia cancellato l'utente giusto
 			expect(supabaseAdmin.auth.admin.deleteUser).toHaveBeenCalledWith(
 				'utente-123'
 			);
 
-			// Verifichiamo che Express abbia inviato l'istruzione di cancellare i cookie
 			const setCookieHeaders = risposta.headers['set-cookie'];
 			expect(setCookieHeaders).toBeDefined();
-			// Controlliamo che i cookie access_token e refresh_token siano stati svuotati
 			expect(
 				setCookieHeaders.some((c) => c.includes('access_token=;'))
 			).toBe(true);
+		});
+
+		it("Dovrebbe restituire 400 se Supabase non riesce a eliminare l'utente", async () => {
+			db.auth.getUser.mockResolvedValue({
+				data: { user: fintoUtente },
+				error: null
+			});
+			supabaseAdmin.auth.admin.deleteUser.mockResolvedValue({
+				error: { message: 'User not found' }
+			});
+
+			const risposta = await request(app)
+				.delete('/api/users/me')
+				.set('Cookie', ['access_token=token_valido']);
+
+			expect(risposta.statusCode).toBe(400);
+			expect(risposta.body.error).toContain('cancellazione');
 		});
 	});
 });

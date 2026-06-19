@@ -18,8 +18,9 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 10.0.2.2 = localhost on Android emulator; replace for physical devices.
-export const BASE_URL = 'http://10.0.2.2:3000/api';
+// EXPO_PUBLIC_API_URL overrides the default.
+// With `adb reverse tcp:3000 tcp:3000`, localhost works on physical devices too.
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api';
 
 const client = axios.create({
   baseURL: BASE_URL,

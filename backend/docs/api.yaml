@@ -1,25 +1,41 @@
 openapi: 3.0.3
 info:
-  title: Stateless Authentication API
-  description: API endpoints for a stateless JWT authentication system aligned with the specific database schema.
-  version: 1.1.0
+  title: EcoTrack API
+  description: REST API for the EcoTrack environmental-footprint tracking platform (D1 spec RF1–RF11).
+  version: 2.0.0
 servers:
   - url: /api
-    description: Relative API server route
+    description: Relative API base path
+
 tags:
   - name: Authentication
-    description: Standard email and password operations
+    description: Email/password registration, login, and password recovery
   - name: SSO
-    description: Single Sign-On operations (Google & CIE)
+    description: Single Sign-On — Google OAuth 2.0 and CIE OIDC (browser and mobile flows)
   - name: Session
-    description: Token lifecycle and user session endpoints
+    description: Token lifecycle (refresh, logout, current user)
+  - name: Users
+    description: User profile, password, push-token, and account management
+  - name: Maps
+    description: Pollution heatmap and route CO2 calculation (RF8, RF9)
+  - name: History
+    description: Trip history CRUD (RF3)
+  - name: Dashboard
+    description: Aggregate CO2 stats for the web dashboard (RF2)
+  - name: Gamification
+    description: Daily/weekly scores, leaderboard, and performance history (RF11)
+  - name: Export
+    description: Personal data export (GDPR / RF10)
+
 paths:
+
+  # ─── AUTHENTICATION ────────────────────────────────────────────────────────
+
   /auth/register:
     post:
-      tags:
-        - Authentication
+      tags: [Authentication]
       summary: Register a new user
-      description: Creates a user record and their associated local_credentials.
+      description: Creates a Supabase Auth user. When email confirmation is enabled the response includes `email_verification_required: true` and no cookies are set.
       requestBody:
         required: true
         content:
@@ -28,19 +44,28 @@ paths:
               $ref: '#/components/schemas/RegisterRequest'
       responses:
         '201':
-          description: User successfully created
+          description: User created (email/password flow — cookies set)
           headers:
             Set-Cookie:
-              description: Access and Refresh tokens (HttpOnly)
+              description: access_token and refresh_token (HttpOnly)
               schema:
                 type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email_verification_required:
+                    type: boolean
+                  message:
+                    type: string
         '400':
-          description: Invalid input or email already exists
+          $ref: '#/components/responses/BadRequest'
+
   /auth/login:
     post:
-      tags:
-        - Authentication
-      summary: Authenticate an existing user
+      tags: [Authentication]
+      summary: Authenticate with email and password
       requestBody:
         required: true
         content:
@@ -49,108 +74,750 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Successfully authenticated
+          description: Authenticated — cookies set
           headers:
             Set-Cookie:
-              description: Access and Refresh tokens (HttpOnly)
+              description: access_token and refresh_token (HttpOnly)
               schema:
                 type: string
         '401':
-          description: Invalid credentials
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: Request a password-reset email
+      description: Always returns 200 to prevent user enumeration. Calls Supabase `generateLink({ type: 'recovery' })`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Recovery email sent (or silently ignored for unknown address)
+
+  /auth/reset-password:
+    post:
+      tags: [Authentication]
+      summary: Reset password using a recovery token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token_hash, newPassword]
+              properties:
+                token_hash:
+                  type: string
+                  description: The token from the Supabase recovery link
+                newPassword:
+                  type: string
+                  format: password
+                  description: "Must satisfy: ≥8 chars, uppercase, digit, special char"
+      responses:
+        '200':
+          description: Password updated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/resend-verification:
+    post:
+      tags: [Authentication]
+      summary: Resend email verification link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Verification email resent
+
+  # ─── SSO — BROWSER FLOWS ───────────────────────────────────────────────────
+
   /auth/google:
     get:
-      tags:
-        - SSO
-      summary: Initiate Google OAuth 2.0 flow
+      tags: [SSO]
+      summary: Initiate Google OAuth 2.0 (browser)
       responses:
         '302':
           description: Redirect to Google consent screen
+
   /auth/google/callback:
     get:
-      tags:
-        - SSO
-      summary: Handle Google OAuth callback
-      description: Maps to an existing user or creates a new one, adding a record in auth_providers.
+      tags: [SSO]
+      summary: Handle Google OAuth callback (browser)
       responses:
         '302':
-          description: Redirect to frontend dashboard with HttpOnly cookies set
+          description: Redirect to frontend with HttpOnly cookies set
+
   /auth/cie:
     get:
-      tags:
-        - SSO
-      summary: Initiate CIE OIDC flow
+      tags: [SSO]
+      summary: Initiate CIE OIDC flow (browser)
       responses:
         '302':
           description: Redirect to CIE provider (Ministero dell'Interno)
+
   /auth/cie/callback:
     get:
-      tags:
-        - SSO
-      summary: Handle CIE OIDC callback
-      description: Maps to an existing user or creates a new one, adding a record in auth_providers.
+      tags: [SSO]
+      summary: Handle CIE OIDC callback (browser)
       responses:
         '302':
-          description: Redirect to frontend dashboard with HttpOnly cookies set
+          description: Redirect to frontend with HttpOnly cookies set
+
+  # ─── SSO — MOBILE FLOWS ────────────────────────────────────────────────────
+
+  /auth/google/token:
+    post:
+      tags: [SSO]
+      summary: Google sign-in with ID token (mobile)
+      description: Accepts the `id_token` from `expo-auth-session`, signs in via `signInWithIdToken`, and returns tokens both as JSON and HttpOnly cookies.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_token]
+              properties:
+                id_token:
+                  type: string
+      responses:
+        '200':
+          description: Signed in — access_token and refresh_token returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/cie/mobile-url:
+    get:
+      tags: [SSO]
+      summary: Get CIE authorization URL for mobile
+      description: Returns the OIDC authorization URL plus the `state` and `nonce` values the mobile client must verify on callback.
+      responses:
+        '200':
+          description: Authorization URL and PKCE/nonce values
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  state:
+                    type: string
+                  nonce:
+                    type: string
+
+  /auth/cie/mobile-callback:
+    get:
+      tags: [SSO]
+      summary: Handle CIE callback for mobile
+      description: Accepts `code` and `state` query params, exchanges them for tokens, and returns them as JSON.
+      parameters:
+        - in: query
+          name: code
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: state
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tokens returned as JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ─── SESSION ───────────────────────────────────────────────────────────────
+
   /auth/refresh:
     post:
-      tags:
-        - Session
-      summary: Refresh the Access Token
-      description: Uses the HttpOnly Refresh Token cookie to issue a new Access Token.
+      tags: [Session]
+      summary: Refresh the access token
+      description: Reads the HttpOnly `refresh_token` cookie and issues a new `access_token`.
       responses:
         '200':
-          description: Access token successfully refreshed
-          headers:
-            Set-Cookie:
-              description: New Access token
-              schema:
-                type: string
+          description: Access token refreshed
         '401':
-          description: Invalid or expired Refresh Token
+          $ref: '#/components/responses/Unauthorized'
+
   /auth/logout:
     post:
-      tags:
-        - Session
-      summary: Log the user out
-      description: Clears the HttpOnly cookies by setting their expiration date to the past.
+      tags: [Session]
+      summary: Log out
+      description: Clears `access_token` and `refresh_token` HttpOnly cookies.
       responses:
         '200':
-          description: Successfully logged out
-          headers:
-            Set-Cookie:
-              description: Expired tokens to clear cookies
-              schema:
-                type: string
+          description: Logged out
+
   /auth/me:
     get:
-      tags:
-        - Session
-      summary: Get current user profile
-      description: Requires a valid Access Token cookie. Returns data mapped from the users table.
+      tags: [Session]
+      summary: Get current authenticated user
       security:
         - cookieAuth: []
       responses:
         '200':
-          description: User profile retrieved
+          description: User profile
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
         '401':
-          description: Unauthorized (Token missing or invalid)
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── USERS ─────────────────────────────────────────────────────────────────
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get profile of the authenticated user
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User and profile metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+                  profile:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [Users]
+      summary: Update name, plate, or preferences
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Mario Rossi
+                plate:
+                  type: string
+                  example: AB123CD
+                  description: Italian plate format (2 letters, 3 digits, 2 letters). Empty string removes the plate.
+                preferences:
+                  type: object
+      responses:
+        '200':
+          description: Profile updated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags: [Users]
+      summary: Delete account permanently (GDPR)
+      description: Hard-deletes the Supabase Auth user and clears all cookies.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Account deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/password:
+    put:
+      tags: [Users]
+      summary: Change password (RF7.2)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newPassword]
+              properties:
+                newPassword:
+                  type: string
+                  format: password
+                  description: "Must satisfy: ≥8 chars, uppercase, digit, special char"
+      responses:
+        '200':
+          description: Password updated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/push-token:
+    put:
+      tags: [Users]
+      summary: Save Expo push token (RF11.7)
+      description: Merges `expo_push_token` into the `preferences` JSONB column of the `users` table.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [expo_push_token]
+              properties:
+                expo_push_token:
+                  type: string
+                  example: ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+      responses:
+        '200':
+          description: Push token saved
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── MAPS ──────────────────────────────────────────────────────────────────
+
+  /maps/heatmap:
+    get:
+      tags: [Maps]
+      summary: Pollution heatmap data (RF8.2/8.3)
+      description: Returns 15 seeded mock coordinates around Trento with intensity weights for Leaflet.heat.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [air, noise]
+          description: Pollution type
+      responses:
+        '200':
+          description: Array of weighted coordinates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  points:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HeatmapPoint'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /maps/calculate-co2:
+    post:
+      tags: [Maps]
+      summary: Calculate CO2 emissions per transport mode (RF9.3)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [distances]
+              properties:
+                distances:
+                  type: object
+                  description: Distance in km per mode
+                  properties:
+                    walking:
+                      type: number
+                    bicycling:
+                      type: number
+                    transit:
+                      type: number
+                    driving:
+                      type: number
+      responses:
+        '200':
+          description: CO2 emissions per mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emissions:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        co2_kg:
+                          type: number
+                  driving_movement_type_id:
+                    type: string
+                    format: uuid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── HISTORY ───────────────────────────────────────────────────────────────
+
+  /history:
+    get:
+      tags: [History]
+      summary: Get trip history for the authenticated user (RF3.1)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of trips ordered by date descending
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TripEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [History]
+      summary: Save a new trip (RF3.2)
+      description: Saves the trip and triggers an asynchronous `recalculateDailyScore` (RF11.1).
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripRequest'
+      responses:
+        '201':
+          description: Trip saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entry:
+                    $ref: '#/components/schemas/TripEntry'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── DASHBOARD ─────────────────────────────────────────────────────────────
+
+  /dashboard/co2-stats:
+    get:
+      tags: [Dashboard]
+      summary: Paginated CO2 statistics (RF2)
+      description: Requires an API key header (`x-api-key`). Supports date filtering, pagination, and sorting.
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - in: query
+          name: date_start
+          schema:
+            type: string
+            format: date
+          description: Filter entries on or after this date (ISO 8601)
+        - in: query
+          name: date_end
+          schema:
+            type: string
+            format: date
+          description: Filter entries on or before this date (ISO 8601)
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          description: Number of rows to skip (pagination)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 100
+          description: Maximum rows to return (pagination)
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [timestamp_start, co2_kgs, points]
+            default: timestamp_start
+          description: Column to sort by
+        - in: query
+          name: sort_dir
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort direction
+      responses:
+        '200':
+          description: CO2 stats array with row count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/co2-stats.csv:
+    get:
+      tags: [Dashboard]
+      summary: Download CO2 stats as CSV (RF2)
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - in: query
+          name: date_start
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: date_end
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /dashboard/leaderboard:
+    get:
+      tags: [Dashboard]
+      summary: Top users by points (RF2)
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Top users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+
+  # ─── GAMIFICATION ──────────────────────────────────────────────────────────
+
+  /gamification/daily-score:
+    get:
+      tags: [Gamification]
+      summary: Daily grade and score for today (RF11.1/11.2)
+      description: Recalculates in real time from the user's trips for today.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Today's grade and score
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  score:
+                    $ref: '#/components/schemas/DailyScore'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /gamification/weekly-score:
+    get:
+      tags: [Gamification]
+      summary: Aggregated weekly score (RF11.3)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Weekly aggregate
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /gamification/leaderboard:
+    get:
+      tags: [Gamification]
+      summary: Current week leaderboard (RF11.4)
+      description: Returns top N users (10 or 20 only, per spec) plus the requesting user's position and neighbors. Respects `leaderboard_visibility` preference.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            enum: [10, 20]
+            default: 10
+      responses:
+        '200':
+          description: Leaderboard data
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /gamification/history:
+    get:
+      tags: [Gamification]
+      summary: Personal weekly performance history (RF11.6)
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 12
+          description: Number of past weeks to return
+      responses:
+        '200':
+          description: Weekly history array
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  weeklyHistory:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── EXPORT ────────────────────────────────────────────────────────────────
+
+  /export/user-data:
+    get:
+      tags: [Export]
+      summary: Export all personal data as JSON (GDPR / RF10)
+      description: Returns trips, promotional codes, and aggregate stats for the authenticated user.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Full personal data export
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportTimestamp:
+                    type: string
+                    format: date-time
+                  user:
+                    type: object
+                  stats:
+                    type: object
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TripEntry'
+                  rewards:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+# ─── COMPONENTS ──────────────────────────────────────────────────────────────
+
 components:
   securitySchemes:
     cookieAuth:
       type: apiKey
       in: cookie
       name: access_token
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+
+  responses:
+    BadRequest:
+      description: Bad request — validation error or missing required field
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    Unauthorized:
+      description: Unauthorized — missing or invalid token/API key
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
   schemas:
     RegisterRequest:
       type: object
-      required:
-        - email
-        - password
-        - name
+      required: [email, password, name]
       properties:
         email:
           type: string
@@ -165,48 +832,121 @@ components:
           example: Mario Rossi
         plate:
           type: string
-          example: AG881PF
+          example: AB123CD
         preferences:
           type: object
-          description: Initial user preferences stored as JSON
-          example: { "theme": "dark", "notifications": true }
+          example: { theme: dark, notifications: true }
+
     LoginRequest:
       type: object
-      required:
-        - email
-        - password
+      required: [email, password]
       properties:
         email:
           type: string
           format: email
-          example: user@example.com
         password:
           type: string
           format: password
-          example: SecurePassword123!
+
+    TokenPair:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
     UserProfile:
       type: object
-      description: Data representing the users table.
       properties:
         id:
           type: string
           format: uuid
-          example: 123e4567-e89b-12d3-a456-426614174000
         email:
           type: string
           format: email
-          example: user@example.com
         name:
           type: string
-          example: Mario Rossi
         plate:
           type: string
-          example: AG881PF
-        achievements:
-          type: object
-          description: JSON object representing unlocked achievements
-          example: { "first_walk": true, "carbon_saver_level_1": false }
+          example: AB123CD
         preferences:
           type: object
-          description: JSON object representing user preferences
-          example: { "theme": "dark", "notifications": true }
+          example: { theme: dark, notifications: true, leaderboard_visibility: nickname }
+
+    HeatmapPoint:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        weight:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+
+    TripEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp_start:
+          type: string
+          format: date-time
+        timestamp_end:
+          type: string
+          format: date-time
+        co2_kgs:
+          type: number
+        points:
+          type: number
+        movement_types:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            label:
+              type: string
+              example: driving
+
+    TripRequest:
+      type: object
+      required: [timestamp_start, timestamp_end, movement_type_id, co2_kgs, points]
+      properties:
+        timestamp_start:
+          type: string
+          format: date-time
+        timestamp_end:
+          type: string
+          format: date-time
+        movement_type_id:
+          type: string
+          format: uuid
+        co2_kgs:
+          type: number
+        points:
+          type: number
+
+    DailyScore:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        grade:
+          type: string
+          example: A
+        normalizedScore:
+          type: number
+        rawPoints:
+          type: number
+        totalKm:
+          type: number
+        co2SavedKgs:
+          type: number

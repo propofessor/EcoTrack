@@ -36,18 +36,17 @@ router.get('/', async (req, res) => {
 			.order('timestamp_start', { ascending: false });
 
 		if (error) {
-			console.error(
-				'Errore nel recupero dello storico da Supabase:',
-				error.message
-			);
-			return res.status(400).json({
+			console.error('[history] errore query storico:', error.message);
+			return res.status(500).json({
 				error: 'Impossibile recuperare lo storico dei viaggi'
 			});
 		}
 
+		// Un risultato vuoto è legittimo per un utente senza viaggi: restituiamo
+		// una lista vuota, NON dati mock (sarebbero viaggi fittizi per un utente reale).
 		return res.status(200).json({
 			message: 'Storico recuperato con successo',
-			history: data
+			history: data || []
 		});
 	} catch (err) {
 		console.error('Errore interno nel server (GET history):', err);
@@ -102,7 +101,7 @@ router.post('/', async (req, res) => {
 				"Errore durante l'inserimento del viaggio su Supabase:",
 				error.message
 			);
-			return res.status(400).json({
+			return res.status(500).json({
 				error: 'Impossibile salvare il viaggio nello storico'
 			});
 		}

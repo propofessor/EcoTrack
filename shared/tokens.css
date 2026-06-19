@@ -1,0 +1,42 @@
+/*
+  EcoTrack — shared design tokens
+  ─────────────────────────────────
+  Zinc-based palette used by both the dashboard (Vite / Tailwind v4)
+  and the mobile app (Expo / NativeWind v4).
+
+  Light-theme tokens are in :root.
+  Dark-theme tokens use @media (prefers-color-scheme: dark) as the
+  system-level baseline that each platform can then override:
+    dashboard → [data-theme='dark'] in dashboard/src/styles/index.css
+    mobile    → relies on this media query directly
+
+  Note: mobile/global.css inlines these values rather than @importing
+  this file, to avoid PostCSS @import resolution issues in Metro.
+*/
+
+@layer base {
+
+  /* ── LIGHT THEME ── */
+  :root {
+    --bg-primary:     #f4f4f5; /* Zinc 100 — page background */
+    --bg-surface:     #ffffff; /* Pure white — cards / headers */
+    --text-primary:   #09090b; /* Zinc 950 — body copy */
+    --text-secondary: #71717a; /* Zinc 500 — labels / muted */
+    --border-color:   #e4e4e7; /* Zinc 200 — dividers / borders */
+    --accent:         #18181b; /* Zinc 900 — primary action */
+    --accent-light:   #f4f4f5; /* Zinc 100 — accent background */
+  }
+
+  /* ── DARK THEME (system-level baseline) ── */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary:     #09090b; /* Zinc 950 — near-black page */
+      --bg-surface:     #121214; /* Zinc 900 alt — depth layer */
+      --text-primary:   #f4f4f5; /* Zinc 100 */
+      --text-secondary: #a1a1aa; /* Zinc 400 */
+      --border-color:   #27272a; /* Zinc 800 */
+      --accent:         #f4f4f5; /* Inverted for dark */
+      --accent-light:   #18181b; /* Zinc 800 */
+    }
+  }
+}

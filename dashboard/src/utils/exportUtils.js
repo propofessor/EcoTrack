@@ -1,5 +1,6 @@
 // src/utils/exportUtils.js
 import html2canvas from "html2canvas";
+import Papa from "papaparse";
 
 // RF2: Esporta un elemento DOM come immagine PNG
 export async function exportWidgetAsImage(element, filename) {
@@ -19,24 +20,24 @@ export async function exportWidgetAsImage(element, filename) {
   }
 }
 
-// RF2: Scarica i dati di un widget come file CSV
-export async function exportWidgetAsCsv(dataset, config) {
-  const params = new URLSearchParams();
-  if (config.startDate) params.set("date_start", config.startDate);
-  if (config.endDate) params.set("date_end", config.endDate);
-
-  // Usa l'endpoint CSV del backend (RF3.1)
-  const apiKey = import.meta.env.VITE_API_KEY;
-  const url = `/api/dashboard/${dataset}.csv?${params.toString()}`;
-
+// RF2: Esporta i dati VISUALIZZATI nel widget come file CSV.
+// RF2/Use-Case RF2 richiedono l'export dei "dati visualizzati": serializziamo
+// lato client l'array già mostrato dal widget (qualsiasi dataset: tabelle,
+// transport_split, leaderboard, ...) invece di chiamare un endpoint per-dataset
+// inesistente nel backend.
+export function exportWidgetAsCsv(dataset, data) {
+  if (!Array.isArray(data) || data.length === 0) {
+    alert("Nessun dato da esportare");
+    return;
+  }
   try {
-    const res = await fetch(url, { headers: { "x-api-key": apiKey } });
-    if (!res.ok) throw new Error("Errore nel download CSV");
-    const blob = await res.blob();
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${dataset}-${Date.now()}.csv`;
+    link.download = `${dataset || "export"}-${Date.now()}.csv`;
     link.click();
+    URL.revokeObjectURL(link.href);
   } catch (err) {
     console.error("Errore export CSV:", err);
     alert("Impossibile esportare i dati in CSV");

@@ -1,4 +1,4 @@
-import client from './client';
+import client from "./client";
 
 /**
  * POST /api/maps/calculate-co2
@@ -9,6 +9,6 @@ import client from './client';
  * @returns {{ emissions: object, driving_movement_type_id: string }}
  */
 export async function calculateCo2({ distances }) {
-  const res = await client.post('/maps/calculate-co2', { distances });
+  const res = await client.post("/maps/calculate-co2", { distances });
   return res.data;
 }

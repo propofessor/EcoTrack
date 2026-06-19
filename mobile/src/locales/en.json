@@ -1,0 +1,191 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "← Back",
+    "error": "Error",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "logout": "Logout",
+    "or": "or"
+  },
+  "login": {
+    "title": "EcoTrack",
+    "subtitle": "Monitor your ecological footprint",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "forgotPassword": "Forgot password?",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithCie": "Sign in with CIE",
+    "noAccount": "Don't have an account?",
+    "register": "Register",
+    "failed": "Sign in failed"
+  },
+  "register": {
+    "title": "Create your account",
+    "nameLabel": "Full name",
+    "namePlaceholder": "John Smith",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "At least 8 chars, 1 uppercase, 1 number",
+    "plateLabel": "Vehicle plate (optional)",
+    "platePlaceholder": "AB123CD",
+    "submit": "Register",
+    "submitting": "Registering…",
+    "hasAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "failed": "Registration failed",
+    "errors": {
+      "name": "Name is required.",
+      "email": "Invalid email.",
+      "password": "Password must be at least 8 characters.",
+      "passwordUpper": "Use at least one uppercase letter.",
+      "passwordNumber": "Use at least one number.",
+      "plate": "Invalid plate format (e.g. AB123CD)."
+    }
+  },
+  "forgotPassword": {
+    "title": "Reset password",
+    "step1Description": "Enter your email. We'll send you a code to reset your password.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@example.com",
+    "submit": "Send reset link",
+    "submitting": "Sending…",
+    "step2Description": "Check your email and enter the code you received along with your new password.",
+    "tokenLabel": "Recovery code",
+    "tokenPlaceholder": "Paste the code from the email",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm password",
+    "resetSubmit": "Reset password",
+    "resetting": "Updating…",
+    "resendCode": "Didn't receive the code? Resend",
+    "backToLogin": "← Back to login"
+  },
+  "emailVerification": {
+    "title": "Verify your email",
+    "message": "We sent a confirmation link to",
+    "instruction": "Click the link in the email to activate your account.",
+    "resend": "Resend verification email",
+    "sending": "Sending…",
+    "backToLogin": "Back to login"
+  },
+  "profile": {
+    "title": "Profile",
+    "personalData": "Personal data",
+    "edit": "Edit",
+    "nameLabel": "Full name",
+    "emailLabel": "Email",
+    "plateLabel": "Vehicle plate",
+    "plateEmpty": "Not set",
+    "saveChanges": "Save changes",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "profileUpdated": "Profile updated successfully.",
+    "saveFailed": "Unable to save changes.",
+    "changePassword": "Change password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "updatePassword": "Update password",
+    "passwordChanged": "Password changed successfully.",
+    "passwordMismatch": "Passwords do not match.",
+    "passwordInvalid": "Must be at least 8 characters with an uppercase letter, a number, and a special character.",
+    "preferences": "Preferences",
+    "logoutConfirmTitle": "Logout",
+    "logoutConfirmMessage": "Do you want to sign out?",
+    "deleteAccount": "Delete account permanently",
+    "deleteConfirmTitle": "Delete account",
+    "deleteConfirmMessage": "This action is irreversible. All your data will be permanently deleted (GDPR).",
+    "deleteConfirm": "Delete permanently",
+    "deleteFailed": "Unable to delete the account. Please try again."
+  },
+  "preferences": {
+    "title": "Preferences",
+    "notifications": "Notifications",
+    "dailyGrade": "Daily grade",
+    "dailyGradeDesc": "Receive your daily grade as a push notification",
+    "language": "Language",
+    "leaderboardPrivacy": "Leaderboard privacy",
+    "leaderboardPrivacyDesc": "How your name appears on the leaderboard",
+    "theme": "Theme",
+    "themeLight": "☀️ Light",
+    "themeDark": "🌙 Dark",
+    "visibility": {
+      "nickname": "Nickname (e.g. \"Mario R.\")",
+      "anonymous": "Anonymous",
+      "full_name": "Full name"
+    },
+    "saveFailed": "Unable to save preferences."
+  },
+  "home": {
+    "greeting": "Hello, {{name}}!",
+    "greetingDefault": "Hello!",
+    "weeklyScore": "Weekly score",
+    "activeDays": "Active days",
+    "todayGrade": "Today's grade",
+    "quickActions": "Quick actions",
+    "calculateRoute": "Calculate route",
+    "viewHistory": "History",
+    "viewMap": "Pollution map"
+  },
+  "route": {
+    "title": "CO2 Route Calculator",
+    "subtitle": "Compare the environmental impact of different transport modes",
+    "originPlaceholder": "Origin (address or city)",
+    "destinationPlaceholder": "Destination (address or city)",
+    "calculate": "Calculate emissions",
+    "calculating": "Calculating…",
+    "resultsTitle": "Emissions comparison",
+    "modes": {
+      "walking": "Walking",
+      "bicycling": "Cycling",
+      "transit": "Public transport",
+      "driving": "Car"
+    },
+    "ecoBadge": "🌿 Most eco-friendly option",
+    "co2Zero": "0 g CO₂",
+    "errorFill": "Please enter origin and destination.",
+    "errorCalc": "Unable to calculate emissions."
+  },
+  "history": {
+    "title": "Emissions history",
+    "periods": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "all": "All"
+    },
+    "stats": {
+      "total": "Total",
+      "average": "Average",
+      "best": "Best",
+      "worst": "Worst"
+    }
+  },
+  "gamification": {
+    "title": "Leaderboard",
+    "weeklyScore": "Weekly score",
+    "activeDays": "Active days",
+    "top10": "Top 10",
+    "top20": "Top 20",
+    "yourRank": "Your position",
+    "weeklyHistory": "Weekly history",
+    "you": "You"
+  },
+  "map": {
+    "air": "Air",
+    "noise": "Noise",
+    "loading": "Loading…",
+    "airQuality": "Air quality",
+    "noiseLevel": "Noise (dB)",
+    "low": "Low",
+    "high": "High",
+    "locationDenied": "Permission denied",
+    "locationDeniedMsg": "Enable location services in your settings."
+  }
+}
