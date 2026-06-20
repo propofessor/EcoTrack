@@ -8,7 +8,6 @@ import {
 } from 'recharts';
 import { useElementSize } from '../../hooks/useElementSize.js';
 
-const COLORS = ['#8ab834', '#e7dc0c', '#f59e0b', '#d05305', '#b73410', '#3f981e'];
 import { transportColor } from '../../utils/labels.js';
 
 // Soglia minima: spicchi sotto questa percentuale non mostrano l'etichetta
@@ -80,8 +79,8 @@ export function ChartPie({ data = [], loading = false }) {
 								borderColor: 'var(--border-color)',
 								borderRadius: '0.375rem',
 								boxShadow: 'var(--shadow)',
-								color: 'var(--text-primary)'
-								textTransform: 'capitalize',	
+								color: 'var(--text-primary)',
+								textTransform: 'capitalize'
 							}}
 							formatter={(value, name) => [
 								`${value} kg CO2`,

@@ -13,8 +13,6 @@ async function getCarEmissionFactor(plate) {
 	}
 
 	try {
-		console.log(`Ricerca dati online per la targa: ${plate}...`);
-
 		if (plate.toUpperCase().startsWith('E')) return 0;
 		if (plate.toUpperCase().startsWith('A')) return 140;
 

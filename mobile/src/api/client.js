@@ -36,12 +36,6 @@ function resolveBaseUrl() {
 
 export const BASE_URL = resolveBaseUrl();
 
-if (__DEV__) {
-  // Surfaces the resolved backend URL in the Metro logs so connection
-  // problems are obvious at a glance.
-  console.log(`[api] BASE_URL = ${BASE_URL}`);
-}
-
 const client = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,

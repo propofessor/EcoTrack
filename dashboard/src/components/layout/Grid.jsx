@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { GridBackground } from 'react-grid-layout/extras';
 import { Responsive, useContainerWidth } from 'react-grid-layout';
 import _ from 'lodash';
 import { Plus } from 'lucide-react';
@@ -130,16 +129,6 @@ export default function Grid({ items, setItems }) {
 			<div ref={containerRef} className='relative mt-4'>
 				{mounted && (
 					<>
-						{/*<GridBackground
-							width={width}
-							cols={cols}
-							rowHeight={30}
-							containerPadding={gridConfig.margin}
-							color='rgba(210, 147, 128, 0.3)'
-							borderRadius={0}
-							rows={100}
-						/>*/}
-
 						<Responsive
 							breakpoints={{
 								lg: 1200,

@@ -172,7 +172,6 @@ router.get('/cie', async (req, res) => {
 });
 router.get('/cie/callback', async (req, res) => {
 	try {
-		console.log('✅ Callback CIE ricevuta con query:', req.query);
 		const { code, state, error: cieError } = req.query;
 		const savedState = req.cookies.cie_state;
 

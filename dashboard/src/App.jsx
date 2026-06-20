@@ -1,6 +1,4 @@
 import Dashboard from './pages/Dashboard.jsx';
-//import "react-grid-layout/css/styles.css";
-//import "react-resizable/css/styles.css";
 
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import CookieBanner from './components/ui/CookieBanner.jsx';

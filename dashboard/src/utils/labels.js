@@ -4,23 +4,27 @@
 // dei widget restano sempre allineate.
 
 export const WIDGET_TYPES = [
-	{ value: 'ChartBar',  label: 'Istogramma'        },
-	{ value: 'ChartPie',  label: 'Grafico a Torta'   },
-	{ value: 'ChartLine', label: 'Grafico a Linee'   },
-	{ value: 'DataTable', label: 'Tabella Dati'      },
-	{ value: 'MapWidget', label: 'Mappa Interattiva' },
+	{ value: 'ChartBar', label: 'Istogramma' },
+	{ value: 'ChartPie', label: 'Grafico a Torta' },
+	{ value: 'ChartLine', label: 'Grafico a Linee' },
+	{ value: 'DataTable', label: 'Tabella Dati' },
+	{ value: 'MapWidget', label: 'Mappa Interattiva' }
 ];
 
 export const DATASETS = [
-	{ value: 'co2_monthly',     label: 'CO2 Mensile per Mezzo'            },
+	{ value: 'co2_monthly', label: 'CO2 Mensile per Mezzo' },
 	{ value: 'transport_split', label: 'Distribuzione Mezzi di Trasporto' },
-	{ value: 'history',         label: 'Storico Viaggi'                   },
-	{ value: 'leaderboard',     label: 'Classifica Utenti (Anonimizzata)' },
-	{ value: 'co2_heatmap',     label: 'Dati Mappa CO2'                   },
+	{ value: 'history', label: 'Storico Viaggi' },
+	{ value: 'leaderboard', label: 'Classifica Utenti (Anonimizzata)' },
+	{ value: 'co2_heatmap', label: 'Dati Mappa CO2' }
 ];
 
-const WIDGET_TYPE_LABELS = Object.fromEntries(WIDGET_TYPES.map(t => [t.value, t.label]));
-const DATASET_LABELS     = Object.fromEntries(DATASETS.map(d => [d.value, d.label]));
+const WIDGET_TYPE_LABELS = Object.fromEntries(
+	WIDGET_TYPES.map((t) => [t.value, t.label])
+);
+const DATASET_LABELS = Object.fromEntries(
+	DATASETS.map((d) => [d.value, d.label])
+);
 
 /** Nome descrittivo del tipo di widget (fallback: il valore grezzo). */
 export function widgetTypeLabel(value) {
@@ -35,21 +39,38 @@ export function datasetLabel(value) {
 // ── Colori dei mezzi di trasporto ────────────────────────────────────────────
 // Ordine e colori canonici, condivisi tra i grafici così ogni mezzo ha sempre
 // lo stesso colore (es. nel grafico a linee "CO2 Mensile per Mezzo").
-export const TRANSPORT_ORDER = ['Macchina', 'Bus', 'Treno', 'Monopattino', 'Bicicletta', 'Piedi'];
+export const TRANSPORT_ORDER = [
+	'Macchina',
+	'Bus',
+	'Treno',
+	'Monopattino',
+	'Bicicletta',
+	'Piedi'
+];
 
-export const TRANSPORT_COLORS = {
-	Macchina:    '#ef4444',
-	Bus:         '#3b82f6',
-	Treno:       '#8b5cf6',
-	Monopattino: '#f59e0b',
-	Bicicletta:  '#10b981',
-	Piedi:       '#06b6d4',
-};
+const TRANSPORT_COLORS = [
+	'#8ab834',
+	'#e7dc0c',
+	'#f59e0b',
+	'#d05305',
+	'#b73410',
+	'#3f981e'
+];
 
 // Palette di riserva per etichette non previste nella mappa.
-const FALLBACK_PALETTE = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const FALLBACK_PALETTE = [
+	'#10b981',
+	'#3b82f6',
+	'#f59e0b',
+	'#ef4444',
+	'#8b5cf6',
+	'#06b6d4'
+];
 
 /** Colore stabile per un mezzo; per etichette sconosciute usa la palette per indice. */
 export function transportColor(label, idx = 0) {
-	return TRANSPORT_COLORS[label] || FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length];
+	return (
+		TRANSPORT_COLORS[label] ||
+		FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length]
+	);
 }

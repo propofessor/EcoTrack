@@ -57,8 +57,6 @@ export default function RouteScreen({ navigation }) {
 
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
   const [results, setResults] = useState(null);
   const [directions, setDirections] = useState(null);
   const [loading, setLoading] = useState(false);

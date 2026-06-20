@@ -122,7 +122,6 @@ export default function LoginScreen({ navigation }) {
 
             {/* Brand */}
             <View className="items-center mb-10">
-              {/*className='w-24 h-24 mb-4'*/}
               <Image source={require('../../assets/icon.png')} accessibilityLabel='EcoTrack Logo' className='w-24 h-24 mb-4' />
               <Text className="heading text-center">EcoTrack</Text>
               <Text className="text-muted text-center">Monitora la tua impronta ecologica</Text>
