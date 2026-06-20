@@ -9,7 +9,7 @@
  * RF9.4: comparative results with distance, travel time, CO2, and "best" mode highlighted.
  * RF9.5: "Mostra su mappa" button sends the mock polyline to MapScreen.
  */
-import { useState } from 'react';
+import { useState } from "react";
 import {
   View,
   Text,
@@ -18,41 +18,46 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { calculateCo2 } from '../api/maps';
-import { getMockDirections } from '../api/directions';
-import TransportCard from '../components/TransportCard';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { calculateCo2 } from "../api/maps";
+import { getMockDirections } from "../api/directions";
+import TransportCard from "../components/TransportCard";
 
 const MODE_LABELS = {
-  walking: 'A piedi',
-  bicycling: 'In bicicletta',
-  transit: 'Trasporto pubblico',
-  driving: 'Automobile',
+  piedi: "A piedi",
+  bicicletta: "In bicicletta",
+  autobus: "Trasporto pubblico",
+  macchina: "Automobile",
 };
 
-const MODE_ICONS = { walking: '🚶', bicycling: '🚴', transit: '🚌', driving: '🚗' };
+const MODE_ICONS = {
+  piedi: "🚶",
+  bicicletta: "🚴",
+  autobus: "🚌",
+  macchina: "🚗",
+};
 
 // Static mock polyline for Trento — same waypoints used in MapScreen.
 // In production this would come from the Directions API response polyline.
 const MOCK_POLYLINE = [
   [46.0748, 11.1217],
-  [46.0730, 11.1210],
-  [46.0720, 11.1205],
-  [46.0710, 11.1200],
+  [46.073, 11.121],
+  [46.072, 11.1205],
+  [46.071, 11.12],
   [46.0702, 11.1196],
 ];
 
 export default function RouteScreen({ navigation }) {
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
   const [results, setResults] = useState(null);
   const [directions, setDirections] = useState(null);
   const [loading, setLoading] = useState(false);
 
   async function handleCalculate() {
     if (!origin.trim() || !destination.trim()) {
-      Alert.alert('Errore', 'Inserisci partenza e destinazione.');
+      Alert.alert("Errore", "Inserisci partenza e destinazione.");
       return;
     }
     setLoading(true);
@@ -63,16 +68,19 @@ export default function RouteScreen({ navigation }) {
       setDirections(dir);
 
       const distancesKm = {
-        walking: dir.walking.distanceKm,
-        bicycling: dir.bicycling.distanceKm,
-        transit: dir.transit.distanceKm,
-        driving: dir.driving.distanceKm,
+        piedi: dir.piedi.distanceKm,
+        bicicletta: dir.bicicletta.distanceKm,
+        autobus: dir.autobus.distanceKm,
+        macchina: dir.macchina.distanceKm,
       };
 
       const data = await calculateCo2({ distances: distancesKm });
       setResults(data.emissions);
     } catch (err) {
-      Alert.alert('Errore', err.response?.data?.error || 'Impossibile calcolare le emissioni.');
+      Alert.alert(
+        "Errore",
+        err.response?.data?.error || "Impossibile calcolare le emissioni.",
+      );
     } finally {
       setLoading(false);
     }
@@ -83,11 +91,11 @@ export default function RouteScreen({ navigation }) {
     ? Object.entries(results).reduce(
         (best, [mode, val]) =>
           val.co2_kg < best.co2 ? { mode, co2: val.co2_kg } : best,
-        { mode: null, co2: Infinity }
+        { mode: null, co2: Infinity },
       ).mode
     : null;
 
-  const modes = ['walking', 'bicycling', 'transit', 'driving'];
+  const modes = ["piedi", "bicicletta", "autobus", "macchina"];
 
   return (
     <SafeAreaView className="screen flex-1">
@@ -131,10 +139,11 @@ export default function RouteScreen({ navigation }) {
             onPress={handleCalculate}
             disabled={loading}
           >
-            {loading
-              ? <ActivityIndicator color="#ffffff" />
-              : <Text className="btn-primary-text">Calcola emissioni</Text>
-            }
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text className="btn-primary-text">Calcola emissioni</Text>
+            )}
           </TouchableOpacity>
 
           {/* Results — RF9.4 */}
@@ -156,9 +165,13 @@ export default function RouteScreen({ navigation }) {
               {/* RF9.5: route visualization on map */}
               <TouchableOpacity
                 className="btn-ghost rounded-xl py-3 items-center mt-2"
-                onPress={() => navigation.navigate('Mappa', { polyline: MOCK_POLYLINE })}
+                onPress={() =>
+                  navigation.navigate("Mappa", { polyline: MOCK_POLYLINE })
+                }
               >
-                <Text className="btn-ghost-text">🗺️ Mostra percorso su mappa</Text>
+                <Text className="btn-ghost-text">
+                  🗺️ Mostra percorso su mappa
+                </Text>
               </TouchableOpacity>
             </View>
           )}

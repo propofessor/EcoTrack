@@ -22,8 +22,11 @@ jest.mock('../src/db', () => ({
 }));
 
 // 2. MOCKIAMO IL SERVIZIO CO2
+// EMISSION_FACTORS è letto da gamificationService al caricamento del modulo
+// (via index.js → history.js), quindi il mock deve fornirlo.
 jest.mock('../src/services/co2Service', () => ({
-	calculateEmissions: jest.fn()
+	calculateEmissions: jest.fn(),
+	EMISSION_FACTORS: { bus: 40, car_average: 110 }
 }));
 
 // 3. Mockiamo il middleware di autenticazione alla radice
@@ -54,20 +57,20 @@ describe('Test delle API di Mappe & Calcolo CO2 (/api/maps)', () => {
 	describe('POST /api/maps/calculate-co2', () => {
 		const inputDistanzeValide = {
 			distances: {
-				walking: 2.0,
-				bicycling: 5.0,
-				transit: 12.5,
-				driving: 20.0
+				piedi: 2.0,
+				bicicletta: 5.0,
+				autobus: 12.5,
+				macchina: 20.0
 			}
 		};
 
 		it("Dovrebbe calcolare le emissioni e restituire l'ID del mezzo corretto (200)", async () => {
 			calculateEmissions.mockResolvedValue({
 				emissions: {
-					walking: 0,
-					bicycling: 0,
-					transit: 1100,
-					driving: 3200
+					piedi: 0,
+					bicicletta: 0,
+					autobus: 1100,
+					macchina: 3200
 				}
 			});
 
@@ -88,7 +91,7 @@ describe('Test delle API di Mappe & Calcolo CO2 (/api/maps)', () => {
 			expect(risposta.body.message).toBe(
 				'Calcolo delle emissioni completato con successo'
 			);
-			expect(risposta.body.emissions.driving).toBe(3200);
+			expect(risposta.body.emissions.macchina).toBe(3200);
 			expect(risposta.body.driving_movement_type_id).toBe(fintoUuidMezzo);
 		});
 

@@ -5,7 +5,9 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "adb:reverse": "adb reverse tcp:3000 tcp:3000 && adb reverse tcp:8081 tcp:8081",
+    "android:dev": "npm run adb:reverse && expo start --localhost --android"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",

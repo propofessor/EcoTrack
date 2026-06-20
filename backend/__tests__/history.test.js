@@ -37,7 +37,9 @@ jest.mock('../src/middleware/authMiddleware', () => {
 // 3. MOCKIAMO IL SERVICE DI GAMIFICATION per evitare che il ricalcolo
 // asincrono "best-effort" dopo il POST faccia query sullo stesso mock chain
 jest.mock('../src/services/gamificationService', () => ({
-	recalculateDailyScore: jest.fn().mockResolvedValue({ data: null, error: null })
+	recalculateDailyScore: jest
+		.fn()
+		.mockResolvedValue({ data: null, error: null })
 }));
 
 // Importiamo l'app SOLO DOPO aver configurato i mock
@@ -92,8 +94,10 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 				'Storico recuperato con successo'
 			);
 			expect(risposta.body.history).toHaveLength(1);
+			// L'etichetta del mezzo deve essere normalizzata in italiano canonico
+			// (es. il valore 'bicycling' del DB diventa 'Bicicletta').
 			expect(risposta.body.history[0].movement_types.label).toBe(
-				'bicycling'
+				'Bicicletta'
 			);
 			expect(mockChain.eq).toHaveBeenCalledWith(
 				'user_id',

@@ -141,10 +141,10 @@
     "calculating": "Calcolo…",
     "resultsTitle": "Confronto emissioni",
     "modes": {
-      "walking": "A piedi",
-      "bicycling": "In bicicletta",
-      "transit": "Trasporto pubblico",
-      "driving": "Automobile"
+      "piedi": "A piedi",
+      "bicicletta": "In bicicletta",
+      "autobus": "Trasporto pubblico",
+      "macchina": "Automobile"
     },
     "ecoBadge": "🌿 Opzione più ecologica",
     "co2Zero": "0 g CO₂",

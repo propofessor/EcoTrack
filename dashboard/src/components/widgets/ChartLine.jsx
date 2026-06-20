@@ -6,9 +6,11 @@ import {
 	YAxis,
 	CartesianGrid,
 	Tooltip,
+	Legend,
 	ResponsiveContainer
 } from 'recharts';
 import { useElementSize } from '../../hooks/useElementSize.js';
+import { TRANSPORT_ORDER, transportColor } from '../../utils/labels.js';
 
 export function ChartLine({ config = {}, data: rawData = [], loading = false }) {
 	const [containerRef, { width, height }] = useElementSize();
@@ -29,6 +31,28 @@ export function ChartLine({ config = {}, data: rawData = [], loading = false }) 
 	}, [rawData, dataset]);
 
 	const xKey = dataset === 'history' ? 'date' : 'month';
+
+	// Per 'co2_monthly' tracciamo una linea per mezzo (solo quelli che hanno
+	// prodotto CO2 nel periodo). Per gli altri dataset resta un'unica linea
+	// sul totale 'co2'.
+	const lineKeys = useMemo(() => {
+		if (dataset !== 'co2_monthly') return ['co2'];
+		const totals = {};
+		data.forEach(row => {
+			Object.keys(row).forEach(k => {
+				if (k === 'month' || k === 'co2') return;
+				totals[k] = (totals[k] || 0) + (Number(row[k]) || 0);
+			});
+		});
+		const present = Object.keys(totals).filter(k => totals[k] > 0);
+		const ordered = [
+			...TRANSPORT_ORDER.filter(m => present.includes(m)),
+			...present.filter(m => !TRANSPORT_ORDER.includes(m)),
+		];
+		return ordered.length ? ordered : ['co2'];
+	}, [data, dataset]);
+
+	const isMultiLine = lineKeys.length > 1;
 
 	const tooltipStyle = {
 		contentStyle: {
@@ -67,16 +91,33 @@ export function ChartLine({ config = {}, data: rawData = [], loading = false }) 
 						/>
 						<Tooltip
 							{...tooltipStyle}
-							formatter={value => [`${value} kg`, 'CO2']}
+							formatter={(value, name) => [`${value} kg`, name === 'co2' ? 'CO2' : name]}
 						/>
-						<Line
-							type='monotone'
-							dataKey='co2'
-							stroke='var(--accent)'
-							strokeWidth={2}
-							dot={{ fill: 'var(--accent)', strokeWidth: 1, r: 4 }}
-							activeDot={{ r: 6 }}
-						/>
+						{isMultiLine && (
+							<Legend
+								iconType='plainline'
+								wrapperStyle={{
+									color:      'var(--text-secondary)',
+									fontSize:   11,
+									paddingTop: '6px',
+								}}
+							/>
+						)}
+						{lineKeys.map((key, idx) => {
+							const color = isMultiLine ? transportColor(key, idx) : 'var(--accent)';
+							return (
+								<Line
+									key={key}
+									type='monotone'
+									dataKey={key}
+									name={key === 'co2' ? 'CO2' : key}
+									stroke={color}
+									strokeWidth={2}
+									dot={{ fill: color, strokeWidth: 1, r: 4 }}
+									activeDot={{ r: 6 }}
+								/>
+							);
+						})}
 					</LineChart>
 				</ResponsiveContainer>
 			)}

@@ -17,9 +17,15 @@ const OVERLAY = { NONE: 'none', AIR: 'air', NOISE: 'noise' };
 
 const TRENTO = { lat: 46.0748, lng: 11.1217, zoom: 13 };
 
-// Leaflet.heat gradient format: { stop: 'color' }
-const AIR_GRADIENT = { 0.0: 'rgba(0,255,0,0)', 0.4: 'rgba(255,255,0,0.6)', 1.0: 'rgba(255,0,0,0.9)' };
-const NOISE_GRADIENT = { 0.0: 'rgba(0,0,255,0)', 0.4: 'rgba(255,165,0,0.6)', 1.0: 'rgba(255,0,0,0.9)' };
+// Leaflet.heat gradient format: { stop: 'color' }.
+// Opaque colour stops starting low on the scale so even light pollution reads
+// clearly on the map (the previous gradient faded to transparent at low values).
+const AIR_GRADIENT = { 0.2: 'rgba(0,200,83,0.6)', 0.45: 'rgba(255,214,0,0.75)', 0.7: 'rgba(255,109,0,0.88)', 1.0: 'rgba(213,0,0,0.95)' };
+const NOISE_GRADIENT = { 0.2: 'rgba(41,98,255,0.6)', 0.45: 'rgba(0,191,165,0.75)', 0.7: 'rgba(255,145,0,0.88)', 1.0: 'rgba(213,0,0,0.95)' };
+
+// Solid legend swatches (low → high), mirroring the heatmap gradients.
+const AIR_LEGEND = ['#00c853', '#ffd600', '#ff6d00', '#d50000'];
+const NOISE_LEGEND = ['#2962ff', '#00bfa5', '#ff9100', '#d50000'];
 
 const MAP_HTML = `<!DOCTYPE html>
 <html>
@@ -49,8 +55,9 @@ const MAP_HTML = `<!DOCTYPE html>
       if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
       if (points && points.length > 0) {
         heatLayer = L.heatLayer(points, {
-          radius: 30,
-          blur: 20,
+          radius: 38,
+          blur: 18,
+          minOpacity: 0.45,
           gradient: gradient,
           max: 1.0
         }).addTo(map);
@@ -187,11 +194,17 @@ export default function MapScreen({ route: navRoute }) {
 
       {/* RF8.5: Colour legend — anchored to bottom */}
       {overlay !== OVERLAY.NONE && (
-        <View className="card absolute bottom-0 left-0 right-0 flex-row items-center px-4 py-3 gap-3">
+        <View className="card absolute bottom-0 left-0 right-0 px-4 py-3 gap-2">
           <Text className="text-label">{overlay === OVERLAY.AIR ? 'Qualità aria' : 'Rumore (dB)'}</Text>
-          <View className="flex-1 h-3 rounded-full" />
-          <Text className="text-muted">Basso</Text>
-          <Text className="text-muted">Alto</Text>
+          <View className="flex-row items-center gap-3">
+            <Text className="text-muted">Basso</Text>
+            <View className="flex-1 h-3 rounded-full overflow-hidden flex-row">
+              {(overlay === OVERLAY.AIR ? AIR_LEGEND : NOISE_LEGEND).map((color, i) => (
+                <View key={i} style={{ flex: 1, backgroundColor: color }} />
+              ))}
+            </View>
+            <Text className="text-muted">Alto</Text>
+          </View>
         </View>
       )}
 

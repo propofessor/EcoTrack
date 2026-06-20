@@ -11,26 +11,26 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 	// calculateRawPoints
 	// ==========================================
 	describe('calculateRawPoints', () => {
-		it('Dovrebbe restituire punti positivi per un movimento a zero emissioni (es. bicycling)', () => {
-			const punti = calculateRawPoints('bicycling', 10, 0);
+		it('Dovrebbe restituire punti positivi per un movimento a zero emissioni (es. bicicletta)', () => {
+			const punti = calculateRawPoints('bicicletta', 10, 0);
 			// baseline: 10km * 110 g/km = 1100g risparmiati rispetto all'auto
 			expect(punti).toBe(1100);
 		});
 
 		it('Dovrebbe restituire 0 se la distanza è 0 o assente', () => {
-			expect(calculateRawPoints('walking', 0, 0)).toBe(0);
-			expect(calculateRawPoints('walking', undefined, 0)).toBe(0);
+			expect(calculateRawPoints('piedi', 0, 0)).toBe(0);
+			expect(calculateRawPoints('piedi', undefined, 0)).toBe(0);
 		});
 
 		it("Dovrebbe restituire 0 (non negativo) se l'emissione reale supera il baseline", () => {
 			// es. un mezzo con fattore di emissione peggiore della media nazionale
-			const punti = calculateRawPoints('driving', 10, 2000);
+			const punti = calculateRawPoints('macchina', 10, 2000);
 			expect(punti).toBe(0);
 		});
 
-		it('Dovrebbe calcolare punti parziali per un movimento a emissione intermedia (es. transit)', () => {
-			// 5km, baseline 550g, emissione reale 520g (bus, fattore 104g/km)
-			const punti = calculateRawPoints('transit', 5, 520);
+		it('Dovrebbe calcolare punti parziali per un movimento a emissione intermedia', () => {
+			// 5km, baseline 550g, emissione reale 520g → 30g risparmiati
+			const punti = calculateRawPoints('autobus', 5, 520);
 			expect(punti).toBe(30);
 		});
 	});
@@ -39,10 +39,15 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 	// normalizeScore
 	// ==========================================
 	describe('normalizeScore', () => {
-		it('Dovrebbe normalizzare correttamente in base ai km totali', () => {
-			// 1100 punti grezzi su 10km → 1100/10/8 = 13.75 → round a 13.8
+		it('Dovrebbe dare 100 per una giornata interamente green (risparmio massimo)', () => {
+			// 1100 g risparmiati su 10km = 110 g/km = baseline → 100/100
 			const score = normalizeScore(1100, 10);
-			expect(score).toBe(13.8);
+			expect(score).toBe(100);
+		});
+
+		it('Dovrebbe dare ~50 quando si risparmia metà del massimo per km', () => {
+			// 550 g risparmiati su 10km = 55 g/km = metà del baseline → 50
+			expect(normalizeScore(550, 10)).toBe(50);
 		});
 
 		it('Dovrebbe restituire 0 se i km totali sono 0', () => {
@@ -59,10 +64,10 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 			// Utente B: 20km in bici (comportamento 100% virtuoso, molta attività)
 			// Entrambi dovrebbero ottenere un punteggio normalizzato comparabile,
 			// perché entrambi hanno 0 emissioni reali rispetto al baseline.
-			const puntiA = calculateRawPoints('walking', 1, 0);
+			const puntiA = calculateRawPoints('piedi', 1, 0);
 			const scoreA = normalizeScore(puntiA, 1);
 
-			const puntiB = calculateRawPoints('bicycling', 20, 0);
+			const puntiB = calculateRawPoints('bicicletta', 20, 0);
 			const scoreB = normalizeScore(puntiB, 20);
 
 			expect(scoreA).toBe(scoreB);
@@ -98,9 +103,9 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 	describe('computeDailyScore', () => {
 		it('Dovrebbe calcolare correttamente il punteggio aggregato di una giornata con più movimenti', () => {
 			const movimenti = [
-				{ movementLabel: 'walking', distanceKm: 1.2, co2Grams: 0 },
-				{ movementLabel: 'bicycling', distanceKm: 3.5, co2Grams: 0 },
-				{ movementLabel: 'transit', distanceKm: 8.0, co2Grams: 832 }
+				{ movementLabel: 'piedi', distanceKm: 1.2, co2Grams: 0 },
+				{ movementLabel: 'bicicletta', distanceKm: 3.5, co2Grams: 0 },
+				{ movementLabel: 'autobus', distanceKm: 8.0, co2Grams: 832 }
 			];
 
 			const risultato = computeDailyScore(movimenti);
@@ -122,7 +127,7 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 
 		it('Dovrebbe restituire voto E per una giornata interamente in auto (nessun risparmio CO2)', () => {
 			const movimenti = [
-				{ movementLabel: 'driving', distanceKm: 15, co2Grams: 1650 }
+				{ movementLabel: 'macchina', distanceKm: 15, co2Grams: 1650 }
 			];
 
 			const risultato = computeDailyScore(movimenti);

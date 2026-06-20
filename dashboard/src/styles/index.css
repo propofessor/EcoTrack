@@ -183,6 +183,20 @@
 		background-color: var(--bg-widget);
 		box-shadow: var(--shadow);
 		overflow: hidden;
+		/* Enable container queries so children (e.g. the offline badge) can
+		   adapt to the widget's actual width instead of the viewport. */
+		container-type: inline-size;
+	}
+
+	/* When the widget is too narrow, collapse the offline indicator to just
+	   the icon and drop the "offline" text + its leading gap. */
+	@container (max-width: 230px) {
+		.offline-badge {
+			gap: 0;
+		}
+		.offline-badge__label {
+			display: none;
+		}
 	}
 
 	/* Draggable top bar — surface background, bottom divider, grab cursor */

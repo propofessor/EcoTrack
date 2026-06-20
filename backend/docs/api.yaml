@@ -460,13 +460,13 @@ paths:
                   type: object
                   description: Distance in km per mode
                   properties:
-                    walking:
+                    piedi:
                       type: number
-                    bicycling:
+                    bicicletta:
                       type: number
-                    transit:
+                    autobus:
                       type: number
-                    driving:
+                    macchina:
                       type: number
       responses:
         '200':
@@ -913,7 +913,7 @@ components:
               format: uuid
             label:
               type: string
-              example: driving
+              example: macchina
 
     TripRequest:
       type: object

@@ -5,6 +5,7 @@ const { supabaseAdmin } = require('../db'); // <--- IMPORTANTE: Destrutturato co
 const requireAuth = require('../middleware/authMiddleware');
 const { calculateRawPoints } = require('../services/scoreEngine');
 const { recalculateDailyScore } = require('../services/gamificationService');
+const { canonicalMovementLabel } = require('../utils/movementLabels');
 
 // Proteggiamo tutte le rotte: solo gli utenti autenticati possono accedere al proprio storico
 router.use(requireAuth);
@@ -42,11 +43,19 @@ router.get('/', async (req, res) => {
 			});
 		}
 
+		// Normalizziamo l'etichetta del mezzo verso la forma canonica italiana
+		// (es. 'driving' → 'Macchina') prima di restituirla al client.
+		const history = (data || []).map(entry =>
+			entry?.movement_types
+				? { ...entry, movement_types: { ...entry.movement_types, label: canonicalMovementLabel(entry.movement_types.label) } }
+				: entry
+		);
+
 		// Un risultato vuoto è legittimo per un utente senza viaggi: restituiamo
 		// una lista vuota, NON dati mock (sarebbero viaggi fittizi per un utente reale).
 		return res.status(200).json({
 			message: 'Storico recuperato con successo',
-			history: data || []
+			history
 		});
 	} catch (err) {
 		console.error('Errore interno nel server (GET history):', err);

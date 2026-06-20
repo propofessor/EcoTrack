@@ -23,7 +23,7 @@ export default function HomeScreen({ navigation }) {
   const [weekly, setWeekly] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const displayName = user?.profile?.name || user?.email || 'Utente';
+  const displayName = user?.name || user?.email || 'Utente';
 
   const loadData = useCallback(async () => {
     try {

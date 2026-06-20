@@ -4,31 +4,29 @@ import { getCo2Stats, getLeaderboard, getMapData } from '../api/dashboardapi.js'
 // Fallback mock data for each dataset (shown when API is unavailable)
 const MOCK = {
 	co2_monthly: [
-		{ month: '2026-01', co2: 142.5 },
-		{ month: '2026-02', co2: 158.3 },
-		{ month: '2026-03', co2: 133.8 },
-		{ month: '2026-04', co2: 167.2 },
-		{ month: '2026-05', co2: 149.6 },
-		{ month: '2026-06', co2: 122.1 },
+		{ month: '2026-01', co2: 136.5, Macchina: 110.0, Bus: 22.0, Monopattino: 4.5, Bicicletta: 0, Piedi: 0 },
+		{ month: '2026-02', co2: 150.3, Macchina: 120.0, Bus: 26.0, Monopattino: 4.3, Bicicletta: 0, Piedi: 0 },
+		{ month: '2026-03', co2: 127.3, Macchina: 100.0, Bus: 24.0, Monopattino: 3.3, Bicicletta: 0, Piedi: 0 },
+		{ month: '2026-04', co2: 160.2, Macchina: 128.0, Bus: 28.0, Monopattino: 4.2, Bicicletta: 0, Piedi: 0 },
+		{ month: '2026-05', co2: 141.0, Macchina: 112.0, Bus: 25.0, Monopattino: 4.0, Bicicletta: 0, Piedi: 0 },
+		{ month: '2026-06', co2: 115.0, Macchina:  90.0, Bus: 21.0, Monopattino: 4.0, Bicicletta: 0, Piedi: 0 },
 	],
 	transport_split: [
-		{ name: 'Auto',        co2: 312.4, count: 48 },
-		{ name: 'Autobus',     co2:  87.6, count: 62 },
-		{ name: 'Treno',       co2:  34.2, count: 28 },
+		{ name: 'Macchina',    co2: 312.4, count: 48 },
+		{ name: 'Bus',         co2:  87.6, count: 62 },
 		{ name: 'Bicicletta',  co2:   0.0, count: 35 },
 		{ name: 'Monopattino', co2:   4.1, count: 18 },
-		{ name: 'A piedi',     co2:   0.0, count: 41 },
+		{ name: 'Piedi',       co2:   0.0, count: 41 },
 	],
 	history: [
-		{ timestamp_start: '2026-06-17T08:30:00', co2_kgs: 3.2, points: 20,  movement_type: 'Auto'        },
-		{ timestamp_start: '2026-06-16T17:45:00', co2_kgs: 0.8, points: 55,  movement_type: 'Autobus'     },
+		{ timestamp_start: '2026-06-17T08:30:00', co2_kgs: 3.2, points: 20,  movement_type: 'Macchina'    },
+		{ timestamp_start: '2026-06-16T17:45:00', co2_kgs: 0.8, points: 55,  movement_type: 'Bus'         },
 		{ timestamp_start: '2026-06-15T09:00:00', co2_kgs: 0.0, points: 140, movement_type: 'Bicicletta'  },
 		{ timestamp_start: '2026-06-14T18:15:00', co2_kgs: 0.2, points: 90,  movement_type: 'Monopattino' },
-		{ timestamp_start: '2026-06-13T12:30:00', co2_kgs: 0.3, points: 75,  movement_type: 'Treno'       },
-		{ timestamp_start: '2026-06-12T08:00:00', co2_kgs: 4.1, points: 15,  movement_type: 'Auto'        },
-		{ timestamp_start: '2026-06-11T19:00:00', co2_kgs: 0.0, points: 165, movement_type: 'A piedi'     },
-		{ timestamp_start: '2026-06-10T10:30:00', co2_kgs: 0.9, points: 48,  movement_type: 'Autobus'     },
-		{ timestamp_start: '2026-06-09T07:45:00', co2_kgs: 2.7, points: 22,  movement_type: 'Auto'        },
+		{ timestamp_start: '2026-06-12T08:00:00', co2_kgs: 4.1, points: 15,  movement_type: 'Macchina'    },
+		{ timestamp_start: '2026-06-11T19:00:00', co2_kgs: 0.0, points: 165, movement_type: 'Piedi'       },
+		{ timestamp_start: '2026-06-10T10:30:00', co2_kgs: 0.9, points: 48,  movement_type: 'Bus'         },
+		{ timestamp_start: '2026-06-09T07:45:00', co2_kgs: 2.7, points: 22,  movement_type: 'Macchina'    },
 		{ timestamp_start: '2026-06-08T16:00:00', co2_kgs: 0.0, points: 130, movement_type: 'Bicicletta'  },
 	],
 	leaderboard: [
@@ -105,14 +103,34 @@ export function useWidgetData(config = {}) {
 					const rows = res?.data || [];
 					if (rows.length === 0) return MOCK.co2_monthly;
 
-					const agg = {};
+					// Pivot per mese × mezzo: ogni riga porta i kg CO2 di ciascun
+					// mezzo più il totale mensile in `co2` (così istogramma e
+					// tabella, che leggono `co2`, continuano a funzionare).
+					const agg   = {};            // month -> { label -> sumCo2 }
+					const modes = new Set();     // unione dei mezzi presenti
 					rows.forEach(row => {
 						const month = row.timestamp_start?.slice(0, 7) || 'N/D';
-						agg[month] = (agg[month] || 0) + (parseFloat(row.co2_kgs) || 0);
+						const label = row.movement_types?.label || 'Altro';
+						const co2   = parseFloat(row.co2_kgs) || 0;
+						if (!agg[month]) agg[month] = {};
+						agg[month][label] = (agg[month][label] || 0) + co2;
+						modes.add(label);
 					});
 					return Object.entries(agg)
 						.sort(([a], [b]) => a.localeCompare(b))
-						.map(([month, co2]) => ({ month, co2: parseFloat(co2.toFixed(2)) }));
+						.map(([month, byMode]) => {
+							const out = { month };
+							let total = 0;
+							// Garantiamo che ogni mezzo sia presente (0 se assente),
+							// così le linee non hanno interruzioni.
+							modes.forEach(label => {
+								const v = byMode[label] || 0;
+								out[label] = parseFloat(v.toFixed(2));
+								total += v;
+							});
+							out.co2 = parseFloat(total.toFixed(2));
+							return out;
+						});
 				}
 
 				case 'transport_split': {

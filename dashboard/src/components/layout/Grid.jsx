@@ -100,7 +100,9 @@ export default function Grid({ items, setItems }) {
 						className='add-widget-cell flex flex-1 flex-col items-center justify-center gap-2'
 					>
 						<Plus size={32} className='add-widget-icon' />
-						<span className='add-widget-label'>Aggiungi Widget</span>
+						<span className='add-widget-label'>
+							Aggiungi Widget
+						</span>
 					</div>
 				</div>
 			);
@@ -128,7 +130,7 @@ export default function Grid({ items, setItems }) {
 			<div ref={containerRef} className='relative mt-4'>
 				{mounted && (
 					<>
-						<GridBackground
+						{/*<GridBackground
 							width={width}
 							cols={cols}
 							rowHeight={30}
@@ -136,7 +138,7 @@ export default function Grid({ items, setItems }) {
 							color='rgba(210, 147, 128, 0.3)'
 							borderRadius={0}
 							rows={100}
-						/>
+						/>*/}
 
 						<Responsive
 							breakpoints={{
@@ -151,7 +153,7 @@ export default function Grid({ items, setItems }) {
 							width={width}
 							onLayoutChange={onLayoutChange}
 							onBreakpointChange={onBreakpointChange}
-							draggableHandle=".drag-handle"
+							draggableHandle='.drag-handle'
 						>
 							{_.map(items, (el) => createElement(el))}
 						</Responsive>

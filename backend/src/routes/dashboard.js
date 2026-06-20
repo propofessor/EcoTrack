@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { supabaseAdmin } = require('../db');
 const checkApiKey = require('../middleware/apiKeyMiddleware');
+const { canonicalMovementLabel } = require('../utils/movementLabels');
 
 router.use(checkApiKey);
 
@@ -11,16 +12,15 @@ const SORTABLE_COLS = new Set(['timestamp_start', 'co2_kgs', 'points']);
 // ─── Deterministic mock data (used when Supabase is empty / unavailable) ──────
 
 const TRANSPORT_TYPES = [
-	{ label: 'Auto',        co2Min: 1.8,  co2Max: 7.2,  ptsMin: 10,  ptsMax: 30  },
-	{ label: 'Autobus',     co2Min: 0.4,  co2Max: 1.8,  ptsMin: 30,  ptsMax: 70  },
-	{ label: 'Treno',       co2Min: 0.1,  co2Max: 0.5,  ptsMin: 50,  ptsMax: 100 },
+	{ label: 'Macchina',    co2Min: 1.8,  co2Max: 7.2,  ptsMin: 10,  ptsMax: 30  },
+	{ label: 'Bus',         co2Min: 0.4,  co2Max: 1.8,  ptsMin: 30,  ptsMax: 70  },
 	{ label: 'Bicicletta',  co2Min: 0,    co2Max: 0,    ptsMin: 100, ptsMax: 180 },
 	{ label: 'Monopattino', co2Min: 0.05, co2Max: 0.15, ptsMin: 80,  ptsMax: 140 },
-	{ label: 'A piedi',     co2Min: 0,    co2Max: 0,    ptsMin: 120, ptsMax: 200 },
+	{ label: 'Piedi',       co2Min: 0,    co2Max: 0,    ptsMin: 120, ptsMax: 200 },
 ];
 
 // Realistic urban distribution for a small Italian city with good public transport
-const TRANSPORT_WEIGHTS = [0.28, 0.24, 0.09, 0.22, 0.08, 0.09];
+const TRANSPORT_WEIGHTS = [0.30, 0.28, 0.24, 0.08, 0.10];
 
 function makePRNG(seed) {
 	let s = (seed >>> 0);
@@ -162,6 +162,15 @@ router.get('/co2-stats', async (req, res) => {
 			if (ascending)  result = [...result].reverse();
 			result = result.slice(Number(offset), Number(offset) + Number(limit));
 		}
+
+		// Normalizziamo le etichette dei mezzi verso la forma canonica italiana
+		// (es. 'walking' → 'Piedi'), così la dashboard riceve sempre testo IT a
+		// prescindere da come sono memorizzati i dati nel DB.
+		result = result.map(row =>
+			row?.movement_types
+				? { ...row, movement_types: { ...row.movement_types, label: canonicalMovementLabel(row.movement_types.label) } }
+				: row
+		);
 
 		return res.json({ data: result, count: result.length });
 	} catch (err) {

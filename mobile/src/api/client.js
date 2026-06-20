@@ -12,15 +12,52 @@
  *      then retries the original request once.
  *
  * BASE URL
- * Android emulator maps 10.0.2.2 to the host machine's localhost.
- * Change to your actual server IP/hostname for real devices.
+ * Auto-detected from the Metro bundler's LAN IP (see resolveBaseUrl below) so
+ * physical devices and emulators on the same network reach the dev backend
+ * without manual config. Override with EXPO_PUBLIC_API_URL when needed.
  */
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// EXPO_PUBLIC_API_URL overrides the default.
-// With `adb reverse tcp:3000 tcp:3000`, localhost works on physical devices too.
-export const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api';
+const BACKEND_PORT = 3000;
+
+/**
+ * Resolve the base URL for the backend.
+ *
+ * Priority:
+ *   1. EXPO_PUBLIC_API_URL — explicit override (e.g. a deployed backend).
+ *   2. The dev machine's LAN IP, auto-detected from the Metro bundler host.
+ *      In Expo Go this is the same machine running `expo start`, so the
+ *      backend (port 3000) is reachable at that IP from a physical device
+ *      or emulator on the same network. This is what the .env comment promises.
+ *   3. localhost — final fallback (only works on the dev machine itself,
+ *      e.g. iOS simulator or Expo web).
+ */
+function resolveBaseUrl() {
+  const explicit = process.env.EXPO_PUBLIC_API_URL;
+  if (explicit) return explicit;
+
+  // hostUri looks like "192.168.1.20:8081"; older SDKs expose debuggerHost.
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    Constants.expoGoConfig?.debuggerHost ??
+    Constants.manifest2?.extra?.expoGo?.debuggerHost ??
+    Constants.manifest?.debuggerHost;
+
+  const host = hostUri?.split(':')[0];
+  if (host) return `http://${host}:${BACKEND_PORT}/api`;
+
+  return `http://localhost:${BACKEND_PORT}/api`;
+}
+
+export const BASE_URL = resolveBaseUrl();
+
+if (__DEV__) {
+  // Surfaces the resolved backend URL in the Metro logs so connection
+  // problems are obvious at a glance.
+  console.log(`[api] BASE_URL = ${BASE_URL}`);
+}
 
 const client = axios.create({
   baseURL: BASE_URL,

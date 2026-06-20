@@ -1,22 +1,7 @@
 // src/components/modals/WidgetConfigModal.jsx
 import { useState } from 'react';
 import { X } from 'lucide-react';
-
-const WIDGET_TYPES = [
-	{ value: 'ChartBar',   label: 'Istogramma'         },
-	{ value: 'ChartPie',   label: 'Grafico a Torta'    },
-	{ value: 'ChartLine',  label: 'Grafico a Linee'    },
-	{ value: 'DataTable',  label: 'Tabella Dati'       },
-	{ value: 'MapWidget',  label: 'Mappa Interattiva'  },
-];
-
-const DATASETS = [
-	{ value: 'co2_monthly',     label: 'CO2 Mensile per Mezzo'           },
-	{ value: 'transport_split', label: 'Distribuzione Mezzi di Trasporto' },
-	{ value: 'history',         label: 'Storico Viaggi'                   },
-	{ value: 'leaderboard',     label: 'Classifica Utenti (Anonimizzata)' },
-	{ value: 'co2_heatmap',     label: 'Dati Mappa CO2'                  },
-];
+import { WIDGET_TYPES, DATASETS } from '../../utils/labels.js';
 
 // Which datasets make sense for each chart type
 const VALID_DATASETS = {

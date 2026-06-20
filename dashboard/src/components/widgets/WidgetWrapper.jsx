@@ -5,6 +5,7 @@ import {
 	exportWidgetAsCsv
 } from '../../utils/exportUtils';
 import { useWidgetData } from '../../hooks/useWidgetData.js';
+import { widgetTypeLabel, datasetLabel } from '../../utils/labels.js';
 import { ChartBar } from './ChartBar';
 import { ChartPie } from './ChartPie';
 import { ChartLine } from './ChartLine';
@@ -54,16 +55,17 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 						className='widget-icon shrink-0'
 					/>
 					<span className='widget-title'>
-						{widgetConfig.widgetType || 'NON CONFIGURATO'}
-						{widgetConfig.dataset ? ` // ${widgetConfig.dataset}` : ''}
+						{widgetConfig.widgetType ? widgetTypeLabel(widgetConfig.widgetType) : 'NON CONFIGURATO'}
+						{widgetConfig.dataset ? `: ${datasetLabel(widgetConfig.dataset)}` : ''}
 					</span>
 					{usingFallback && (
 						<span
-							className='inline-flex items-center gap-1 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium'
+							className='offline-badge inline-flex items-center gap-1 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium'
 							style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
 							title='Backend non raggiungibile: vengono mostrati dati di esempio.'
 						>
-							<WifiOff size={11} /> offline
+							<WifiOff size={11} />
+							<span className='offline-badge__label'>offline</span>
 						</span>
 					)}
 				</div>

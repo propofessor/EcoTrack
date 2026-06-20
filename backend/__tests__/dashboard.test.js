@@ -9,8 +9,9 @@ jest.mock('../src/db', () => ({
 
 // Mock the API key middleware so we can test route logic in isolation;
 // the middleware itself is tested in apiKeyMiddleware.test.js
-jest.mock('../src/middleware/apiKeyMiddleware', () => (req, res, next) =>
-	next()
+jest.mock(
+	'../src/middleware/apiKeyMiddleware',
+	() => (req, res, next) => next()
 );
 
 const { supabaseAdmin } = require('../src/db');
@@ -58,16 +59,21 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 					co2_kgs: 1.2,
 					points: 100,
 					timestamp_start: '2026-06-18T08:00:00Z',
-					movement_types: { label: 'bicycling' }
+					movement_types: { label: 'driving' }
 				}
 			];
-			supabaseAdmin.from.mockReturnValue(makeChain({ data: fakeData, error: null }));
+			supabaseAdmin.from.mockReturnValue(
+				makeChain({ data: fakeData, error: null })
+			);
 
 			const risposta = await request(app).get('/api/dashboard/co2-stats');
 
 			expect(risposta.statusCode).toBe(200);
 			expect(risposta.body.data).toHaveLength(1);
 			expect(risposta.body.count).toBe(1);
+			// L'etichetta del mezzo deve essere normalizzata in italiano canonico
+			// (es. il valore 'driving' del DB diventa 'Macchina').
+			expect(risposta.body.data[0].movement_types.label).toBe('Macchina');
 		});
 
 		it('Dovrebbe applicare i filtri date_start e date_end alla query', async () => {
@@ -103,12 +109,24 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 	describe('GET /api/dashboard/co2-stats.csv', () => {
 		it('Dovrebbe restituire un file CSV con Content-Type text/csv (200)', async () => {
 			const fakeData = [
-				{ co2_kgs: 0.5, points: 50, timestamp_start: '2026-06-18T08:00:00Z' },
-				{ co2_kgs: 1.2, points: 120, timestamp_start: '2026-06-17T09:00:00Z' }
+				{
+					co2_kgs: 0.5,
+					points: 50,
+					timestamp_start: '2026-06-18T08:00:00Z'
+				},
+				{
+					co2_kgs: 1.2,
+					points: 120,
+					timestamp_start: '2026-06-17T09:00:00Z'
+				}
 			];
-			supabaseAdmin.from.mockReturnValue(makeChain({ data: fakeData, error: null }));
+			supabaseAdmin.from.mockReturnValue(
+				makeChain({ data: fakeData, error: null })
+			);
 
-			const risposta = await request(app).get('/api/dashboard/co2-stats.csv');
+			const risposta = await request(app).get(
+				'/api/dashboard/co2-stats.csv'
+			);
 
 			expect(risposta.statusCode).toBe(200);
 			expect(risposta.headers['content-type']).toContain('text/csv');
@@ -121,7 +139,9 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 				makeChain({ data: null, error: { message: 'Error' } })
 			);
 
-			const risposta = await request(app).get('/api/dashboard/co2-stats.csv');
+			const risposta = await request(app).get(
+				'/api/dashboard/co2-stats.csv'
+			);
 
 			expect(risposta.statusCode).toBe(500);
 		});
@@ -133,12 +153,24 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 	describe('GET /api/dashboard/leaderboard', () => {
 		it('Dovrebbe restituire la classifica dei viaggi per punti (200)', async () => {
 			const fakeData = [
-				{ user_id: 'u1', points: 500, timestamp_start: '2026-06-18T08:00:00Z' },
-				{ user_id: 'u2', points: 300, timestamp_start: '2026-06-17T09:00:00Z' }
+				{
+					user_id: 'u1',
+					points: 500,
+					timestamp_start: '2026-06-18T08:00:00Z'
+				},
+				{
+					user_id: 'u2',
+					points: 300,
+					timestamp_start: '2026-06-17T09:00:00Z'
+				}
 			];
-			supabaseAdmin.from.mockReturnValue(makeChain({ data: fakeData, error: null }));
+			supabaseAdmin.from.mockReturnValue(
+				makeChain({ data: fakeData, error: null })
+			);
 
-			const risposta = await request(app).get('/api/dashboard/leaderboard');
+			const risposta = await request(app).get(
+				'/api/dashboard/leaderboard'
+			);
 
 			expect(risposta.statusCode).toBe(200);
 			expect(risposta.body.data).toHaveLength(2);
@@ -149,7 +181,9 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 				makeChain({ data: null, error: { message: 'Error' } })
 			);
 
-			const risposta = await request(app).get('/api/dashboard/leaderboard');
+			const risposta = await request(app).get(
+				'/api/dashboard/leaderboard'
+			);
 
 			expect(risposta.statusCode).toBe(500);
 		});

@@ -15,23 +15,29 @@
 // già definito in co2Service.js).
 const BASELINE_CAR_EMISSION_FACTOR_G_PER_KM = 110;
 
-// Pesi di normalizzazione: il punteggio grezzo (grammi di CO2 risparmiati)
-// viene diviso per i km totali percorsi nella giornata, per evitare che
-// chi si sposta poco (es. 1km a piedi) finisca strutturalmente più in
-// basso di chi si sposta molto (es. 20km in bici), pur essendo entrambi
-// comportamenti virtuosi al 100%. Il risultato viene poi scalato in un
-// intervallo 0-100 con un cap, per mantenere la classifica leggibile.
-const NORMALIZED_SCORE_SCALE = 8; // g di CO2 risparmiati per km → punti
+// Normalizzazione: il punteggio normalizzato esprime QUANTO la giornata si è
+// avvicinata al comportamento ideale (zero emissioni) rispetto al peggiore
+// possibile (tutto in auto al fattore baseline). È la frazione di CO2
+// risparmiata per km rispetto al massimo risparmiabile — che è il baseline
+// stesso (110 g/km) — riportata su scala 0-100.
+//
+//   risparmioPerKm = totalRawPoints / totalKm        // 0 .. 110 g/km
+//   normalizzato   = risparmioPerKm / baseline * 100  // 0 .. 100
+//
+// Dividere per i km totali garantisce equità tra utenti con diversi livelli di
+// attività (RF11.1): chi fa 1km a piedi e chi fa 20km in bici sono entrambi al
+// 100% virtuosi e ottengono lo stesso punteggio. Esempi: giornata interamente
+// green → 100 (voto S); interamente in auto → 0 (voto E); metà e metà → ~50 (B).
 const NORMALIZED_SCORE_CAP = 100;
 
 /**
  * Calcola i punti grezzi (CO2 risparmiata in grammi rispetto al baseline
  * "tutto in auto") per un singolo movimento.
  *
- * @param {string} movementLabel - es. 'walking', 'bicycling', 'transit', 'driving'
+ * @param {string} movementLabel - es. 'piedi', 'bicicletta', 'autobus', 'macchina'
  * @param {number} distanceKm
  * @param {number} actualCo2Grams - CO2 effettivamente emessa per questo movimento (da co2Service)
- * @returns {number} grammi di CO2 risparmiati (può essere 0 per 'driving')
+ * @returns {number} grammi di CO2 risparmiati (può essere 0 per 'macchina')
  */
 function calculateRawPoints(movementLabel, distanceKm, actualCo2Grams) {
 	if (!distanceKm || distanceKm <= 0) return 0;
@@ -39,25 +45,28 @@ function calculateRawPoints(movementLabel, distanceKm, actualCo2Grams) {
 	const baselineEmission = distanceKm * BASELINE_CAR_EMISSION_FACTOR_G_PER_KM;
 	const co2Saved = baselineEmission - (actualCo2Grams || 0);
 
-	// Non penalizziamo: un movimento 'driving' con fattore reale peggiore
+	// Non penalizziamo: un movimento 'macchina' con fattore reale peggiore
 	// della media nazionale non deve generare punti negativi, semplicemente 0.
 	return Math.max(0, Math.round(co2Saved));
 }
 
 /**
- * Normalizza il punteggio grezzo giornaliero in base ai km totali percorsi
- * nella giornata (RF11.1: "normalizzare per garantire equità tra utenti
- * con diversi livelli di attività").
+ * Normalizza il punteggio grezzo giornaliero come frazione del risparmio di
+ * CO2 per km rispetto al massimo risparmiabile (il baseline auto), su scala
+ * 0-100 (RF11.1: "normalizzare per garantire equità tra utenti con diversi
+ * livelli di attività").
  *
  * @param {number} totalRawPoints - somma di calculateRawPoints su tutti i movimenti del giorno
  * @param {number} totalKm - somma delle distanze percorse nel giorno
- * @returns {number} punteggio normalizzato, 0-100
+ * @returns {number} punteggio normalizzato, 0-100 (100 = giornata interamente green)
  */
 function normalizeScore(totalRawPoints, totalKm) {
 	if (!totalKm || totalKm <= 0) return 0;
 
-	const perKmScore = totalRawPoints / totalKm / NORMALIZED_SCORE_SCALE;
-	return Math.min(NORMALIZED_SCORE_CAP, Math.round(perKmScore * 10) / 10);
+	const savedPerKm = totalRawPoints / totalKm; // 0 .. 110 g/km
+	const normalized =
+		(savedPerKm / BASELINE_CAR_EMISSION_FACTOR_G_PER_KM) * 100; // 0 .. 100
+	return Math.min(NORMALIZED_SCORE_CAP, Math.round(normalized * 10) / 10);
 }
 
 /**
@@ -67,7 +76,7 @@ function normalizeScore(totalRawPoints, totalKm) {
  * Soglie scelte sui percentili dello 0-100 normalizzato:
  *   S: comportamento quasi interamente a basso impatto
  *   A/B/C: fasce intermedie
- *   E: nessun comportamento sostenibile registrato (es. solo 'driving', o nessun movimento)
+ *   E: nessun comportamento sostenibile registrato (es. solo 'macchina', o nessun movimento)
  *
  * @param {number} normalizedScore - 0-100
  * @returns {'S'|'A'|'B'|'C'|'E'}

@@ -1,7 +1,22 @@
 // src/services/gamificationService.js
 const { supabaseAdmin } = require('../db');
-const { computeDailyScore } = require('./scoreEngine');
+const {
+	computeDailyScore,
+	BASELINE_CAR_EMISSION_FACTOR_G_PER_KM
+} = require('./scoreEngine');
+const { EMISSION_FACTORS } = require('./co2Service');
 const { notifyUser, notifyMany } = require('./notificationService');
+const { canonicalMovementLabel } = require('../utils/movementLabels');
+
+// Fattore di emissione (g/km) per i mezzi che emettono CO2, usato per
+// ricostruire la distanza percorsa dal solo dato di emissione salvato in
+// `history` (lo schema non persiste la distanza). Usare il fattore SPECIFICO
+// del mezzo — non sempre quello dell'auto — è ciò che fa guadagnare al bus un
+// credito reale: km = co2/40 → risparmio di ~70 g/km rispetto al baseline auto.
+const EMITTING_FACTOR_BY_LABEL = {
+	Macchina: EMISSION_FACTORS.car_average, // 110
+	Bus: EMISSION_FACTORS.bus // 40
+};
 
 // ============================================================
 // HELPERS DI DATA (settimana ISO: lunedì-domenica, reset alla domenica
@@ -74,30 +89,34 @@ async function recalculateDailyScore(userId, dateOnly) {
 	}
 
 	// NOTA: history.co2_kgs è l'emissione effettiva del movimento, non la
-	// distanza. Per coerenza con scoreEngine (che lavora su distanza e
-	// CO2 effettiva) deriviamo una distanza implicita dal rapporto
-	// emissione/fattore quando il movimento non è 'driving'/'transit' a
-	// emissione nulla. In assenza del dato di distanza esplicito in
-	// `history` (lo schema attuale non lo persiste, solo l'emissione
-	// risultante), usiamo co2_kgs come proxy diretto del "comportamento
-	// virtuoso": più basso è, meglio è. Questo evita di richiedere una
-	// migrazione aggiuntiva sulla tabella `history` esistente.
-	// Average speeds (km/h) used to estimate distance for zero-emission trips
-	// whose co2_kgs=0 makes the CO2-based proxy unusable.
-	const ZERO_EMISSION_SPEEDS_KMH = { walking: 5, bicycling: 15, transit: 20 };
+	// distanza. Lo schema non persiste la distanza, quindi la ricostruiamo dal
+	// solo dato di emissione. Per i mezzi che emettono usiamo il fattore di
+	// emissione SPECIFICO del mezzo (km = co2/fattore): il bus (40 g/km) ottiene
+	// così una distanza maggiore e quindi un risparmio reale rispetto al
+	// baseline auto (110 g/km), mentre l'auto resta a ~0. Per i viaggi a
+	// emissione zero (piedi/bici) la CO2 non porta informazione sulla distanza,
+	// quindi la stimiamo dal tempo trascorso × una velocità media del mezzo.
+	// Le velocità sono indicizzate sull'etichetta canonica così funziona anche
+	// se il DB salva le etichette in inglese (es. 'walking' → 'Piedi').
+	const ZERO_EMISSION_SPEEDS_KMH = { Piedi: 5, Bicicletta: 15, Bus: 20 };
 
 	const movements = (dayHistory || []).map((entry) => {
 		const co2Grams = (parseFloat(entry.co2_kgs) || 0) * 1000;
-		const movementLabel = entry.movement_types?.label || 'unknown';
+		const movementLabel = canonicalMovementLabel(entry.movement_types?.label) || 'unknown';
 
 		let impliedKm;
 		if (co2Grams > 0) {
-			// Non-zero CO2: reverse-engineer distance from emission / baseline factor
-			impliedKm = co2Grams / 110;
+			// Emitting trip: reverse-engineer distance from emission / the mode's
+			// own emission factor (bus → /40, car → /110, fallback baseline).
+			const factor =
+				EMITTING_FACTOR_BY_LABEL[movementLabel] ??
+				BASELINE_CAR_EMISSION_FACTOR_G_PER_KM;
+			impliedKm = co2Grams / factor;
 		} else {
 			// Zero-emission trip: estimate distance from elapsed time × mode speed
 			const durationHours =
-				(new Date(entry.timestamp_end) - new Date(entry.timestamp_start)) /
+				(new Date(entry.timestamp_end) -
+					new Date(entry.timestamp_start)) /
 				3_600_000;
 			const speed = ZERO_EMISSION_SPEEDS_KMH[movementLabel] ?? 8;
 			impliedKm = Math.max(0.1, durationHours * speed);
@@ -136,7 +155,16 @@ async function recalculateDailyScore(userId, dateOnly) {
 
 	// RF11.2: notify user of their daily grade (fire-and-forget — don't block the response)
 	const grade = score.grade;
-	const gradeEmoji = grade === 'S' ? '🌟' : grade === 'A' ? '✅' : grade === 'B' ? '👍' : grade === 'C' ? '⚠️' : '📉';
+	const gradeEmoji =
+		grade === 'S'
+			? '🌟'
+			: grade === 'A'
+				? '✅'
+				: grade === 'B'
+					? '👍'
+					: grade === 'C'
+						? '⚠️'
+						: '📉';
 	notifyUser(
 		userId,
 		`Voto giornaliero: ${grade} ${gradeEmoji}`,
@@ -185,8 +213,8 @@ async function getWeeklyScoreForUser(userId, referenceDate = new Date()) {
 			weekEnd,
 			weeklyScore: Math.round(weeklyScore * 10) / 10,
 			daysWithActivity: (data || []).filter(
-			(r) => (parseFloat(r.normalized_score) || 0) > 0
-		).length
+				(r) => (parseFloat(r.normalized_score) || 0) > 0
+			).length
 		},
 		error: null
 	};
@@ -239,7 +267,13 @@ async function getCurrentWeekLeaderboard({
 	const userIds = [...totalsByUser.keys()];
 	if (userIds.length === 0) {
 		return {
-			data: { weekStart, weekEnd, podium: [], leaderboard: [], personalRank: null },
+			data: {
+				weekStart,
+				weekEnd,
+				podium: [],
+				leaderboard: [],
+				personalRank: null
+			},
 			error: null
 		};
 	}
@@ -399,7 +433,10 @@ async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 				.in('weekly_leaderboard_history_id', snapshotIds)
 				.limit(1);
 			if (existing?.length > 0) {
-				return { data: { weekStart, weekEnd, rewardsAwarded: 0 }, error: null };
+				return {
+					data: { weekStart, weekEnd, rewardsAwarded: 0 },
+					error: null
+				};
 			}
 		}
 
@@ -421,10 +458,25 @@ async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 	const rankByUserId = new Map(leaderboard.map((e) => [e.userId, e.rank]));
 	notifyMany(allUserIds, (userId) => {
 		const rank = rankByUserId.get(userId);
-		if (rank === 1) return { title: '🥇 Hai vinto la classifica!', body: `Sei arrivato 1° questa settimana. Complimenti!` };
-		if (rank === 2) return { title: '🥈 Ottimo risultato!', body: `Sei arrivato 2° in classifica questa settimana.` };
-		if (rank === 3) return { title: '🥉 Sul podio!', body: `Sei arrivato 3° in classifica questa settimana.` };
-		return { title: '📊 Risultati settimanali disponibili', body: `Questa settimana sei arrivato #${rank} in classifica. Continua!` };
+		if (rank === 1)
+			return {
+				title: '🥇 Hai vinto la classifica!',
+				body: `Sei arrivato 1° questa settimana. Complimenti!`
+			};
+		if (rank === 2)
+			return {
+				title: '🥈 Ottimo risultato!',
+				body: `Sei arrivato 2° in classifica questa settimana.`
+			};
+		if (rank === 3)
+			return {
+				title: '🥉 Sul podio!',
+				body: `Sei arrivato 3° in classifica questa settimana.`
+			};
+		return {
+			title: '📊 Risultati settimanali disponibili',
+			body: `Questa settimana sei arrivato #${rank} in classifica. Continua!`
+		};
 	}).catch(() => {});
 
 	return { data: { weekStart, weekEnd, rewardsAwarded }, error: null };
