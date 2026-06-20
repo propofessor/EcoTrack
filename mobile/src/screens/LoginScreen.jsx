@@ -8,11 +8,13 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
-import { login as apiLogin, getMe, getGoogleMobileUrl, getCieAuthUrl, cieCallback } from '../api/auth';
+import { login as apiLogin, getMe, getGoogleMobileUrl, getGoogleWebUrl, getCieAuthUrl, cieCallback } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 import { BASE_URL } from '../api/client';
 
@@ -22,6 +24,9 @@ const GOOGLE_CALLBACK_URL = 'ecotrack://auth/google';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
+  const scheme = useColorScheme();
+  const inputColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
+  const placeholderColor = scheme === 'dark' ? '#71717a' : '#a1a1aa';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,10 +51,16 @@ export default function LoginScreen({ navigation }) {
     }
   }
 
-  // RF5.2: Google login via backend WebBrowser flow
+  // RF5.2: Google login
   async function handleGoogleLogin() {
     setLoading(true);
     try {
+      if (Platform.OS === 'web') {
+        // Full-page redirect — backend sets cookies, redirects back to this app
+        const { url } = await getGoogleWebUrl();
+        window.location.href = url;
+        return; // page navigates away; AuthContext re-checks session on return
+      }
       const { url } = await getGoogleMobileUrl();
       const result = await WebBrowser.openAuthSessionAsync(url, GOOGLE_CALLBACK_URL);
       if (result.type === 'success') {
@@ -111,7 +122,8 @@ export default function LoginScreen({ navigation }) {
 
             {/* Brand */}
             <View className="items-center mb-10">
-              <Text>🌿</Text>
+              {/*className='w-24 h-24 mb-4'*/}
+              <Image source={require('../../assets/icon.png')} accessibilityLabel='EcoTrack Logo' className='w-24 h-24 mb-4' />
               <Text className="heading text-center">EcoTrack</Text>
               <Text className="text-muted text-center">Monitora la tua impronta ecologica</Text>
             </View>
@@ -123,6 +135,8 @@ export default function LoginScreen({ navigation }) {
                 <Text className="text-label">Email</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
+                  style={{ color: inputColor }}
+                  placeholderTextColor={placeholderColor}
                   placeholder="nome@esempio.it"
                   value={email}
                   onChangeText={setEmail}
@@ -136,7 +150,9 @@ export default function LoginScreen({ navigation }) {
                 <Text className="text-label">Password</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
-                  placeholder="••••••••"
+                  style={{ color: inputColor }}
+                  placeholderTextColor={placeholderColor}
+                  placeholder="Inserisci la tua password"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -178,7 +194,7 @@ export default function LoginScreen({ navigation }) {
                 onPress={handleGoogleLogin}
                 disabled={loading}
               >
-                <Text>🇬</Text>
+                <Image source={require('../../assets/google-icon.png')} accessibilityLabel='Google Logo' className='w-6 h-6' />
                 <Text className="btn-ghost-text">Continua con Google</Text>
               </TouchableOpacity>
 
@@ -187,7 +203,7 @@ export default function LoginScreen({ navigation }) {
                 onPress={handleCieLogin}
                 disabled={loading}
               >
-                <Text>🇮🇹</Text>
+                <Image source={require('../../assets/cie-icon.png')} accessibilityLabel='CIE Logo' className='w-6 h-6' />
                 <Text className="btn-ghost-text">Accedi con CIE</Text>
               </TouchableOpacity>
             </View>

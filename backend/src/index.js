@@ -22,7 +22,7 @@ const app = express();
 
 const allowedOrigins = process.env.CORS_ORIGINS
 	? process.env.CORS_ORIGINS.split(',')
-	: ['http://localhost:5173', 'http://localhost:3000'];
+	: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8081'];
 
 app.use(
 	cors({

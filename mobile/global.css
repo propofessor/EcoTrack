@@ -33,8 +33,11 @@
     --text-primary:   #09090b; /* Zinc 950 */
     --text-secondary: #71717a; /* Zinc 500 */
     --border-color:   #e4e4e7; /* Zinc 200 */
-    --accent:         #18181b; /* Zinc 900 */
+    --accent:         #8ab834;
+    --accent-hover:   #668c20;
+    --accent-border:  #8ab33e;
     --accent-light:   #f4f4f5; /* Zinc 100 */
+    font-family: 'Comfortaa', system-ui, -apple-system, sans-serif;
   }
 
   /* ── DARK THEME (system preference) ── */
@@ -45,7 +48,6 @@
       --text-primary:   #f4f4f5; /* Zinc 100 */
       --text-secondary: #a1a1aa; /* Zinc 400 */
       --border-color:   #27272a; /* Zinc 800 */
-      --accent:         #f4f4f5;
       --accent-light:   #18181b; /* Zinc 800 */
     }
   }
@@ -87,28 +89,28 @@
   }
 
   /* Standard body copy */
+
   .text-body {
-    font-size: 0.875rem;
+    font-size: 1.2rem;
     color: var(--text-primary);
   }
 
   /* Muted / secondary — mirrors dashboard .header-subtitle */
   .text-muted {
-    font-size: 0.8125rem;
+    font-size: 1rem;
     color: var(--text-secondary);
   }
 
   /* Form field labels and small metadata */
   .text-label {
-    font-size: 0.8125rem;
+    font-size: 1rem;
     font-weight: 500;
     color: var(--text-secondary);
   }
 
   /* Monospace uppercase chip — mirrors dashboard .widget-title */
   .text-mono {
-    font-family: 'Courier New', monospace;
-    font-size: 0.75rem;
+    font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -118,16 +120,23 @@
   /* Tappable navigation / action link */
   .link {
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-hover);
+  }
+  @media (prefers-color-scheme: dark) {
+    .link { color: var(--accent); }
   }
 
   /* Inline validation error */
   .text-error {
-    font-size: 0.75rem;
+    font-size: 1rem;
     color: #ef4444; /* red-500 */
   }
   @media (prefers-color-scheme: dark) {
     .text-error { color: #f87171; /* red-400 */ }
+  }
+
+  .svg-wrapper {
+    text-color: black;
   }
 
 
@@ -171,7 +180,10 @@
     border-style: solid;
     border-color: var(--border-color);
     color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 1.2rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    .input { color: #f4f4f5; }
   }
 
 
@@ -184,7 +196,7 @@
     background-color: var(--accent);
     border-width: 1px;
     border-style: solid;
-    border-color: var(--accent);
+    border-color: var(--accent-border);
   }
 
   .btn-primary-text {
@@ -193,7 +205,6 @@
     font-weight: 600;
   }
   @media (prefers-color-scheme: dark) {
-    /* In dark mode --accent is light (#f4f4f5), so text must be dark */
     .btn-primary-text { color: #09090b; }
   }
 
@@ -207,7 +218,7 @@
 
   .btn-ghost-text {
     color: var(--text-primary);
-    font-size: 0.8125rem;
+    font-size: 1rem;
     font-weight: 500;
   }
 
@@ -226,17 +237,16 @@
   ---------------------------------------------------------- */
 
   .avatar {
-    background-color: var(--accent);
+    background-color: #27272a; /* zinc-800 — neutral instead of full accent */
+  }
+  @media (prefers-color-scheme: dark) {
+    .avatar { background-color: #3f3f46; } /* zinc-700 — lifted slightly in dark */
   }
 
   .avatar-letter {
-    color: #ffffff;
+    color: #f4f4f5;
     font-size: 1.75rem;
     font-weight: 700;
-  }
-  @media (prefers-color-scheme: dark) {
-    /* --accent is light in dark mode, so letter must be dark */
-    .avatar-letter { color: #09090b; }
   }
 
 
@@ -252,7 +262,7 @@
   }
 
   .grade-letter {
-    font-size: 4.5rem;
+    font-size: 2.5rem;
     font-weight: 800;
     color: var(--text-primary);
   }
@@ -260,7 +270,10 @@
   .grade-points {
     font-size: 1.375rem;
     font-weight: 700;
-    color: var(--accent);
+    color: var(--accent-hover);
+  }
+  @media (prefers-color-scheme: dark) {
+    .grade-points { color: var(--accent); }
   }
 
   .grade-stat-value {
@@ -306,18 +319,23 @@
 
   /* Current-user highlight */
   .leaderboard-row--self {
-    background-color: var(--accent-light);
+    background-color: #eef5e5;
     border-color: var(--accent);
+  }
+  @media (prefers-color-scheme: dark) {
+    .leaderboard-row--self {
+      background-color: rgba(138, 184, 52, 0.12);
+    }
   }
 
   .rank-badge-text {
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-secondary);
   }
 
   .leaderboard-name {
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 500;
     color: var(--text-primary);
   }
@@ -325,11 +343,14 @@
   .leaderboard-self-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-hover);
+  }
+  @media (prefers-color-scheme: dark) {
+    .leaderboard-self-label { color: var(--accent); }
   }
 
   .leaderboard-score {
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
   }
@@ -340,17 +361,17 @@
   ---------------------------------------------------------- */
 
   .podium-block-1 { background-color: #fbbf24; } /* amber-400 — gold   */
-  .podium-block-2 { background-color: #a1a1aa; } /* zinc-400 — silver  */
-  .podium-block-3 { background-color: #cd9a5c; } /* warm bronze        */
+  .podium-block-2 { background-color: #c4c4cc; } /* zinc-300 — silver  */
+  .podium-block-3 { background-color: #cd7f32; } /* bronze */
 
   .podium-name {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-primary);
   }
 
   .podium-score {
-    font-size: 0.6875rem;
+    font-size: 0.8125rem;
     color: var(--text-secondary);
   }
 
@@ -366,15 +387,14 @@
     border-color: var(--border-color);
   }
 
-  /* Best-option highlight — emerald accent */
+  /* Best-option highlight — dashboard green accent */
   .transport-card--best {
-    border-color: #10b981;                   /* emerald-500 */
-    background-color: rgba(209, 250, 229, 0.3); /* emerald-100 / 30% */
+    border-color: var(--accent);
+    background-color: rgba(138, 184, 52, 0.09);
   }
   @media (prefers-color-scheme: dark) {
     .transport-card--best {
-      border-color: #34d399;                  /* emerald-400 */
-      background-color: rgba(2, 44, 34, 0.2);
+      background-color: rgba(138, 184, 52, 0.08);
     }
   }
 
@@ -387,14 +407,14 @@
   .eco-badge {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #059669; /* emerald-600 */
+    color: var(--accent-hover);
   }
   @media (prefers-color-scheme: dark) {
-    .eco-badge { color: #34d399; /* emerald-400 */ }
+    .eco-badge { color: var(--accent); }
   }
 
   .transport-stat {
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 500;
     color: var(--text-primary);
   }
@@ -414,7 +434,10 @@
   }
 
   .period-btn--active {
-    background-color: var(--accent);
+    background-color: var(--bg-surface);
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--accent);
   }
 
   .period-btn-text {
@@ -425,11 +448,8 @@
 
   .period-btn-text--active {
     font-size: 0.75rem;
-    font-weight: 500;
-    color: #ffffff;
-  }
-  @media (prefers-color-scheme: dark) {
-    .period-btn-text--active { color: #09090b; }
+    font-weight: 700;
+    color: var(--accent);
   }
 
 
@@ -441,13 +461,13 @@
     border-radius: 0.25rem;
     font-size: 0.75rem;
     font-weight: 600;
-    background-color: #d1fae5; /* emerald-100 */
-    color: #047857;             /* emerald-700 */
+    background-color: rgba(138, 184, 52, 0.13);
+    color: var(--accent-hover);
   }
   @media (prefers-color-scheme: dark) {
     .status-badge {
-      background-color: rgba(2, 44, 34, 0.4);
-      color: #34d399; /* emerald-400 */
+      background-color: rgba(138, 184, 52, 0.1);
+      color: var(--accent);
     }
   }
 
@@ -457,13 +477,16 @@
   ---------------------------------------------------------- */
 
   .trend-positive {
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: #10b981; /* emerald-500 — improvement */
+    color: var(--accent-hover);
+  }
+  @media (prefers-color-scheme: dark) {
+    .trend-positive { color: var(--accent); }
   }
 
   .trend-negative {
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #ef4444; /* red-500 — worsening */
   }

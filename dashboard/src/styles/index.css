@@ -15,10 +15,14 @@
 	/* ── DASHBOARD-ONLY LIGHT TOKENS ── */
 	:root {
 		--bg-widget:    #ffffff; /* Widget background */
-		--accent-hover: #f4f4f5; /* Hover tint for ghost buttons */
+		--btn-hover: #f4f4f5; /* Hover tint for ghost buttons */
 		--shadow:
 			0 1px 3px 0 rgba(0, 0, 0, 0.05),
 			0 1px 2px -1px rgba(0, 0, 0, 0.05);
+		--accent:         #8ab834; 
+		--accent-border: #8ab33e;
+		--accent-hover:   #668c20;
+		font-family: 'Comfortaa', system-ui, -apple-system, sans-serif;
 	}
 
 	/* ── LIGHT THEME — explicit override beats the prefers-color-scheme
@@ -31,9 +35,8 @@
 		--text-primary:   #09090b;
 		--text-secondary: #71717a;
 		--border-color:   #e4e4e7;
-		--accent:         #18181b;
+		--btn-hover:   #f4f4f5;
 		--accent-light:   #f4f4f5;
-		--accent-hover:   #f4f4f5;
 		--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
 	}
 
@@ -41,22 +44,20 @@
 	   Higher specificity than the media-query baseline in shared/tokens.css,
 	   so this always wins when data-theme='dark' is present.           */
 	[data-theme='dark'] {
-		--bg-primary:     #09090b; /* Zinc 950 — near-black page */
+		--bg-primary:     #09090b; /* Zinc 950 — near-black page */ /*#1a1a1a*/
 		--bg-surface:     #121214; /* Zinc 900 alt — depth layer */
 		--bg-widget:      #09090b; /* Widget background */
 		--text-primary:   #f4f4f5; /* Zinc 100 */
 		--text-secondary: #a1a1aa; /* Zinc 400 */
 		--border-color:   #27272a; /* Zinc 800 — subtle dividers */
-		--accent:         #f4f4f5; /* Inverted accent for dark mode */
+		--btn-hover:   #18181b; /* Hover tint for dark mode */
 		--accent-light:   #18181b; /* Zinc 800 — button fills */
-		--accent-hover:   #18181b; /* Hover tint for dark mode */
-		--shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+		--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
 	}
 
 	body {
 		background-color: var(--bg-primary);
 		color: var(--text-primary);
-		font-family: 'Inter', system-ui, -apple-system, sans-serif;
 		-webkit-font-smoothing: antialiased;
 	}
 }
@@ -119,6 +120,11 @@
 	   the toolbar of action buttons.
 	   ---------------------------------------------------------- */
 
+	.header {
+		padding: 1rem;
+		background-color: var(--bg-surface);
+	}
+
 	/* Primary dashboard heading */
 	.header-title {
 		font-size: 1.375rem;
@@ -143,20 +149,12 @@
 	/* Base chrome — shape, border, typography, hover transition */
 	.btn {
 		border-radius: 0.5rem;
-		border: 1px solid var(--border-color);
+		border: 0.75px solid var(--border-color);
 		cursor: pointer;
 		font-size: 0.8125rem;
 		font-weight: 500;
 		transition: all 0.15s ease;
-	}
-
-	/* Filled accent — primary "Salva" action */
-	.btn--accent {
-		background-color: var(--accent);
-		color: var(--bg-primary);
-	}
-	.btn--accent:hover {
-		opacity: 0.9;
+		@apply items-center gap-1.5 px-3.5 py-1.75 inline-flex
 	}
 
 	/* Ghost / surface — secondary actions and import label */
@@ -165,6 +163,16 @@
 		color: var(--text-primary);
 	}
 	.btn--default:hover {
+		background-color: var(--btn-hover);
+	}
+
+	.btn--accent {
+		background-color: var(--accent);
+		color: var(--bg-primary);
+		border-color: var(--accent-border);
+	}
+
+	.btn--accent:hover {
 		background-color: var(--accent-hover);
 	}
 
@@ -244,7 +252,7 @@
 		transition: all 0.15s ease;
 	}
 	.widget-action-btn:hover {
-		background-color: var(--accent-hover);
+		background-color: var(--btn-hover);
 		color: var(--text-primary);
 	}
 
@@ -288,7 +296,7 @@
 		transition: all 0.15s ease;
 	}
 	.widget-dropdown-item:hover {
-		background-color: var(--accent-hover);
+		background-color: var(--btn-hover);
 	}
 
 	/* Dashed placeholder shown when a widget has no type yet configured */
@@ -414,12 +422,11 @@
 		border-radius: 0.25rem;
 		font-size: 0.75rem;
 		font-weight: 600;
-		background-color: #d1fae5; /* emerald-100 */
-		color: #047857;            /* emerald-700 */
+		background-color: #b1d17770; 
+		color: var(--accent);            
 	}
 	[data-theme='dark'] .status-badge {
-		background-color: rgba(2, 44, 34, 0.4); /* emerald-950 / 40% */
-		color: #34d399;                          /* emerald-400 */
+		background-color: #6a853955;        
 	}
 
 
@@ -444,7 +451,7 @@
 
 	/* Spinning loader icon — emerald rotating ring */
 	.map-spinner {
-		color: #10b981; /* emerald-500 */
+		color: var(--accent); 
 		animation: spin 1s linear infinite;
 	}
 
@@ -545,22 +552,6 @@
 		stroke: var(--bg-widget);
 		stroke-width: 2;
 	}
-
-
-	/* ----------------------------------------------------------
-	   DARK MODE TOGGLE
-	   Theme toggle button shown in the header toolbar.
-	   ---------------------------------------------------------- */
-
-	/* Button shell — surface fill, border, rounded corners */
-	.dark-mode-toggle {
-		background-color: var(--bg-surface);
-		border: 1px solid var(--border-color);
-		border-radius: 0.5rem;
-		cursor: pointer;
-		color: var(--text-primary);
-	}
-
 
 	/* ----------------------------------------------------------
 	   DASHBOARD PAGE
@@ -736,6 +727,11 @@
 	[data-theme='dark'] .map-popup-desc {
 		color: var(--text-secondary);
 	}
+}
+
+.recharts-legend-item-text {
+	font-weight: 700;
+	text-transform: capitalize;
 }
 
 

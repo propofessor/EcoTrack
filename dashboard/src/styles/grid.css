@@ -3,6 +3,7 @@
 .react-grid-layout {
 	position: relative;
 	width: 100%;
+	padding: 1.5rem;
 }
 
 .react-grid-item {

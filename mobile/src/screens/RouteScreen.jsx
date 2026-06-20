@@ -18,24 +18,19 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { calculateCo2 } from "../api/maps";
 import { getMockDirections } from "../api/directions";
 import TransportCard from "../components/TransportCard";
+import { Footprints, Bike, Bus, Car, Map } from "lucide-react-native";
 
 const MODE_LABELS = {
   piedi: "A piedi",
   bicicletta: "In bicicletta",
   autobus: "Trasporto pubblico",
   macchina: "Automobile",
-};
-
-const MODE_ICONS = {
-  piedi: "🚶",
-  bicicletta: "🚴",
-  autobus: "🚌",
-  macchina: "🚗",
 };
 
 // Static mock polyline for Trento — same waypoints used in MapScreen.
@@ -48,7 +43,20 @@ const MOCK_POLYLINE = [
   [46.0702, 11.1196],
 ];
 
+const MODE_ICONS = {
+  walking: (color) => <Footprints size={28} color={color} />,
+  bicycling: (color) => <Bike size={28} color={color} />,
+  transit: (color) => <Bus size={28} color={color} />,
+  driving: (color) => <Car size={28} color={color} />,
+};
+
 export default function RouteScreen({ navigation }) {
+  const scheme = useColorScheme();
+  const iconColor = scheme === "dark" ? "#f4f4f5" : "#09090b";
+  const mutedColor = scheme === "dark" ? "#a1a1aa" : "#71717a";
+
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [results, setResults] = useState(null);
@@ -109,10 +117,19 @@ export default function RouteScreen({ navigation }) {
           {/* Route inputs — RF9.1 */}
           <View className="card rounded-2xl p-4 gap-3 mb-4">
             <View className="flex-row items-center gap-3">
-              <Text>🟢</Text>
+              <View
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: "#8ab834",
+                }}
+              />
               <TextInput
                 className="input flex-1 rounded-xl px-3 py-2"
                 placeholder="Partenza (indirizzo o città)"
+                placeholderTextColor={mutedColor}
+                style={{ color: iconColor }}
                 value={origin}
                 onChangeText={setOrigin}
                 returnKeyType="next"
@@ -123,10 +140,19 @@ export default function RouteScreen({ navigation }) {
             <View className="divider w-px ml-4 my-1 h-5" />
 
             <View className="flex-row items-center gap-3">
-              <Text>🔴</Text>
+              <View
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: "#ef4444",
+                }}
+              />
               <TextInput
                 className="input flex-1 rounded-xl px-3 py-2"
                 placeholder="Destinazione (indirizzo o città)"
+                placeholderTextColor={mutedColor}
+                style={{ color: iconColor }}
                 value={destination}
                 onChangeText={setDestination}
                 returnKeyType="done"
@@ -153,7 +179,7 @@ export default function RouteScreen({ navigation }) {
               {modes.map((mode) => (
                 <TransportCard
                   key={mode}
-                  icon={MODE_ICONS[mode]}
+                  icon={MODE_ICONS[mode](iconColor)}
                   label={MODE_LABELS[mode]}
                   distanceKm={directions?.[mode]?.distanceKm ?? 0}
                   durationMin={directions?.[mode]?.durationMin ?? null}
@@ -169,9 +195,12 @@ export default function RouteScreen({ navigation }) {
                   navigation.navigate("Mappa", { polyline: MOCK_POLYLINE })
                 }
               >
-                <Text className="btn-ghost-text">
-                  🗺️ Mostra percorso su mappa
-                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Map size={16} color={mutedColor} />
+                  <Text className="btn-ghost-text">
+                    Mostra percorso su mappa
+                  </Text>
+                </View>
               </TouchableOpacity>
             </View>
           )}

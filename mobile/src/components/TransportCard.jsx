@@ -9,21 +9,30 @@
  *   isBest      — true when this is the lowest-emission option
  *   durationMin — estimated travel time in minutes (RF9.4)
  */
-import { View, Text } from 'react-native';
+import { View, Text, useColorScheme } from 'react-native';
+import { Leaf } from 'lucide-react-native';
 
 export default function TransportCard({ icon, label, distanceKm, co2Kg, isBest, durationMin }) {
+  const scheme = useColorScheme();
+  const ecoColor = '#8ab834';
+
   return (
     <View className={`rounded-2xl p-4 flex-row items-center gap-4 transport-card${isBest ? ' transport-card--best' : ''}`}>
 
       {/* Mode icon — 48×48 */}
       <View className="items-center justify-center w-12 h-12">
-        <Text>{icon}</Text>
+        {icon}
       </View>
 
       {/* Mode name and optional eco badge */}
       <View className="flex-1 flex-col">
         <Text className="transport-mode-label">{label}</Text>
-        {isBest && <Text className="eco-badge">🌿 Opzione più ecologica</Text>}
+        {isBest && (
+          <View className="flex-row items-center gap-1">
+            <Leaf size={14} color={ecoColor} />
+            <Text className="eco-badge">Opzione più ecologica</Text>
+          </View>
+        )}
         {durationMin != null && (
           <Text className="text-muted">{durationMin} min</Text>
         )}

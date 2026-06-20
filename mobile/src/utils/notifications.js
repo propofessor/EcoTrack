@@ -3,24 +3,25 @@
  * Registers the device for Expo push notifications and stores the token
  * on the backend so the server can send daily grade / weekly results alerts.
  */
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import client from '../api/client';
 
-// EAS project id — required by getExpoPushTokenAsync in dev-client/bare builds
-// where it can't be inferred from the manifest.
 const projectId =
   Constants?.expoConfig?.extra?.eas?.projectId ??
   Constants?.easConfig?.projectId;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 /**
  * Requests notification permission and registers the push token with the backend.

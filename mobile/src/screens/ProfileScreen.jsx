@@ -17,6 +17,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Image,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
@@ -34,6 +36,17 @@ import {
   cieCallback,
 } from "../api/auth";
 import { BASE_URL } from "../api/client";
+import {
+  User,
+  Mail,
+  Car,
+  KeyRound,
+  Settings,
+  LogOut,
+  Trash2,
+  ChevronRight,
+  Check,
+} from 'lucide-react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -46,6 +59,11 @@ const PLATE_REGEX = /^[A-Z]{2}\d{3}[A-Z]{2}$/i;
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
+  const scheme = useColorScheme();
+  const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
+  const placeholderColor = scheme === 'dark' ? '#71717a' : '#a1a1aa';
+  const mutedColor = scheme === 'dark' ? '#a1a1aa' : '#71717a';
+  const dangerColor = '#ef4444';
 
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -268,6 +286,8 @@ export default function ProfileScreen({ navigation }) {
                   <Text className="text-label">Nome e cognome</Text>
                   <TextInput
                     className="input w-full rounded-xl px-4 py-3"
+                    style={{ color: iconColor }}
+                    placeholderTextColor={placeholderColor}
                     value={name}
                     onChangeText={setName}
                     placeholder="Mario Rossi"
@@ -277,6 +297,8 @@ export default function ProfileScreen({ navigation }) {
                   <Text className="text-label">Targa veicolo</Text>
                   <TextInput
                     className="input w-full rounded-xl px-4 py-3"
+                    style={{ color: iconColor }}
+                    placeholderTextColor={placeholderColor}
                     value={plate}
                     onChangeText={setPlate}
                     placeholder="AB123CD"
@@ -298,7 +320,9 @@ export default function ProfileScreen({ navigation }) {
               <View className="flex-col gap-2">
                 <View className="flex-row items-center justify-between py-3">
                   <View className="flex-row items-center gap-3">
-                    <Text>👤</Text>
+                    <View className="svg-wrapper">
+                      <User size={20} color={iconColor} />
+                    </View>
                     <Text className="text-label">Nome</Text>
                   </View>
                   <Text className="text-body">{name || "—"}</Text>
@@ -306,7 +330,7 @@ export default function ProfileScreen({ navigation }) {
                 <View className="divider h-px" />
                 <View className="flex-row items-center justify-between py-3">
                   <View className="flex-row items-center gap-3">
-                    <Text>✉️</Text>
+                    <Mail size={20} color={iconColor} />
                     <Text className="text-label">Email</Text>
                   </View>
                   <Text className="text-body">{email}</Text>
@@ -314,7 +338,7 @@ export default function ProfileScreen({ navigation }) {
                 <View className="divider h-px" />
                 <View className="flex-row items-center justify-between py-3">
                   <View className="flex-row items-center gap-3">
-                    <Text>🚗</Text>
+                    <Car size={20} color={iconColor} />
                     <Text className="text-label">Targa</Text>
                   </View>
                   <Text className="text-body">{plate || "Non inserita"}</Text>
@@ -330,7 +354,7 @@ export default function ProfileScreen({ navigation }) {
               onPress={() => setChangingPassword((v) => !v)}
             >
               <View className="flex-row items-center gap-3">
-                <Text>🔑</Text>
+                <KeyRound size={20} color={iconColor} />
                 <Text className="text-body">Cambia password</Text>
               </View>
               <Text className="link">
@@ -345,6 +369,8 @@ export default function ProfileScreen({ navigation }) {
                   <Text className="text-label">Nuova password</Text>
                   <TextInput
                     className="input w-full rounded-xl px-4 py-3"
+                    style={{ color: iconColor }}
+                    placeholderTextColor={placeholderColor}
                     placeholder="••••••••"
                     value={newPassword}
                     onChangeText={setNewPassword}
@@ -355,6 +381,8 @@ export default function ProfileScreen({ navigation }) {
                   <Text className="text-label">Conferma password</Text>
                   <TextInput
                     className="input w-full rounded-xl px-4 py-3"
+                    style={{ color: iconColor }}
+                    placeholderTextColor={placeholderColor}
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
@@ -381,11 +409,14 @@ export default function ProfileScreen({ navigation }) {
             {(
               <View className="flex-row items-center justify-between py-3">
                 <View className="flex-row items-center gap-3">
-                  <Text>🇬</Text>
+                  <Image source={require('../../assets/google-icon.png')} accessibilityLabel='Google Logo' className='w-6 h-6' />
                   <Text className="text-body">Google</Text>
                 </View>
                 {linkedProviders.includes("google") ? (
-                  <Text className="link">✓ Collegato</Text>
+                  <View className="flex-row items-center gap-1">
+                    <Check size={16} color={iconColor} />
+                    <Text className="link">Collegato</Text>
+                  </View>
                 ) : (
                   <TouchableOpacity
                     onPress={() => handleLinkGoogle()}
@@ -403,11 +434,14 @@ export default function ProfileScreen({ navigation }) {
 
             <View className="flex-row items-center justify-between py-3">
               <View className="flex-row items-center gap-3">
-                <Text>🇮🇹</Text>
+                <Image source={require('../../assets/cie-icon.png')} accessibilityLabel='CIE Logo' className='w-6 h-6' />
                 <Text className="text-body">CIE</Text>
               </View>
               {linkedProviders.includes("cie") ? (
-                <Text className="link">✓ Collegato</Text>
+                <View className="flex-row items-center gap-1">
+                  <Check size={16} color={iconColor} />
+                  <Text className="link">Collegato</Text>
+                </View>
               ) : (
                 <TouchableOpacity
                   onPress={handleLinkCie}
@@ -428,10 +462,10 @@ export default function ProfileScreen({ navigation }) {
               onPress={() => navigation.navigate("Preferences")}
             >
               <View className="flex-row items-center gap-3">
-                <Text>⚙️</Text>
+                <Settings size={20} color={iconColor} />
                 <Text className="text-body">Preferenze</Text>
               </View>
-              <Text className="text-muted">›</Text>
+              <ChevronRight size={20} color={mutedColor} />
             </TouchableOpacity>
           </View>
 
@@ -447,7 +481,7 @@ export default function ProfileScreen({ navigation }) {
               }
             >
               <View className="flex-row items-center gap-3">
-                <Text>🚪</Text>
+                <LogOut size={20} color={iconColor} />
                 <Text className="text-body">Logout</Text>
               </View>
             </TouchableOpacity>
@@ -459,7 +493,7 @@ export default function ProfileScreen({ navigation }) {
               className="flex-row items-center gap-3 py-3"
               onPress={handleDeleteAccount}
             >
-              <Text>🗑️</Text>
+              <Trash2 size={20} color={dangerColor} />
               <Text className="btn-danger-text">
                 Elimina account definitivamente
               </Text>

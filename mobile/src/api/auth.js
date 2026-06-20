@@ -48,6 +48,12 @@ export async function getGoogleMobileUrl() {
   return res.data; // { url }
 }
 
+/** RF5.2: Get the Supabase Google OAuth URL for the web full-page redirect flow. */
+export async function getGoogleWebUrl() {
+  const res = await client.get('/auth/google/web-url');
+  return res.data; // { url }
+}
+
 /** RF5.2: Exchange the OAuth code returned by Supabase for a session. Stores tokens. */
 export async function googleMobileCallback({ code }) {
   const res = await client.get('/auth/google/mobile-callback', { params: { code } });

@@ -76,7 +76,7 @@ export default function Dashboard() {
 	};
 
 	return (
-		<div className='dashboard-page p-5'>
+		<div className='dashboard-page'>
 			<Header
 				className='w-full'
 				saveLayout={saveLayout}

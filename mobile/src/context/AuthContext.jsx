@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { hasStoredToken, getMe, logout as apiLogout } from '../api/auth';
 import { registerPushNotifications } from '../utils/notifications';
 
@@ -12,15 +13,19 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
-        const tokenExists = await hasStoredToken();
-        if (tokenExists) {
+        if (Platform.OS === 'web') {
+          // Browser manages session cookies automatically via withCredentials
           const data = await getMe();
           setUser(data);
-          // RF11.7: register push token (no-op on simulator or if already registered)
-          registerPushNotifications().catch(() => {});
+        } else {
+          const tokenExists = await hasStoredToken();
+          if (tokenExists) {
+            const data = await getMe();
+            setUser(data);
+            registerPushNotifications().catch(() => {});
+          }
         }
       } catch {
-        // Token is expired or invalid — silently drop it.
         setUser(null);
       } finally {
         setLoading(false);
