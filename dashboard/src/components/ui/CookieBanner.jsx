@@ -3,6 +3,7 @@
  * Shown on first visit; user must accept or reject cookies.
  * Choice is persisted in localStorage under 'cookies_accepted'.
  */
+import { Cookie } from 'lucide-react';
 import { useState } from 'react';
 
 const STORAGE_KEY = 'cookies_accepted';
@@ -40,52 +41,38 @@ export default function CookieBanner() {
 				display: 'flex',
 				alignItems: 'center',
 				justifyContent: 'space-between',
-				gap: '1rem',
+				gap: '0.5rem',
 				flexWrap: 'wrap',
 				backgroundColor: 'var(--bg-surface)',
 				borderTop: '1px solid var(--border-color)',
-				boxShadow: '0 -2px 12px rgba(0,0,0,0.15)',
+				boxShadow: 'rgba(0, 0, 0, 0.075) 0px -0.5px 10px'
 			}}
 			role="dialog"
 			aria-label="Informativa sui cookie"
 		>
+			<Cookie size={16}/>
 			<p style={{ margin: 0, flex: 1, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-				🍪 Questo sito utilizza cookie tecnici essenziali per il suo funzionamento.
+				
+				Questo sito utilizza cookie tecnici essenziali per il suo funzionamento.
+
 				Consulta la nostra{' '}
-				<a href="#" style={{ color: 'var(--accent)' }}>
+				<a href="#" style={{ color: 'var(--accent)', fontWeight: 1000 }}>
 					Cookie Policy
 				</a>{' '}
 				per maggiori informazioni.
 			</p>
 			<div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
 				<button
-					onClick={reject}
-					style={{
-						padding: '0.5rem 1.25rem',
-						borderRadius: '0.5rem',
-						border: '1px solid var(--border-color)',
-						background: 'transparent',
-						color: 'var(--text-secondary)',
-						cursor: 'pointer',
-						fontSize: '0.875rem',
-					}}
-				>
-					Rifiuta
-				</button>
-				<button
 					onClick={accept}
-					style={{
-						padding: '0.5rem 1.25rem',
-						borderRadius: '0.5rem',
-						border: 'none',
-						background: 'var(--accent)',
-						color: '#fff',
-						cursor: 'pointer',
-						fontSize: '0.875rem',
-						fontWeight: 600,
-					}}
+					className='btn btn--accent'
 				>
 					Accetta
+				</button>
+				<button
+					onClick={reject}
+					className='btn btn--default'
+				>
+					Rifiuta
 				</button>
 			</div>
 		</div>

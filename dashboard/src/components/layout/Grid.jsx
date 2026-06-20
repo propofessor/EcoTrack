@@ -128,7 +128,7 @@ export default function Grid({ items, setItems }) {
 			<div ref={containerRef} className='relative mt-4'>
 				{mounted && (
 					<>
-						<GridBackground
+						{/*<GridBackground
 							width={width}
 							cols={cols}
 							rowHeight={30}
@@ -136,7 +136,7 @@ export default function Grid({ items, setItems }) {
 							color='rgba(210, 147, 128, 0.3)'
 							borderRadius={0}
 							rows={100}
-						/>
+						/>*/}
 
 						<Responsive
 							breakpoints={{

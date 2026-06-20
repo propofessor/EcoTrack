@@ -107,7 +107,7 @@ export function WidgetConfigModal({ widget, onSave, onClose }) {
 					<select
 						value={dataset}
 						onChange={e => setDataset(e.target.value)}
-						className='modal-input px-3 py-2 mb-4'
+						className={'modal-input px-3 py-2 mb-4' + (!type ? ' opacity-50 cursor-not-allowed' : '')}
 						disabled={!type}
 					>
 						<option value=''>-- Seleziona --</option>
@@ -180,10 +180,10 @@ export function WidgetConfigModal({ widget, onSave, onClose }) {
 				</div>
 
 				<div className='flex justify-end gap-2 p-4'>
-					<button onClick={onClose} className='modal-btn modal-btn--cancel px-4 py-2'>
+					<button onClick={onClose} className='btn btn--default px-4 py-2'>
 						Annulla
 					</button>
-					<button onClick={handleSave} className='modal-btn modal-btn--save px-4 py-2'>
+					<button onClick={handleSave} className='btn btn--accent px-4 py-2'>
 						Salva Widget
 					</button>
 				</div>

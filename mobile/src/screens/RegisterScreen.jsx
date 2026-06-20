@@ -8,6 +8,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { register as apiRegister, getMe } from '../api/auth';
@@ -24,6 +26,9 @@ const PASSWORD_REGEX =
 
 export default function RegisterScreen({ navigation }) {
   const { login } = useAuth();
+  const scheme = useColorScheme();
+  const inputColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
+  const placeholderColor = scheme === 'dark' ? '#71717a' : '#a1a1aa';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -83,7 +88,7 @@ export default function RegisterScreen({ navigation }) {
 
             {/* Brand */}
             <View className="items-center mb-10">
-              <Text>🌿</Text>
+              <Image source={require('../../assets/icon.png')} accessibilityLabel='EcoTrack Logo' className='w-24 h-24 mb-4' />
               <Text className="heading text-center">Crea il tuo account</Text>
             </View>
 
@@ -94,6 +99,8 @@ export default function RegisterScreen({ navigation }) {
                 <Text className="text-label">Nome e cognome</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
+                  style={{ color: inputColor }}
+                  placeholderTextColor={placeholderColor}
                   placeholder="Mario Rossi"
                   value={name}
                   onChangeText={setName}
@@ -105,6 +112,8 @@ export default function RegisterScreen({ navigation }) {
                 <Text className="text-label">Email</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
+                  style={{ color: inputColor }}
+                  placeholderTextColor={placeholderColor}
                   placeholder="nome@esempio.it"
                   value={email}
                   onChangeText={setEmail}
@@ -119,6 +128,8 @@ export default function RegisterScreen({ navigation }) {
                 <Text className="text-label">Password</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
+                  style={{ color: inputColor }}
+                  placeholderTextColor={placeholderColor}
                   placeholder="Min 8: maiuscola, minuscola, numero, speciale"
                   value={password}
                   onChangeText={setPassword}
@@ -131,6 +142,8 @@ export default function RegisterScreen({ navigation }) {
                 <Text className="text-label">Targa veicolo (opzionale)</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
+                  style={{ color: inputColor }}
+                  placeholderTextColor={placeholderColor}
                   placeholder="AB123CD"
                   value={plate}
                   onChangeText={setPlate}

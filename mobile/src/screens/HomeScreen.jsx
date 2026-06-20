@@ -9,15 +9,19 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { getDailyScore, getWeeklyScore } from '../api/gamification';
 import GradeCard from '../components/GradeCard';
 import StatCard from '../components/StatCard';
+import { Compass, BarChart2, Map } from 'lucide-react-native';
 
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
+  const scheme = useColorScheme();
+  const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
 
   const [daily, setDaily] = useState(null);
   const [weekly, setWeekly] = useState(null);
@@ -59,7 +63,7 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           {/* Daily grade — RF11.2 */}
-          <View className="mb-6">
+          <View className="mb-4">
             <GradeCard score={daily} />
           </View>
 
@@ -92,8 +96,8 @@ export default function HomeScreen({ navigation }) {
                 className="card rounded-2xl p-4 flex-row items-center gap-3"
                 onPress={() => navigation.navigate('Percorso')}
               >
-                <Text>🧭</Text>
-                <View className="flex-col gap-1">
+                <Compass size={24} color={iconColor} />
+                <View className="flex-1 flex-col gap-1">
                   <Text className="text-body">Calcola percorso</Text>
                   <Text className="text-muted">Confronta le emissioni CO2 per il tuo tragitto</Text>
                 </View>
@@ -103,8 +107,8 @@ export default function HomeScreen({ navigation }) {
                 className="card rounded-2xl p-4 flex-row items-center gap-3"
                 onPress={() => navigation.navigate('Storico')}
               >
-                <Text>📊</Text>
-                <View className="flex-col gap-1">
+                <BarChart2 size={24} color={iconColor} />
+                <View className="flex-1 flex-col gap-1">
                   <Text className="text-body">Storico emissioni</Text>
                   <Text className="text-muted">Analizza il tuo andamento nel tempo</Text>
                 </View>
@@ -114,8 +118,8 @@ export default function HomeScreen({ navigation }) {
                 className="card rounded-2xl p-4 flex-row items-center gap-3"
                 onPress={() => navigation.navigate('Mappa')}
               >
-                <Text>🗺️</Text>
-                <View className="flex-col gap-1">
+                <Map size={24} color={iconColor} />
+                <View className="flex-1 flex-col gap-1">
                   <Text className="text-body">Mappa qualità aria</Text>
                   <Text className="text-muted">Visualizza l'inquinamento nella tua città</Text>
                 </View>

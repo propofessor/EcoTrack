@@ -7,11 +7,11 @@
  * RF8.5: colour legend.
  */
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Switch, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import { View, Text, TouchableOpacity, Switch, Alert, useColorScheme } from 'react-native';
+import PlatformWebView from '../components/PlatformWebView';
 import * as Location from 'expo-location';
 import client from '../api/client';
+import { MapPin } from 'lucide-react-native';
 
 const OVERLAY = { NONE: 'none', AIR: 'air', NOISE: 'noise' };
 
@@ -29,6 +29,7 @@ const MAP_HTML = `<!DOCTYPE html>
   <style>
     html, body, #map { width: 100%; height: 100%; margin: 0; padding: 0; }
     .leaflet-control-attribution { font-size: 8px; }
+    .leaflet-bottom.leaflet-left { margin-bottom: 12px; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -36,11 +37,12 @@ const MAP_HTML = `<!DOCTYPE html>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   <script>
-    var map = L.map('map', { zoomControl: true }).setView([${TRENTO.lat}, ${TRENTO.lng}], ${TRENTO.zoom});
+    var map = L.map('map', { zoomControl: false }).setView([${TRENTO.lat}, ${TRENTO.lng}], ${TRENTO.zoom});
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19
     }).addTo(map);
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
     var heatLayer = null;
     var routeLayer = null;
@@ -98,6 +100,8 @@ const MOCK_ROUTE_LATLNGS = [
 
 export default function MapScreen({ route: navRoute }) {
   const webViewRef = useRef(null);
+  const scheme = useColorScheme();
+  const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
   const [overlay, setOverlay] = useState(OVERLAY.NONE);
   const [loading, setLoading] = useState(false);
   const routePolyline = navRoute?.params?.polyline ?? null;
@@ -147,7 +151,7 @@ export default function MapScreen({ route: navRoute }) {
 
   return (
     <View className="flex-1">
-      <WebView
+      <PlatformWebView
         ref={webViewRef}
         source={{ html: MAP_HTML }}
         style={{ flex: 1 }}
@@ -156,7 +160,6 @@ export default function MapScreen({ route: navRoute }) {
         originWhitelist={['*']}
         mixedContentMode="always"
         onLoadEnd={() => {
-          // RF9.5: draw route polyline if navigated here from RouteScreen
           if (routePolyline) {
             sendPolyline(routePolyline);
           }
@@ -164,26 +167,29 @@ export default function MapScreen({ route: navRoute }) {
       />
 
       {/* RF8.4: Layer toggle controls — floating top-right card */}
-      <SafeAreaView
-        className="card absolute top-16 right-4 rounded-2xl p-3 gap-2"
-        style={{ minWidth: 120 }}
+      <View
+        className="card absolute top-16 right-4 rounded-xl"
+        style={{ minWidth: 110, padding: 8, gap: 4 }}
       >
         <View className="flex-row items-center justify-between gap-2">
-          <Text className="text-label">Aria</Text>
+          <Text style={{ fontSize: 13, fontWeight: '500', color: scheme === 'dark' ? '#a1a1aa' : '#71717a' }}>Aria</Text>
           <Switch
             value={overlay === OVERLAY.AIR}
             onValueChange={() => toggleOverlay(OVERLAY.AIR)}
+            trackColor={{ false: '#3f3f46', true: '#8ab834' }}
+            thumbColor="#ffffff"
           />
         </View>
         <View className="flex-row items-center justify-between gap-2">
-          <Text className="text-label">Rumore</Text>
+          <Text style={{ fontSize: 13, fontWeight: '500', color: scheme === 'dark' ? '#a1a1aa' : '#71717a' }}>Rumore</Text>
           <Switch
             value={overlay === OVERLAY.NOISE}
             onValueChange={() => toggleOverlay(OVERLAY.NOISE)}
+            trackColor={{ false: '#3f3f46', true: '#8ab834' }}
+            thumbColor="#ffffff"
           />
         </View>
-        {loading && <Text className="text-muted">Caricamento…</Text>}
-      </SafeAreaView>
+      </View>
 
       {/* RF8.5: Colour legend — anchored to bottom */}
       {overlay !== OVERLAY.NONE && (
@@ -200,7 +206,7 @@ export default function MapScreen({ route: navRoute }) {
         className="card absolute bottom-24 right-4 rounded-full p-3"
         onPress={locateMe}
       >
-        <Text>📍</Text>
+        <MapPin size={22} color={iconColor} />
       </TouchableOpacity>
     </View>
   );

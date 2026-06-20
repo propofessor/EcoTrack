@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Lockfiles — commit pnpm-lock.yaml, ignore npm/yarn leftovers
+package-lock.json
+yarn.lock
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Android
+android/
+*.apk
+*.aab
+
+# iOS
+ios/
+*.ipa
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Firebase / FCM credentials
+google-services.json
+GoogleService-Info.plist
+ecotrack-e65ed-firebase-adminsdk-fbsvc-33c8aaa9ba.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

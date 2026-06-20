@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getCo2Stats, getLeaderboard, getMapData } from '../api/dashboardapi.js';
 
+const FORCE_MOCK = import.meta.env.VITE_FORCE_MOCK === 'true';
 // Fallback mock data for each dataset (shown when API is unavailable)
 const MOCK = {
 	co2_monthly: [
@@ -99,6 +100,7 @@ export function useWidgetData(config = {}) {
 		};
 
 		const fetchAndTransform = async () => {
+			if (FORCE_MOCK) return MOCK[dataset] ?? [];
 			switch (dataset) {
 				case 'co2_monthly': {
 					const res  = await getCo2Stats({ ...buildDateParams(), limit: 1000 });

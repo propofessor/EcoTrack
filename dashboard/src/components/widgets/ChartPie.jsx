@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { useElementSize } from '../../hooks/useElementSize.js';
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const COLORS = ['#8ab834', '#e7dc0c', '#f59e0b', '#d05305', '#b73410', '#3f981e'];
 
 export function ChartPie({ data = [], loading = false }) {
 	const [containerRef, { width, height }] = useElementSize();
@@ -25,10 +25,6 @@ export function ChartPie({ data = [], loading = false }) {
 							outerRadius='75%'
 							dataKey='co2'
 							nameKey='name'
-							label={({ name, percent }) =>
-								`${name} ${(percent * 100).toFixed(0)}%`
-							}
-							labelLine={false}
 						>
 							{data.map((_, index) => (
 								<Cell
@@ -45,6 +41,7 @@ export function ChartPie({ data = [], loading = false }) {
 								borderRadius: '0.375rem',
 								boxShadow:    'var(--shadow)',
 								color:        'var(--text-primary)',
+								textTransform: 'capitalize',	
 							}}
 							formatter={(value, name) => [`${value} kg CO2`, name]}
 						/>

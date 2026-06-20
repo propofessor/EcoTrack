@@ -78,7 +78,7 @@ export default function GamificationScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View className="px-4 pt-4 pb-8">
-          <Text className="heading">Gamification</Text>
+          <Text className="heading">Classifica</Text>
           <Text className="text-muted mb-4">
             Settimana {leaderboard?.weekStart} – {leaderboard?.weekEnd}
           </Text>

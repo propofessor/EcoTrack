@@ -11,12 +11,14 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, updateProfile } from '../api/users';
+import { Check, Sun, Moon } from 'lucide-react-native';
 
 const LANGUAGES = [
   { code: 'it', label: 'Italiano 🇮🇹' },
@@ -33,6 +35,8 @@ const VISIBILITY_OPTIONS = [
 export default function PreferencesScreen({ navigation }) {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const scheme = useColorScheme();
+  const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
   const [prefs, setPrefs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -107,6 +111,8 @@ export default function PreferencesScreen({ navigation }) {
               <Switch
                 value={prefs.notificationsEnabled}
                 onValueChange={(v) => savePrefs({ notificationsEnabled: v })}
+                trackColor={{ false: '#3f3f46', true: '#8ab834' }}
+                thumbColor="#ffffff"
               />
             </View>
           </View>
@@ -121,7 +127,7 @@ export default function PreferencesScreen({ navigation }) {
                 onPress={() => savePrefs({ language: lang.code })}
               >
                 <Text className="text-body">{lang.label}</Text>
-                {prefs.language === lang.code && <Text className="link">✓</Text>}
+                {prefs.language === lang.code && <Check size={16} color={iconColor} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -137,7 +143,7 @@ export default function PreferencesScreen({ navigation }) {
                 onPress={() => savePrefs({ leaderboard_visibility: opt.value })}
               >
                 <Text className="text-body">{opt.label}</Text>
-                {prefs.leaderboard_visibility === opt.value && <Text className="link">✓</Text>}
+                {prefs.leaderboard_visibility === opt.value && <Check size={16} color={iconColor} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -152,9 +158,15 @@ export default function PreferencesScreen({ navigation }) {
                   className={`flex-1 rounded-xl py-4 items-center ${prefs.theme === t ? 'btn-primary' : 'btn-ghost'}`}
                   onPress={() => savePrefs({ theme: t })}
                 >
-                  <Text className={prefs.theme === t ? 'btn-primary-text' : 'btn-ghost-text'}>
-                    {t === 'light' ? '☀️ Chiaro' : '🌙 Scuro'}
-                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    {t === 'light'
+                      ? <Sun size={22} color={prefs.theme === 'light' ? '#ffffff' : iconColor} />
+                      : <Moon size={22} color={prefs.theme === 'dark' ? '#ffffff' : iconColor} />
+                    }
+                    <Text className={prefs.theme === t ? 'btn-primary-text' : 'btn-ghost-text'} style={{ fontSize: 17 }}>
+                      {t === 'light' ? 'Chiaro' : 'Scuro'}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>

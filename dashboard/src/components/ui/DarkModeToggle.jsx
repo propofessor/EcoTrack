@@ -8,10 +8,10 @@ export function DarkModeToggle() {
     <button
       onClick={toggleTheme}
       title={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}
-      className='dark-mode-toggle flex items-center gap-1.5 px-2.5 py-1.5'
+      className='btn btn--default'
     >
       {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
       {theme === 'dark' ? 'Light' : 'Dark'}
-    </button>
+    </button> 
   )
 }

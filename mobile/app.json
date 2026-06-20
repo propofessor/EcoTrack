@@ -38,6 +38,12 @@
       "eas": {
         "projectId": "e5aaf888-03a8-4585-859a-002fd83c0ac7"
       }
+    },
+    "ios": {
+      "bundleIdentifier": "com.ecotrack.app"
+    },
+    "web": {
+      "bundler": "metro"
     }
   }
 }

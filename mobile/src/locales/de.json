@@ -146,7 +146,7 @@
       "transit": "Öffentliche Verkehrsmittel",
       "driving": "Auto"
     },
-    "ecoBadge": "🌿 Umweltfreundlichste Option",
+    "ecoBadge": "Umweltfreundlichste Option",
     "co2Zero": "0 g CO₂",
     "errorFill": "Bitte Start und Ziel eingeben.",
     "errorCalc": "Emissionen konnten nicht berechnet werden."

@@ -797,4 +797,54 @@ router.get('/google/mobile-callback', async (req, res) => {
 	}
 });
 
+const WEB_APP_URL = process.env.WEB_APP_URL || 'http://localhost:8081';
+
+// GET /api/auth/google/web-url — returns Google OAuth URL for web full-page redirect flow
+router.get('/google/web-url', async (req, res) => {
+	try {
+		const { data, error } = await db.auth.signInWithOAuth({
+			provider: 'google',
+			options: {
+				redirectTo: `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/google/web-callback`,
+				queryParams: { access_type: 'offline', prompt: 'consent' },
+			},
+		});
+		if (error || !data?.url) {
+			console.error('Errore signInWithOAuth web:', error?.message);
+			return res.status(500).json({ error: 'Impossibile avviare il login con Google' });
+		}
+		return res.status(200).json({ url: data.url });
+	} catch (err) {
+		console.error('Errore /google/web-url:', err);
+		return res.status(500).json({ error: 'Errore interno del server' });
+	}
+});
+
+// GET /api/auth/google/web-callback — exchanges Supabase code for session, sets cookies, redirects to web app
+router.get('/google/web-callback', async (req, res) => {
+	try {
+		const { code } = req.query;
+		if (!code) {
+			return res.redirect(`${WEB_APP_URL}/?error=missing_code`);
+		}
+		const { data, error } = await db.auth.exchangeCodeForSession(code);
+		if (error || !data?.session) {
+			console.error('Errore Google web-callback:', error?.message);
+			return res.redirect(`${WEB_APP_URL}/?error=auth_failed`);
+		}
+		const { access_token, refresh_token } = data.session;
+		const cookieOpts = {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'lax',
+		};
+		res.cookie('access_token', access_token, { ...cookieOpts, maxAge: 3600000 });
+		res.cookie('refresh_token', refresh_token, { ...cookieOpts, maxAge: 7 * 24 * 3600000 });
+		return res.redirect(WEB_APP_URL);
+	} catch (err) {
+		console.error('Errore /google/web-callback:', err);
+		return res.redirect(`${WEB_APP_URL}/?error=server_error`);
+	}
+});
+
 module.exports = router;

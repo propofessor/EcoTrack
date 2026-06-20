@@ -4,13 +4,16 @@
  * Prompts the user to check their inbox and allows resending the link.
  */
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { resendVerification } from '../api/auth';
+import { Mail } from 'lucide-react-native';
 
 export default function EmailVerificationScreen({ navigation, route }) {
   const email = route.params?.email || '';
   const [sending, setSending] = useState(false);
+  const scheme = useColorScheme();
+  const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
 
   async function handleResend() {
     if (!email) return;
@@ -29,7 +32,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
     <SafeAreaView className="screen flex-1">
       <View className="flex-1 justify-center items-center px-6">
 
-        <Text style={{ fontSize: 56 }}>📧</Text>
+        <Mail size={56} color={iconColor} />
 
         <Text className="heading text-center mt-4 mb-2">Verifica la tua email</Text>
         <Text className="text-muted text-center mb-8">

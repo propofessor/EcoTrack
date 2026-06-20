@@ -4,10 +4,11 @@ import { DarkModeToggle } from '../ui/DarkModeToggle';
 
 export default function Header({ saveLayout, exportConfig, handleImportFile }) {
 	return (
-		<div className='flex flex-wrap items-center justify-between gap-2.5 mb-5'>
-			<div>
+		<div className='header flex flex-wrap items-center justify-between gap-2.5 mb-5'>
+			<img src='/favicon.png' alt='EcoTrack Logo' className='h-10 w-10' />
+			<div style={{ flex: 1, marginLeft: '0.5rem'}}>
 				<h1 className='header-title'>
-					🌱 EcoTrack — Dashboard Comune
+					EcoTrack — Dashboard
 				</h1>
 				<p className='header-subtitle'>
 					Trascina i widget per riordinare, ridimensiona dagli angoli
@@ -17,19 +18,19 @@ export default function Header({ saveLayout, exportConfig, handleImportFile }) {
 			<div className='flex flex-wrap items-center gap-2'>
 				<DarkModeToggle />
 				<ActionButton
-					icon={<Save size={14} />}
+					icon={<Save size={16} />}
 					label='Salva'
 					onClick={saveLayout}
 					variant='accent'
 				/>
 				<ActionButton
-					icon={<Download size={14} />}
+					icon={<Download size={16} />}
 					label='Esporta'
 					onClick={exportConfig}
 				/>
 
 				<label className='btn btn--default inline-flex items-center gap-1.5 px-3.5 py-1.75'>
-					<Upload size={14} /> Importa
+					<Upload size={16} /> Importa
 					<input
 						type='file'
 						accept='.json'
