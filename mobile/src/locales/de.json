@@ -4,10 +4,13 @@
     "cancel": "Abbrechen",
     "back": "← Zurück",
     "error": "Fehler",
+    "success": "Erfolg",
+    "ok": "OK",
     "loading": "Laden…",
     "retry": "Erneut versuchen",
     "logout": "Abmelden",
-    "or": "oder"
+    "or": "oder",
+    "passwordPlaceholder": "••••••••"
   },
   "login": {
     "title": "EcoTrack",
@@ -15,7 +18,7 @@
     "emailLabel": "E-Mail",
     "emailPlaceholder": "name@beispiel.de",
     "passwordLabel": "Passwort",
-    "passwordPlaceholder": "••••••••",
+    "passwordPlaceholder": "Gib dein Passwort ein",
     "submit": "Anmelden",
     "submitting": "Anmeldung läuft…",
     "forgotPassword": "Passwort vergessen?",
@@ -23,7 +26,15 @@
     "continueWithCie": "Mit CIE anmelden",
     "noAccount": "Noch kein Konto?",
     "register": "Registrieren",
-    "failed": "Anmeldung fehlgeschlagen"
+    "failed": "Anmeldung fehlgeschlagen",
+    "fillFields": "Gib E-Mail und Passwort ein.",
+    "invalidCredentials": "Ungültige Anmeldedaten.",
+    "googleErrorTitle": "Google-Fehler",
+    "googleAuthFailed": "Google-Authentifizierung fehlgeschlagen.",
+    "googleFailed": "Google-Anmeldung fehlgeschlagen.",
+    "cieErrorTitle": "CIE-Fehler",
+    "cieAuthFailed": "CIE-Authentifizierung fehlgeschlagen.",
+    "cieFailed": "CIE-Anmeldung fehlgeschlagen."
   },
   "register": {
     "title": "Konto erstellen",
@@ -32,18 +43,18 @@
     "emailLabel": "E-Mail",
     "emailPlaceholder": "name@beispiel.de",
     "passwordLabel": "Passwort",
-    "passwordPlaceholder": "Mind. 8 Zeichen, 1 Großbuchstabe, 1 Zahl",
+    "passwordPlaceholder": "Min. 8: Groß, Klein, Zahl, Sonderzeichen",
     "plateLabel": "Fahrzeugkennzeichen (optional)",
     "platePlaceholder": "AB123CD",
     "submit": "Registrieren",
     "submitting": "Registrierung läuft…",
     "hasAccount": "Bereits ein Konto?",
     "signIn": "Anmelden",
-    "failed": "Registrierung fehlgeschlagen",
+    "failed": "Registrierung fehlgeschlagen.",
     "errors": {
       "name": "Name ist erforderlich.",
       "email": "Ungültige E-Mail.",
-      "password": "Passwort muss mindestens 8 Zeichen haben.",
+      "password": "Das Passwort muss mindestens 8 Zeichen, einen Groß- und einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
       "passwordUpper": "Mindestens einen Großbuchstaben verwenden.",
       "passwordNumber": "Mindestens eine Zahl verwenden.",
       "plate": "Ungültiges Kennzeichenformat (z.B. AB123CD)."
@@ -64,7 +75,15 @@
     "resetSubmit": "Passwort zurücksetzen",
     "resetting": "Aktualisierung…",
     "resendCode": "Keinen Code erhalten? Erneut senden",
-    "backToLogin": "← Zurück zur Anmeldung"
+    "backToLogin": "← Zurück zur Anmeldung",
+    "errorEmail": "Gib deine E-Mail ein.",
+    "sendFailed": "Link konnte nicht gesendet werden. Bitte versuche es später erneut.",
+    "errorToken": "Gib den per E-Mail erhaltenen Code ein.",
+    "passwordInvalidTitle": "Ungültiges Passwort",
+    "passwordInvalidMessage": "Muss mindestens 8 Zeichen, einen Groß- und einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
+    "successTitle": "Erfolg",
+    "successMessage": "Passwort aktualisiert. Du kannst dich jetzt anmelden.",
+    "tokenInvalid": "Ungültiger oder abgelaufener Token."
   },
   "emailVerification": {
     "title": "E-Mail bestätigen",
@@ -72,16 +91,22 @@
     "instruction": "Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.",
     "resend": "Bestätigungs-E-Mail erneut senden",
     "sending": "Senden…",
-    "backToLogin": "Zurück zur Anmeldung"
+    "backToLogin": "Zurück zur Anmeldung",
+    "resentTitle": "E-Mail gesendet",
+    "resentMessage": "Überprüfe erneut dein Postfach.",
+    "resendFailed": "Senden nicht möglich. Bitte versuche es später erneut."
   },
   "profile": {
     "title": "Profil",
     "personalData": "Persönliche Daten",
     "edit": "Bearbeiten",
+    "name": "Name",
     "nameLabel": "Vor- und Nachname",
     "emailLabel": "E-Mail",
+    "plate": "Kennzeichen",
     "plateLabel": "Fahrzeugkennzeichen",
     "plateEmpty": "Nicht eingegeben",
+    "plateInvalid": "Ungültiges Kennzeichenformat (z.B. AB123CD).",
     "saveChanges": "Änderungen speichern",
     "saving": "Speichern…",
     "saved": "Gespeichert",
@@ -93,13 +118,28 @@
     "updatePassword": "Passwort aktualisieren",
     "passwordChanged": "Passwort erfolgreich geändert.",
     "passwordMismatch": "Passwörter stimmen nicht überein.",
+    "passwordInvalidTitle": "Ungültiges Passwort",
     "passwordInvalid": "Muss mindestens 8 Zeichen, einen Großbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
+    "passwordUpdateFailed": "Passwort konnte nicht aktualisiert werden.",
+    "linkedAccounts": "Verknüpfte Konten",
+    "linked": "Verknüpft",
+    "linking": "Verknüpfung…",
+    "link": "Verknüpfen",
+    "googleLinked": "Verknüpft",
+    "googleLinkedMsg": "Google-Konto erfolgreich verknüpft.",
+    "googleLinkFailed": "Google konnte nicht verknüpft werden.",
+    "cieLinked": "Verknüpft",
+    "cieLinkedMsg": "CIE erfolgreich verknüpft.",
+    "cieLinkFailed": "CIE konnte nicht verknüpft werden.",
     "preferences": "Einstellungen",
     "logoutConfirmTitle": "Abmelden",
     "logoutConfirmMessage": "Möchtest du dich abmelden?",
+    "continueLabel": "Weiter",
     "deleteAccount": "Konto dauerhaft löschen",
     "deleteConfirmTitle": "Konto löschen",
     "deleteConfirmMessage": "Diese Aktion ist unwiderruflich. Alle deine Daten werden dauerhaft gelöscht (DSGVO).",
+    "deleteFinalTitle": "Löschung bestätigen?",
+    "deleteFinalMessage": "Endgültige Bestätigung: Das Konto und alle zugehörigen Daten werden gelöscht und können nicht wiederhergestellt werden.",
     "deleteConfirm": "Dauerhaft löschen",
     "deleteFailed": "Konto konnte nicht gelöscht werden. Bitte versuche es erneut."
   },
@@ -114,6 +154,8 @@
     "theme": "Design",
     "themeLight": "☀️ Hell",
     "themeDark": "🌙 Dunkel",
+    "light": "Hell",
+    "dark": "Dunkel",
     "visibility": {
       "nickname": "Spitzname (z.B. \"Mario R.\")",
       "anonymous": "Anonym",
@@ -122,13 +164,22 @@
     "saveFailed": "Einstellungen konnten nicht gespeichert werden."
   },
   "home": {
-    "greeting": "Hallo, {{name}}!",
+    "greeting": "Hallo, {{name}} 👋",
     "greetingDefault": "Hallo!",
+    "defaultUser": "Benutzer",
+    "subtitle": "Hier ist deine heutige Umweltbilanz",
+    "currentWeek": "Aktuelle Woche",
+    "viewLeaderboard": "Rangliste ansehen →",
     "weeklyScore": "Wochenpunktzahl",
     "activeDays": "Aktive Tage",
     "todayGrade": "Heutige Note",
-    "quickActions": "Schnellaktionen",
+    "quickActions": "Schnellzugriff",
     "calculateRoute": "Route berechnen",
+    "routeCardDesc": "Vergleiche die CO2-Emissionen deiner Strecke",
+    "historyCard": "Emissionsverlauf",
+    "historyCardDesc": "Analysiere deinen Verlauf über die Zeit",
+    "mapCard": "Luftqualitätskarte",
+    "mapCardDesc": "Zeige die Umweltverschmutzung in deiner Stadt",
     "viewHistory": "Verlauf",
     "viewMap": "Umweltkarte"
   },
@@ -140,6 +191,7 @@
     "calculate": "Emissionen berechnen",
     "calculating": "Berechnung…",
     "resultsTitle": "Emissionsvergleich",
+    "showOnMap": "Route auf Karte anzeigen",
     "modes": {
       "piedi": "Zu Fuß",
       "bicicletta": "Fahrrad",
@@ -153,6 +205,10 @@
   },
   "history": {
     "title": "Emissionsverlauf",
+    "subtitle": "Dein ökologischer Fußabdruck über die Zeit",
+    "trendImproving": "Verbesserung",
+    "trendWorsening": "Verschlechterung",
+    "trendSuffix": "im Vergleich zum vorherigen Zeitraum",
     "periods": {
       "day": "Tag",
       "week": "Woche",
@@ -169,12 +225,21 @@
   },
   "gamification": {
     "title": "Rangliste",
+    "weekRange": "Woche {{start}} – {{end}}",
+    "todayGrade": "Deine heutige Note",
     "weeklyScore": "Wochenpunktzahl",
+    "weeklyScoreLabel": "Wochenpunktzahl",
     "activeDays": "Aktive Tage",
+    "podiumTitle": "Wochenpodium",
+    "yourRank": "Deine Position",
+    "leaderboardTop": "Rangliste {{tier}}",
     "top10": "Top 10",
     "top20": "Top 20",
-    "yourRank": "Deine Position",
+    "showTop10": "Top 10 anzeigen",
+    "showTop20": "Top 20 anzeigen",
+    "noData": "Keine Daten für diese Woche verfügbar.",
     "weeklyHistory": "Wochenverlauf",
+    "position": "Position: #{{rank}}",
     "you": "Du"
   },
   "map": {
@@ -187,5 +252,9 @@
     "high": "Hoch",
     "locationDenied": "Berechtigung verweigert",
     "locationDeniedMsg": "Aktiviere den Standortzugriff in den Einstellungen."
+  },
+  "gradeCard": {
+    "distance": "Strecke",
+    "co2Saved": "CO2 gespart"
   }
 }

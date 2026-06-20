@@ -106,5 +106,90 @@ describe('Test delle API di Mappe & Calcolo CO2 (/api/maps)', () => {
 				'Fornisci le distanze per il calcolo'
 			);
 		});
+
+		it('Dovrebbe usare il MOCK UUID come fallback se il DB non trova il mezzo (RF10)', async () => {
+			const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+			calculateEmissions.mockResolvedValue({ emissions: { macchina: 3200 } });
+			supabaseAdmin.from.mockReturnValue(mockChain);
+			mockChain.single.mockResolvedValue({
+				data: null,
+				error: { message: 'not found' }
+			});
+
+			const risposta = await request(app)
+				.post('/api/maps/calculate-co2')
+				.set('Cookie', ['access_token=token_valido'])
+				.send(inputDistanzeValide);
+
+			expect(risposta.statusCode).toBe(200);
+			// fallback all'UUID mock definito in src/mocks/mockData.js
+			expect(risposta.body.driving_movement_type_id).toBe(
+				'00000001-0000-0000-0000-000000000003'
+			);
+			warnSpy.mockRestore();
+		});
+
+		it('Dovrebbe restituire 500 se il calcolo delle emissioni solleva un’eccezione', async () => {
+			const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+			calculateEmissions.mockRejectedValue(new Error('boom'));
+
+			const risposta = await request(app)
+				.post('/api/maps/calculate-co2')
+				.set('Cookie', ['access_token=token_valido'])
+				.send(inputDistanzeValide);
+
+			expect(risposta.statusCode).toBe(500);
+			expect(risposta.body.error).toBe('Errore interno del server');
+			errSpy.mockRestore();
+		});
+	});
+
+	// ==========================================
+	// GET /api/maps/heatmap (RF8.2/8.3)
+	// ==========================================
+	describe('GET /api/maps/heatmap', () => {
+		it("Dovrebbe restituire i punti per l'inquinamento dell'aria (200)", async () => {
+			const risposta = await request(app)
+				.get('/api/maps/heatmap?type=air')
+				.set('Cookie', ['access_token=token_valido']);
+
+			expect(risposta.statusCode).toBe(200);
+			expect(Array.isArray(risposta.body.points)).toBe(true);
+			expect(risposta.body.points).toHaveLength(15);
+			expect(risposta.body.points[0]).toEqual(
+				expect.objectContaining({
+					latitude: expect.any(Number),
+					longitude: expect.any(Number),
+					weight: expect.any(Number)
+				})
+			);
+		});
+
+		it("Dovrebbe restituire i punti per l'inquinamento acustico (200)", async () => {
+			const risposta = await request(app)
+				.get('/api/maps/heatmap?type=noise')
+				.set('Cookie', ['access_token=token_valido']);
+
+			expect(risposta.statusCode).toBe(200);
+			expect(risposta.body.points).toHaveLength(15);
+		});
+
+		it("Dovrebbe usare 'air' come default se il type è assente (200)", async () => {
+			const risposta = await request(app)
+				.get('/api/maps/heatmap')
+				.set('Cookie', ['access_token=token_valido']);
+
+			expect(risposta.statusCode).toBe(200);
+			expect(risposta.body.points).toHaveLength(15);
+		});
+
+		it("Dovrebbe restituire 400 se il type non è 'air' né 'noise'", async () => {
+			const risposta = await request(app)
+				.get('/api/maps/heatmap?type=invalido')
+				.set('Cookie', ['access_token=token_valido']);
+
+			expect(risposta.statusCode).toBe(400);
+			expect(risposta.body.error).toContain("'air' o 'noise'");
+		});
 	});
 });

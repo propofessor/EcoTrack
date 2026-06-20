@@ -4,10 +4,13 @@
     "cancel": "Cancel",
     "back": "← Back",
     "error": "Error",
+    "success": "Success",
+    "ok": "OK",
     "loading": "Loading…",
     "retry": "Retry",
     "logout": "Logout",
-    "or": "or"
+    "or": "or",
+    "passwordPlaceholder": "••••••••"
   },
   "login": {
     "title": "EcoTrack",
@@ -15,7 +18,7 @@
     "emailLabel": "Email",
     "emailPlaceholder": "name@example.com",
     "passwordLabel": "Password",
-    "passwordPlaceholder": "••••••••",
+    "passwordPlaceholder": "Enter your password",
     "submit": "Sign in",
     "submitting": "Signing in…",
     "forgotPassword": "Forgot password?",
@@ -23,7 +26,15 @@
     "continueWithCie": "Sign in with CIE",
     "noAccount": "Don't have an account?",
     "register": "Register",
-    "failed": "Sign in failed"
+    "failed": "Sign in failed",
+    "fillFields": "Enter your email and password.",
+    "invalidCredentials": "Invalid credentials.",
+    "googleErrorTitle": "Google error",
+    "googleAuthFailed": "Google authentication failed.",
+    "googleFailed": "Google sign in failed.",
+    "cieErrorTitle": "CIE error",
+    "cieAuthFailed": "CIE authentication failed.",
+    "cieFailed": "CIE sign in failed."
   },
   "register": {
     "title": "Create your account",
@@ -32,18 +43,18 @@
     "emailLabel": "Email",
     "emailPlaceholder": "name@example.com",
     "passwordLabel": "Password",
-    "passwordPlaceholder": "At least 8 chars, 1 uppercase, 1 number",
+    "passwordPlaceholder": "Min 8: upper, lower, number, special",
     "plateLabel": "Vehicle plate (optional)",
     "platePlaceholder": "AB123CD",
     "submit": "Register",
     "submitting": "Registering…",
     "hasAccount": "Already have an account?",
     "signIn": "Sign in",
-    "failed": "Registration failed",
+    "failed": "Registration failed.",
     "errors": {
       "name": "Name is required.",
       "email": "Invalid email.",
-      "password": "Password must be at least 8 characters.",
+      "password": "Password must be at least 8 characters with an uppercase, a lowercase, a number, and a special character.",
       "passwordUpper": "Use at least one uppercase letter.",
       "passwordNumber": "Use at least one number.",
       "plate": "Invalid plate format (e.g. AB123CD)."
@@ -64,7 +75,15 @@
     "resetSubmit": "Reset password",
     "resetting": "Updating…",
     "resendCode": "Didn't receive the code? Resend",
-    "backToLogin": "← Back to login"
+    "backToLogin": "← Back to login",
+    "errorEmail": "Enter your email.",
+    "sendFailed": "Unable to send the link. Please try again later.",
+    "errorToken": "Enter the code you received by email.",
+    "passwordInvalidTitle": "Invalid password",
+    "passwordInvalidMessage": "Must contain at least 8 characters, an uppercase, a lowercase, a number, and a special character.",
+    "successTitle": "Success",
+    "successMessage": "Password updated. You can now sign in.",
+    "tokenInvalid": "Invalid or expired token."
   },
   "emailVerification": {
     "title": "Verify your email",
@@ -72,16 +91,22 @@
     "instruction": "Click the link in the email to activate your account.",
     "resend": "Resend verification email",
     "sending": "Sending…",
-    "backToLogin": "Back to login"
+    "backToLogin": "Back to login",
+    "resentTitle": "Email sent",
+    "resentMessage": "Check your inbox again.",
+    "resendFailed": "Unable to send. Please try again later."
   },
   "profile": {
     "title": "Profile",
     "personalData": "Personal data",
     "edit": "Edit",
+    "name": "Name",
     "nameLabel": "Full name",
     "emailLabel": "Email",
+    "plate": "Plate",
     "plateLabel": "Vehicle plate",
     "plateEmpty": "Not set",
+    "plateInvalid": "Invalid plate format (e.g. AB123CD).",
     "saveChanges": "Save changes",
     "saving": "Saving…",
     "saved": "Saved",
@@ -93,13 +118,28 @@
     "updatePassword": "Update password",
     "passwordChanged": "Password changed successfully.",
     "passwordMismatch": "Passwords do not match.",
+    "passwordInvalidTitle": "Invalid password",
     "passwordInvalid": "Must be at least 8 characters with an uppercase letter, a number, and a special character.",
+    "passwordUpdateFailed": "Unable to update the password.",
+    "linkedAccounts": "Linked accounts",
+    "linked": "Linked",
+    "linking": "Linking…",
+    "link": "Link",
+    "googleLinked": "Linked",
+    "googleLinkedMsg": "Google account linked successfully.",
+    "googleLinkFailed": "Unable to link Google.",
+    "cieLinked": "Linked",
+    "cieLinkedMsg": "CIE linked successfully.",
+    "cieLinkFailed": "Unable to link CIE.",
     "preferences": "Preferences",
     "logoutConfirmTitle": "Logout",
     "logoutConfirmMessage": "Do you want to sign out?",
+    "continueLabel": "Continue",
     "deleteAccount": "Delete account permanently",
     "deleteConfirmTitle": "Delete account",
     "deleteConfirmMessage": "This action is irreversible. All your data will be permanently deleted (GDPR).",
+    "deleteFinalTitle": "Confirm deletion?",
+    "deleteFinalMessage": "Final confirmation: the account and all associated data will be deleted and cannot be recovered.",
     "deleteConfirm": "Delete permanently",
     "deleteFailed": "Unable to delete the account. Please try again."
   },
@@ -114,6 +154,8 @@
     "theme": "Theme",
     "themeLight": "☀️ Light",
     "themeDark": "🌙 Dark",
+    "light": "Light",
+    "dark": "Dark",
     "visibility": {
       "nickname": "Nickname (e.g. \"Mario R.\")",
       "anonymous": "Anonymous",
@@ -122,13 +164,22 @@
     "saveFailed": "Unable to save preferences."
   },
   "home": {
-    "greeting": "Hello, {{name}}!",
+    "greeting": "Hello, {{name}} 👋",
     "greetingDefault": "Hello!",
+    "defaultUser": "User",
+    "subtitle": "Here is your environmental impact for today",
+    "currentWeek": "Current week",
+    "viewLeaderboard": "View leaderboard →",
     "weeklyScore": "Weekly score",
     "activeDays": "Active days",
     "todayGrade": "Today's grade",
-    "quickActions": "Quick actions",
+    "quickActions": "Quick access",
     "calculateRoute": "Calculate route",
+    "routeCardDesc": "Compare CO2 emissions for your trip",
+    "historyCard": "Emissions history",
+    "historyCardDesc": "Analyse your progress over time",
+    "mapCard": "Air quality map",
+    "mapCardDesc": "View pollution in your city",
     "viewHistory": "History",
     "viewMap": "Pollution map"
   },
@@ -140,8 +191,9 @@
     "calculate": "Calculate emissions",
     "calculating": "Calculating…",
     "resultsTitle": "Emissions comparison",
+    "showOnMap": "Show route on map",
     "modes": {
-      "piedi": "piedi",
+      "piedi": "Walking",
       "bicicletta": "Cycling",
       "autobus": "Public transport",
       "macchina": "Car"
@@ -153,6 +205,10 @@
   },
   "history": {
     "title": "Emissions history",
+    "subtitle": "Your ecological footprint over time",
+    "trendImproving": "improving",
+    "trendWorsening": "worsening",
+    "trendSuffix": "compared to the previous period",
     "periods": {
       "day": "Day",
       "week": "Week",
@@ -169,12 +225,21 @@
   },
   "gamification": {
     "title": "Leaderboard",
+    "weekRange": "Week {{start}} – {{end}}",
+    "todayGrade": "Your grade today",
     "weeklyScore": "Weekly score",
+    "weeklyScoreLabel": "Weekly score",
     "activeDays": "Active days",
+    "podiumTitle": "Weekly podium",
+    "yourRank": "Your position",
+    "leaderboardTop": "{{tier}} leaderboard",
     "top10": "Top 10",
     "top20": "Top 20",
-    "yourRank": "Your position",
+    "showTop10": "Show Top 10",
+    "showTop20": "Show Top 20",
+    "noData": "No data available for this week.",
     "weeklyHistory": "Weekly history",
+    "position": "Position: #{{rank}}",
     "you": "You"
   },
   "map": {
@@ -187,5 +252,9 @@
     "high": "High",
     "locationDenied": "Permission denied",
     "locationDeniedMsg": "Enable location services in your settings."
+  },
+  "gradeCard": {
+    "distance": "Distance",
+    "co2Saved": "CO2 saved"
   }
 }

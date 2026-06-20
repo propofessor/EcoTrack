@@ -19,15 +19,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from 'react-native-chart-kit';
+import { useTranslation } from 'react-i18next';
 import { getHistory } from '../api/history';
 
-const PERIODS = [
-  { key: 'day', label: 'Giorno' },
-  { key: 'week', label: 'Settimana' },
-  { key: 'month', label: 'Mese' },
-  { key: 'year', label: 'Anno' },
-  { key: 'all', label: 'Tutto' },
-];
+const PERIODS = ['day', 'week', 'month', 'year', 'all'];
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -73,6 +68,7 @@ function computeStats(values) {
 }
 
 export default function HistoryScreen() {
+  const { t } = useTranslation();
   const [rawHistory, setRawHistory] = useState([]);
   const [period, setPeriod] = useState('month');
   const [loading, setLoading] = useState(true);
@@ -113,19 +109,19 @@ export default function HistoryScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View className="px-4 pt-4 pb-8">
-          <Text className="heading">Storico emissioni</Text>
-          <Text className="text-muted mb-4">La tua impronta ecologica nel tempo</Text>
+          <Text className="heading">{t('history.title')}</Text>
+          <Text className="text-muted mb-4">{t('history.subtitle')}</Text>
 
           {/* Period selector — RF10.2 */}
           <View className="flex-row gap-1 mb-4">
             {PERIODS.map((p) => (
               <TouchableOpacity
-                key={p.key}
-                className={`flex-1 items-center justify-center py-2 period-btn${period === p.key ? ' period-btn--active' : ''}`}
-                onPress={() => setPeriod(p.key)}
+                key={p}
+                className={`flex-1 items-center justify-center py-2 period-btn${period === p ? ' period-btn--active' : ''}`}
+                onPress={() => setPeriod(p)}
               >
-                <Text className={period === p.key ? 'period-btn-text--active' : 'period-btn-text'}>
-                  {p.label}
+                <Text className={period === p ? 'period-btn-text--active' : 'period-btn-text'}>
+                  {t(`history.periods.${p}`)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -159,19 +155,19 @@ export default function HistoryScreen() {
           {/* Summary statistics — RF10.4 */}
           <View className="flex-row flex-wrap gap-3 mb-4">
             <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
-              <Text className="text-label">Totale</Text>
+              <Text className="text-label">{t('history.stats.total')}</Text>
               <Text className="stat-value mt-1">{stats.total} kg</Text>
             </View>
             <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
-              <Text className="text-label">Media</Text>
+              <Text className="text-label">{t('history.stats.average')}</Text>
               <Text className="stat-value mt-1">{stats.avg} kg</Text>
             </View>
             <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
-              <Text className="text-label">Migliore</Text>
+              <Text className="text-label">{t('history.stats.best')}</Text>
               <Text className="stat-value mt-1">{stats.min} kg</Text>
             </View>
             <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
-              <Text className="text-label">Peggiore</Text>
+              <Text className="text-label">{t('history.stats.worst')}</Text>
               <Text className="stat-value mt-1">{stats.max} kg</Text>
             </View>
           </View>
@@ -185,7 +181,8 @@ export default function HistoryScreen() {
                 </Text>
                 <Text className="text-body">
                   {Math.abs(trend).toFixed(1)}%{' '}
-                  {trend < 0 ? 'in miglioramento' : 'in peggioramento'} rispetto al periodo precedente
+                  {trend < 0 ? t('history.trendImproving') : t('history.trendWorsening')}{' '}
+                  {t('history.trendSuffix')}
                 </Text>
               </View>
             </View>

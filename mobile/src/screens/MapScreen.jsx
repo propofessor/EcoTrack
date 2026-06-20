@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Switch, Alert, useColorScheme } from 'react-native';
 import PlatformWebView from '../components/PlatformWebView';
 import * as Location from 'expo-location';
+import { useTranslation } from 'react-i18next';
 import client from '../api/client';
 import { MapPin } from 'lucide-react-native';
 
@@ -95,17 +96,8 @@ const MAP_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-// Static mock polyline for Trento (Piazza Duomo → Stazione FS) — RF9.5
-// Replace with decoded Directions API polyline when a paid key is available.
-const MOCK_ROUTE_LATLNGS = [
-  [46.0748, 11.1217], // Piazza Duomo
-  [46.0730, 11.1210], // Via Roma nord
-  [46.0720, 11.1205], // Via Roma centro
-  [46.0710, 11.1200], // Via Roma sud
-  [46.0702, 11.1196], // Stazione FS
-];
-
 export default function MapScreen({ route: navRoute }) {
+  const { t } = useTranslation();
   const webViewRef = useRef(null);
   const scheme = useColorScheme();
   const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
@@ -122,7 +114,7 @@ export default function MapScreen({ route: navRoute }) {
   async function locateMe() {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permesso negato', 'Abilita la geolocalizzazione nelle impostazioni.');
+      Alert.alert(t('map.locationDenied'), t('map.locationDeniedMsg'));
       return;
     }
     const loc = await Location.getCurrentPositionAsync({});
@@ -179,7 +171,7 @@ export default function MapScreen({ route: navRoute }) {
         style={{ minWidth: 110, padding: 8, gap: 4 }}
       >
         <View className="flex-row items-center justify-between gap-2">
-          <Text style={{ fontSize: 13, fontWeight: '500', color: scheme === 'dark' ? '#a1a1aa' : '#71717a' }}>Aria</Text>
+          <Text style={{ fontSize: 13, fontWeight: '500', color: scheme === 'dark' ? '#a1a1aa' : '#71717a' }}>{t('map.air')}</Text>
           <Switch
             value={overlay === OVERLAY.AIR}
             onValueChange={() => toggleOverlay(OVERLAY.AIR)}
@@ -188,7 +180,7 @@ export default function MapScreen({ route: navRoute }) {
           />
         </View>
         <View className="flex-row items-center justify-between gap-2">
-          <Text style={{ fontSize: 13, fontWeight: '500', color: scheme === 'dark' ? '#a1a1aa' : '#71717a' }}>Rumore</Text>
+          <Text style={{ fontSize: 13, fontWeight: '500', color: scheme === 'dark' ? '#a1a1aa' : '#71717a' }}>{t('map.noise')}</Text>
           <Switch
             value={overlay === OVERLAY.NOISE}
             onValueChange={() => toggleOverlay(OVERLAY.NOISE)}
@@ -201,15 +193,15 @@ export default function MapScreen({ route: navRoute }) {
       {/* RF8.5: Colour legend — anchored to bottom */}
       {overlay !== OVERLAY.NONE && (
         <View className="card absolute bottom-0 left-0 right-0 px-4 py-3 gap-2">
-          <Text className="text-label">{overlay === OVERLAY.AIR ? 'Qualità aria' : 'Rumore (dB)'}</Text>
+          <Text className="text-label">{overlay === OVERLAY.AIR ? t('map.airQuality') : t('map.noiseLevel')}</Text>
           <View className="flex-row items-center gap-3">
-            <Text className="text-muted">Basso</Text>
+            <Text className="text-muted">{t('map.low')}</Text>
             <View className="flex-1 h-3 rounded-full overflow-hidden flex-row">
               {(overlay === OVERLAY.AIR ? AIR_LEGEND : NOISE_LEGEND).map((color, i) => (
                 <View key={i} style={{ flex: 1, backgroundColor: color }} />
               ))}
             </View>
-            <Text className="text-muted">Alto</Text>
+            <Text className="text-muted">{t('map.high')}</Text>
           </View>
         </View>
       )}

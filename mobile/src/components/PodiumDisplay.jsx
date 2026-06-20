@@ -6,7 +6,7 @@
  *
  * Visual order: 2nd (left) | 1st (centre, tallest) | 3rd (right)
  */
-import { View, Text, useColorScheme } from 'react-native';
+import { View, Text } from 'react-native';
 import { Medal } from 'lucide-react-native';
 
 const MEDAL_COLORS = { 1: '#431407', 2: '#18181b', 3: '#3d1505' };
@@ -25,8 +25,6 @@ const PODIUM_COLOR = {
 
 export default function PodiumDisplay({ podium }) {
   if (!podium?.length) return null;
-  const scheme = useColorScheme();
-  const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
 
   const ordered = [
     podium.find((e) => e.rank === 2),

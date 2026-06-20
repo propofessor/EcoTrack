@@ -52,11 +52,9 @@ export default function CookieBanner() {
 		>
 			<Cookie size={16}/>
 			<p style={{ margin: 0, flex: 1, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-				
-				Questo sito utilizza cookie tecnici essenziali per il suo funzionamento.
-
+				Questo sito utilizza cookie tecnici essenziali per il suo funzionamento.{' '}
 				Consulta la nostra{' '}
-				<a href="#" style={{ color: 'var(--accent)', fontWeight: 1000 }}>
+				<a href="#" style={{ color: 'var(--accent)', fontWeight: 700 }}>
 					Cookie Policy
 				</a>{' '}
 				per maggiori informazioni.

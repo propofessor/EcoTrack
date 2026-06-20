@@ -162,8 +162,8 @@ export default function PreferencesScreen({ navigation }) {
                 className="flex-row items-center justify-between py-3"
                 onPress={() => savePrefs({ leaderboard_visibility: value })}
               >
-                <Text className="text-body">{opt.label}</Text>
-                {prefs.leaderboard_visibility === opt.value && (
+                <Text className="text-body">{t(`preferences.visibility.${value}`)}</Text>
+                {prefs.leaderboard_visibility === value && (
                   <Check size={16} color={iconColor} />
                 )}
               </TouchableOpacity>
@@ -181,7 +181,7 @@ export default function PreferencesScreen({ navigation }) {
                   onPress={() => savePrefs({ theme: themeOption })}
                 >
                   <View className="flex-row items-center gap-2">
-                    {t === "light" ? (
+                    {themeOption === "light" ? (
                       <Sun
                         size={22}
                         color={prefs.theme === "light" ? "#ffffff" : iconColor}
@@ -194,13 +194,13 @@ export default function PreferencesScreen({ navigation }) {
                     )}
                     <Text
                       className={
-                        prefs.theme === t
+                        prefs.theme === themeOption
                           ? "btn-primary-text"
                           : "btn-ghost-text"
                       }
                       style={{ fontSize: 17 }}
                     >
-                      {t === "light" ? "Chiaro" : "Scuro"}
+                      {themeOption === "light" ? "Chiaro" : "Scuro"}
                     </Text>
                   </View>
                 </TouchableOpacity>

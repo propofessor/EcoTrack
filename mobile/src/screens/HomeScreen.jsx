@@ -12,6 +12,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { getDailyScore, getWeeklyScore } from '../api/gamification';
 import GradeCard from '../components/GradeCard';
@@ -20,6 +21,7 @@ import { Compass, BarChart2, Map } from 'lucide-react-native';
 
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const scheme = useColorScheme();
   const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
 
@@ -27,7 +29,7 @@ export default function HomeScreen({ navigation }) {
   const [weekly, setWeekly] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const displayName = user?.name || user?.email || 'Utente';
+  const displayName = user?.name || user?.email || t('home.defaultUser');
 
   const loadData = useCallback(async () => {
     try {
@@ -58,8 +60,8 @@ export default function HomeScreen({ navigation }) {
 
           {/* Greeting */}
           <View className="mb-3">
-            <Text className="heading">Ciao, {displayName} 👋</Text>
-            <Text className="text-muted">Ecco il tuo impatto ambientale di oggi</Text>
+            <Text className="heading">{t('home.greeting', { name: displayName })}</Text>
+            <Text className="text-muted">{t('home.subtitle')}</Text>
           </View>
 
           {/* Daily grade — RF11.2 */}
@@ -70,19 +72,19 @@ export default function HomeScreen({ navigation }) {
           {/* Weekly quick-stats — RF11.3 */}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-3">
-              <Text className="subheading">Settimana corrente</Text>
+              <Text className="subheading">{t('home.currentWeek')}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Classifica')}>
-                <Text className="link">Vedi classifica →</Text>
+                <Text className="link">{t('home.viewLeaderboard')}</Text>
               </TouchableOpacity>
             </View>
 
             <View className="flex-row flex-wrap gap-3">
               <StatCard
-                label="Punteggio settim."
+                label={t('home.weeklyScore')}
                 value={weekly ? `${weekly.weeklyScore}` : '—'}
               />
               <StatCard
-                label="Giorni attivi"
+                label={t('home.activeDays')}
                 value={weekly ? `${weekly.daysWithActivity}` : '—'}
               />
             </View>
@@ -90,7 +92,7 @@ export default function HomeScreen({ navigation }) {
 
           {/* Quick navigation shortcuts */}
           <View className="mb-6">
-            <Text className="subheading mb-3">Accesso rapido</Text>
+            <Text className="subheading mb-3">{t('home.quickActions')}</Text>
             <View className="flex-col gap-2">
               <TouchableOpacity
                 className="card rounded-2xl p-4 flex-row items-center gap-3"
@@ -98,8 +100,8 @@ export default function HomeScreen({ navigation }) {
               >
                 <Compass size={24} color={iconColor} />
                 <View className="flex-1 flex-col gap-1">
-                  <Text className="text-body">Calcola percorso</Text>
-                  <Text className="text-muted">Confronta le emissioni CO2 per il tuo tragitto</Text>
+                  <Text className="text-body">{t('home.calculateRoute')}</Text>
+                  <Text className="text-muted">{t('home.routeCardDesc')}</Text>
                 </View>
               </TouchableOpacity>
 
@@ -109,8 +111,8 @@ export default function HomeScreen({ navigation }) {
               >
                 <BarChart2 size={24} color={iconColor} />
                 <View className="flex-1 flex-col gap-1">
-                  <Text className="text-body">Storico emissioni</Text>
-                  <Text className="text-muted">Analizza il tuo andamento nel tempo</Text>
+                  <Text className="text-body">{t('home.historyCard')}</Text>
+                  <Text className="text-muted">{t('home.historyCardDesc')}</Text>
                 </View>
               </TouchableOpacity>
 
@@ -120,8 +122,8 @@ export default function HomeScreen({ navigation }) {
               >
                 <Map size={24} color={iconColor} />
                 <View className="flex-1 flex-col gap-1">
-                  <Text className="text-body">Mappa qualità aria</Text>
-                  <Text className="text-muted">Visualizza l'inquinamento nella tua città</Text>
+                  <Text className="text-body">{t('home.mapCard')}</Text>
+                  <Text className="text-muted">{t('home.mapCardDesc')}</Text>
                 </View>
               </TouchableOpacity>
             </View>

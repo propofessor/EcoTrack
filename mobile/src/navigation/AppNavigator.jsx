@@ -21,7 +21,7 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View className="loading-wrapper">
+      <View className="screen flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
       </View>
     );

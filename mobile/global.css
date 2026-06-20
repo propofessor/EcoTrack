@@ -136,7 +136,7 @@
   }
 
   .svg-wrapper {
-    text-color: black;
+    color: var(--text-primary);
   }
 
 

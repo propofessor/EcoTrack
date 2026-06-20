@@ -6,10 +6,12 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { resendVerification } from '../api/auth';
 import { Mail } from 'lucide-react-native';
 
 export default function EmailVerificationScreen({ navigation, route }) {
+  const { t } = useTranslation();
   const email = route.params?.email || '';
   const [sending, setSending] = useState(false);
   const scheme = useColorScheme();
@@ -20,9 +22,9 @@ export default function EmailVerificationScreen({ navigation, route }) {
     setSending(true);
     try {
       await resendVerification({ email });
-      Alert.alert('Email inviata', 'Controlla di nuovo la tua casella di posta.');
+      Alert.alert(t('emailVerification.resentTitle'), t('emailVerification.resentMessage'));
     } catch {
-      Alert.alert('Errore', 'Impossibile inviare. Riprova più tardi.');
+      Alert.alert(t('common.error'), t('emailVerification.resendFailed'));
     } finally {
       setSending(false);
     }
@@ -34,11 +36,11 @@ export default function EmailVerificationScreen({ navigation, route }) {
 
         <Mail size={56} color={iconColor} />
 
-        <Text className="heading text-center mt-4 mb-2">Verifica la tua email</Text>
+        <Text className="heading text-center mt-4 mb-2">{t('emailVerification.title')}</Text>
         <Text className="text-muted text-center mb-8">
-          Abbiamo inviato un link di conferma a{'\n'}
+          {t('emailVerification.message')}{'\n'}
           <Text className="text-label">{email}</Text>.{'\n'}
-          Clicca il link nell'email per attivare il tuo account.
+          {t('emailVerification.instruction')}
         </Text>
 
         <View className="w-full gap-3">
@@ -48,7 +50,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
             disabled={sending}
           >
             <Text className="btn-primary-text">
-              {sending ? 'Invio…' : 'Reinvia email di verifica'}
+              {sending ? t('emailVerification.sending') : t('emailVerification.resend')}
             </Text>
           </TouchableOpacity>
 
@@ -56,7 +58,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
             className="items-center py-3"
             onPress={() => navigation.navigate('Login')}
           >
-            <Text className="link">Torna al login</Text>
+            <Text className="link">{t('emailVerification.backToLogin')}</Text>
           </TouchableOpacity>
         </View>
       </View>

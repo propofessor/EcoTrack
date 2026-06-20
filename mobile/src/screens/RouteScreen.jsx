@@ -21,17 +21,11 @@ import {
   useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { calculateCo2 } from "../api/maps";
 import { getMockDirections } from "../api/directions";
 import TransportCard from "../components/TransportCard";
 import { Footprints, Bike, Bus, Car, Map } from "lucide-react-native";
-
-const MODE_LABELS = {
-  piedi: "A piedi",
-  bicicletta: "In bicicletta",
-  autobus: "Trasporto pubblico",
-  macchina: "Automobile",
-};
 
 // Static mock polyline for Trento — same waypoints used in MapScreen.
 // In production this would come from the Directions API response polyline.
@@ -44,13 +38,14 @@ const MOCK_POLYLINE = [
 ];
 
 const MODE_ICONS = {
-  walking: (color) => <Footprints size={28} color={color} />,
-  bicycling: (color) => <Bike size={28} color={color} />,
-  transit: (color) => <Bus size={28} color={color} />,
-  driving: (color) => <Car size={28} color={color} />,
+  piedi: (color) => <Footprints size={28} color={color} />,
+  bicicletta: (color) => <Bike size={28} color={color} />,
+  autobus: (color) => <Bus size={28} color={color} />,
+  macchina: (color) => <Car size={28} color={color} />,
 };
 
 export default function RouteScreen({ navigation }) {
+  const { t } = useTranslation();
   const scheme = useColorScheme();
   const iconColor = scheme === "dark" ? "#f4f4f5" : "#09090b";
   const mutedColor = scheme === "dark" ? "#a1a1aa" : "#71717a";
@@ -63,7 +58,7 @@ export default function RouteScreen({ navigation }) {
 
   async function handleCalculate() {
     if (!origin.trim() || !destination.trim()) {
-      Alert.alert("Errore", "Inserisci partenza e destinazione.");
+      Alert.alert(t("common.error"), t("route.errorFill"));
       return;
     }
     setLoading(true);
@@ -84,8 +79,8 @@ export default function RouteScreen({ navigation }) {
       setResults(data.emissions);
     } catch (err) {
       Alert.alert(
-        "Errore",
-        err.response?.data?.error || "Impossibile calcolare le emissioni.",
+        t("common.error"),
+        err.response?.data?.error || t("route.errorCalc"),
       );
     } finally {
       setLoading(false);
@@ -107,9 +102,9 @@ export default function RouteScreen({ navigation }) {
     <SafeAreaView className="screen flex-1">
       <ScrollView className="flex-1">
         <View className="px-4 pt-4 pb-8">
-          <Text className="heading">Calcolo percorso CO2</Text>
+          <Text className="heading">{t("route.title")}</Text>
           <Text className="text-muted mb-4">
-            Confronta l'impatto ambientale dei diversi mezzi di trasporto
+            {t("route.subtitle")}
           </Text>
 
           {/* Route inputs — RF9.1 */}
@@ -125,7 +120,7 @@ export default function RouteScreen({ navigation }) {
               />
               <TextInput
                 className="input flex-1 rounded-xl px-3 py-2"
-                placeholder="Partenza (indirizzo o città)"
+                placeholder={t("route.originPlaceholder")}
                 placeholderTextColor={mutedColor}
                 style={{ color: iconColor }}
                 value={origin}
@@ -148,7 +143,7 @@ export default function RouteScreen({ navigation }) {
               />
               <TextInput
                 className="input flex-1 rounded-xl px-3 py-2"
-                placeholder="Destinazione (indirizzo o città)"
+                placeholder={t("route.destinationPlaceholder")}
                 placeholderTextColor={mutedColor}
                 style={{ color: iconColor }}
                 value={destination}
@@ -166,7 +161,7 @@ export default function RouteScreen({ navigation }) {
             {loading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text className="btn-primary-text">Calcola emissioni</Text>
+              <Text className="btn-primary-text">{t("route.calculate")}</Text>
             )}
           </TouchableOpacity>
 

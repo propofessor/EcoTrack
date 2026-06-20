@@ -202,7 +202,7 @@ export function useWidgetData(config = {}) {
 			})
 			.finally(() => setLoading(false));
 
-	}, [dataset, dateMode, dynamicDays, startDate, endDate]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [dataset, dateMode, dynamicDays, startDate, endDate]);
 
 	return { data, loading, usingFallback };
 }

@@ -2,9 +2,9 @@ import { Save, Download, Upload } from 'lucide-react';
 import { ActionButton } from '../ui/ActionButton';
 import { DarkModeToggle } from '../ui/DarkModeToggle';
 
-export default function Header({ saveLayout, exportConfig, handleImportFile }) {
+export default function Header({ className = '', saveLayout, exportConfig, handleImportFile }) {
 	return (
-		<div className='header flex flex-wrap items-center justify-between gap-2.5 mb-5'>
+		<div className={`header flex flex-wrap items-center justify-between gap-2.5 mb-5 ${className}`}>
 			<img src='/favicon.png' alt='EcoTrack Logo' className='h-10 w-10' />
 			<div style={{ flex: 1, marginLeft: '0.5rem'}}>
 				<h1 className='header-title'>

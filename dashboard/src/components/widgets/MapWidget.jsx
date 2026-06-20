@@ -8,9 +8,24 @@ export function MapWidget({ data: heatmapData = [] }) {
 	const [leafletLoaded, setLeafletLoaded] = useState(false);
 	const [error, setError] = useState(null);
 
-	// Load Leaflet from CDN asynchronously
+	// Load Leaflet from CDN asynchronously.
+	// Guard against duplicate injection: React 19 StrictMode invokes effects
+	// twice in dev, and multiple MapWidget instances share the same global L.
 	useEffect(() => {
 		if (window.L) { setLeafletLoaded(true); return; }
+
+		const SCRIPT_ID = 'leaflet-cdn-script';
+		const existing = document.getElementById(SCRIPT_ID);
+		if (existing) {
+			if (existing.dataset.loaded === 'true') setLeafletLoaded(true);
+			else {
+				existing.addEventListener('load', () => setLeafletLoaded(true));
+				existing.addEventListener('error', () =>
+					setError('Impossibile caricare le risorse della mappa.')
+				);
+			}
+			return;
+		}
 
 		const link = document.createElement('link');
 		link.rel        = 'stylesheet';
@@ -20,10 +35,11 @@ export function MapWidget({ data: heatmapData = [] }) {
 		document.head.appendChild(link);
 
 		const script = document.createElement('script');
+		script.id         = SCRIPT_ID;
 		script.src        = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 		script.integrity  = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
 		script.crossOrigin = '';
-		script.onload  = () => setLeafletLoaded(true);
+		script.onload  = () => { script.dataset.loaded = 'true'; setLeafletLoaded(true); };
 		script.onerror = () => setError('Impossibile caricare le risorse della mappa.');
 		document.head.appendChild(script);
 	}, []);

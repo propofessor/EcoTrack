@@ -1,4 +1,4 @@
-// src/api/dashboardApi.js
+// src/api/dashboardapi.js
 
 // La API Key viene letta dalle variabili d'ambiente di Vite
 // Crea un file dashboard/.env.local:  VITE_API_KEY=la-tua-chiave

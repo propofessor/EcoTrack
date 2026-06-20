@@ -1,16 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Responsive, useContainerWidth } from 'react-grid-layout';
-import _ from 'lodash';
 import { Plus } from 'lucide-react';
 
 import { WidgetWrapper } from '../widgets/WidgetWrapper.jsx';
 import { WidgetConfigModal } from '../modals/WidgetConfigModal.jsx';
 
 export default function Grid({ items, setItems }) {
-	const gridConfig = { rowHeight: 60, margin: [10, 10] };
 	const { width, containerRef, mounted } = useContainerWidth();
 
-	const [cols, setCols] = useState(12);
 	const [, setBreakpoint] = useState('lg');
 	const [editingWidgetId, setEditingWidgetId] = useState(null);
 	const [configuringPlaceholderId, setConfiguringPlaceholderId] =
@@ -34,9 +31,8 @@ export default function Grid({ items, setItems }) {
 		});
 	};
 
-	const onBreakpointChange = function (newBreakpoint, newCols) {
+	const onBreakpointChange = function (newBreakpoint) {
 		setBreakpoint(newBreakpoint);
-		setCols(newCols);
 	};
 
 	const handleUpdateWidget = (id, updates) => {
@@ -91,9 +87,12 @@ export default function Grid({ items, setItems }) {
 	};
 
 	const createElement = function (el) {
+		// Vincolo: nessun widget può scendere sotto le 2×2 caselle della griglia
+		const dataGrid = { ...el, minW: 2, minH: 2 };
+
 		if (el.isAddPlaceholder) {
 			return (
-				<div key={el.i} data-grid={el} className='flex h-full w-full'>
+				<div key={el.i} data-grid={dataGrid} className='flex h-full w-full'>
 					<div
 						onClick={() => setConfiguringPlaceholderId(el.i)}
 						className='add-widget-cell flex flex-1 flex-col items-center justify-center gap-2'
@@ -108,7 +107,7 @@ export default function Grid({ items, setItems }) {
 		}
 
 		return (
-			<div key={el.i} data-grid={el} className='h-full'>
+			<div key={el.i} data-grid={dataGrid} className='h-full'>
 				<WidgetWrapper
 					widgetConfig={el}
 					onUpdate={handleUpdateWidget}
@@ -138,13 +137,14 @@ export default function Grid({ items, setItems }) {
 								xxs: 0
 							}}
 							cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-							gridConfig={gridConfig}
+							rowHeight={150}
+							margin={[10, 10]}
 							width={width}
 							onLayoutChange={onLayoutChange}
 							onBreakpointChange={onBreakpointChange}
 							draggableHandle='.drag-handle'
 						>
-							{_.map(items, (el) => createElement(el))}
+							{items.map((el) => createElement(el))}
 						</Responsive>
 					</>
 				)}

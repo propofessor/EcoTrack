@@ -12,6 +12,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { register as apiRegister, getMe } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 
@@ -26,6 +27,7 @@ const PASSWORD_REGEX =
 
 export default function RegisterScreen({ navigation }) {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const scheme = useColorScheme();
   const inputColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
   const placeholderColor = scheme === 'dark' ? '#71717a' : '#a1a1aa';
@@ -39,13 +41,12 @@ export default function RegisterScreen({ navigation }) {
 
   function validate() {
     const e = {};
-    if (!name.trim()) e.name = 'Il nome è obbligatorio.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Email non valida.';
+    if (!name.trim()) e.name = t('register.errors.name');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = t('register.errors.email');
     if (!PASSWORD_REGEX.test(password)) {
-      e.password =
-        'La password deve avere almeno 8 caratteri, una maiuscola, una minuscola, un numero e un carattere speciale.';
+      e.password = t('register.errors.password');
     }
-    if (plate && !PLATE_REGEX.test(plate)) e.plate = 'Formato targa non valido (es. AB123CD).';
+    if (plate && !PLATE_REGEX.test(plate)) e.plate = t('register.errors.plate');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -70,8 +71,8 @@ export default function RegisterScreen({ navigation }) {
       const userData = await getMe();
       login(userData);
     } catch (err) {
-      const msg = err.response?.data?.error || 'Registrazione fallita.';
-      Alert.alert('Errore', msg);
+      const msg = err.response?.data?.error || t('register.failed');
+      Alert.alert(t('common.error'), msg);
     } finally {
       setLoading(false);
     }
@@ -89,19 +90,19 @@ export default function RegisterScreen({ navigation }) {
             {/* Brand */}
             <View className="items-center mb-10">
               <Image source={require('../../assets/icon.png')} accessibilityLabel='EcoTrack Logo' className='w-24 h-24 mb-4' />
-              <Text className="heading text-center">Crea il tuo account</Text>
+              <Text className="heading text-center">{t('register.title')}</Text>
             </View>
 
             {/* Form */}
             <View className="card rounded-3xl p-6 gap-4">
 
               <View className="flex-col gap-1">
-                <Text className="text-label">Nome e cognome</Text>
+                <Text className="text-label">{t('register.nameLabel')}</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
                   style={{ color: inputColor }}
                   placeholderTextColor={placeholderColor}
-                  placeholder="Mario Rossi"
+                  placeholder={t('register.namePlaceholder')}
                   value={name}
                   onChangeText={setName}
                 />
@@ -109,12 +110,12 @@ export default function RegisterScreen({ navigation }) {
               </View>
 
               <View className="flex-col gap-1">
-                <Text className="text-label">Email</Text>
+                <Text className="text-label">{t('register.emailLabel')}</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
                   style={{ color: inputColor }}
                   placeholderTextColor={placeholderColor}
-                  placeholder="nome@esempio.it"
+                  placeholder={t('register.emailPlaceholder')}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -125,12 +126,12 @@ export default function RegisterScreen({ navigation }) {
               </View>
 
               <View className="flex-col gap-1">
-                <Text className="text-label">Password</Text>
+                <Text className="text-label">{t('register.passwordLabel')}</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
                   style={{ color: inputColor }}
                   placeholderTextColor={placeholderColor}
-                  placeholder="Min 8: maiuscola, minuscola, numero, speciale"
+                  placeholder={t('register.passwordPlaceholder')}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -139,12 +140,12 @@ export default function RegisterScreen({ navigation }) {
               </View>
 
               <View className="flex-col gap-1">
-                <Text className="text-label">Targa veicolo (opzionale)</Text>
+                <Text className="text-label">{t('register.plateLabel')}</Text>
                 <TextInput
                   className="input w-full rounded-xl px-4 py-3"
                   style={{ color: inputColor }}
                   placeholderTextColor={placeholderColor}
-                  placeholder="AB123CD"
+                  placeholder={t('register.platePlaceholder')}
                   value={plate}
                   onChangeText={setPlate}
                   autoCapitalize="characters"
@@ -160,7 +161,7 @@ export default function RegisterScreen({ navigation }) {
                   disabled={loading}
                 >
                   <Text className="btn-primary-text">
-                    {loading ? 'Registrazione…' : 'Registrati'}
+                    {loading ? t('register.submitting') : t('register.submit')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -168,9 +169,9 @@ export default function RegisterScreen({ navigation }) {
 
             {/* Login link */}
             <View className="flex-row justify-center gap-1 mt-4">
-              <Text className="text-muted">Hai già un account?</Text>
+              <Text className="text-muted">{t('register.hasAccount')}</Text>
               <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text className="link">Accedi</Text>
+                <Text className="link">{t('register.signIn')}</Text>
               </TouchableOpacity>
             </View>
           </View>

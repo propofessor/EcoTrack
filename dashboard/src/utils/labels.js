@@ -48,14 +48,14 @@ export const TRANSPORT_ORDER = [
 	'Piedi'
 ];
 
-const TRANSPORT_COLORS = [
-	'#8ab834',
-	'#e7dc0c',
-	'#f59e0b',
-	'#d05305',
-	'#b73410',
-	'#3f981e'
-];
+const TRANSPORT_COLORS = {
+	Macchina:    '#8ab834',
+	Bus:         '#e7dc0c',
+	Treno:       '#f59e0b',
+	Monopattino: '#d05305',
+	Bicicletta:  '#b73410',
+	Piedi:       '#3f981e'
+};
 
 // Palette di riserva per etichette non previste nella mappa.
 const FALLBACK_PALETTE = [

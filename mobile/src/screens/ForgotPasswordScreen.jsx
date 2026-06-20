@@ -16,12 +16,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { forgotPassword, resetPassword } from '../api/auth';
 
 const PASSWORD_REGEX =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 
 export default function ForgotPasswordScreen({ navigation }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState('email'); // 'email' | 'reset'
   const [email, setEmail] = useState('');
   const [tokenHash, setTokenHash] = useState('');
@@ -31,7 +33,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   async function handleRequestReset() {
     if (!email.trim()) {
-      Alert.alert('Errore', 'Inserisci la tua email.');
+      Alert.alert(t('common.error'), t('forgotPassword.errorEmail'));
       return;
     }
     setLoading(true);
@@ -39,7 +41,7 @@ export default function ForgotPasswordScreen({ navigation }) {
       await forgotPassword({ email: email.trim() });
       setStep('reset');
     } catch {
-      Alert.alert('Errore', 'Impossibile inviare il link. Riprova più tardi.');
+      Alert.alert(t('common.error'), t('forgotPassword.sendFailed'));
     } finally {
       setLoading(false);
     }
@@ -47,29 +49,29 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   async function handleResetPassword() {
     if (!tokenHash.trim()) {
-      Alert.alert('Errore', 'Inserisci il codice ricevuto via email.');
+      Alert.alert(t('common.error'), t('forgotPassword.errorToken'));
       return;
     }
     if (!PASSWORD_REGEX.test(newPassword)) {
       Alert.alert(
-        'Password non valida',
-        'Deve contenere almeno 8 caratteri, una maiuscola, una minuscola, un numero e un carattere speciale.'
+        t('forgotPassword.passwordInvalidTitle'),
+        t('forgotPassword.passwordInvalidMessage')
       );
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Errore', 'Le password non coincidono.');
+      Alert.alert(t('common.error'), t('profile.passwordMismatch'));
       return;
     }
     setLoading(true);
     try {
       await resetPassword({ token_hash: tokenHash.trim(), newPassword });
-      Alert.alert('Successo', 'Password aggiornata. Puoi ora accedere.', [
-        { text: 'OK', onPress: () => navigation.navigate('Login') },
+      Alert.alert(t('forgotPassword.successTitle'), t('forgotPassword.successMessage'), [
+        { text: t('common.ok'), onPress: () => navigation.navigate('Login') },
       ]);
     } catch (err) {
-      const msg = err.response?.data?.error || 'Token non valido o scaduto.';
-      Alert.alert('Errore', msg);
+      const msg = err.response?.data?.error || t('forgotPassword.tokenInvalid');
+      Alert.alert(t('common.error'), msg);
     } finally {
       setLoading(false);
     }
@@ -86,23 +88,23 @@ export default function ForgotPasswordScreen({ navigation }) {
 
             {/* Back button */}
             <TouchableOpacity className="mb-6" onPress={() => navigation.goBack()}>
-              <Text className="link">← Torna al login</Text>
+              <Text className="link">{t('forgotPassword.backToLogin')}</Text>
             </TouchableOpacity>
 
-            <Text className="heading mb-1">Recupera password</Text>
+            <Text className="heading mb-1">{t('forgotPassword.title')}</Text>
 
             {step === 'email' ? (
               <>
                 <Text className="text-muted mb-6">
-                  Inserisci la tua email. Ti invieremo un codice per reimpostare la password.
+                  {t('forgotPassword.step1Description')}
                 </Text>
 
                 <View className="card rounded-3xl p-6 gap-4">
                   <View className="flex-col gap-1">
-                    <Text className="text-label">Email</Text>
+                    <Text className="text-label">{t('forgotPassword.emailLabel')}</Text>
                     <TextInput
                       className="input w-full rounded-xl px-4 py-3"
-                      placeholder="nome@esempio.it"
+                      placeholder={t('forgotPassword.emailPlaceholder')}
                       value={email}
                       onChangeText={setEmail}
                       keyboardType="email-address"
@@ -117,7 +119,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                     disabled={loading}
                   >
                     <Text className="btn-primary-text">
-                      {loading ? 'Invio in corso…' : 'Invia link di recupero'}
+                      {loading ? t('forgotPassword.submitting') : t('forgotPassword.submit')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -125,15 +127,15 @@ export default function ForgotPasswordScreen({ navigation }) {
             ) : (
               <>
                 <Text className="text-muted mb-6">
-                  Controlla la tua email e inserisci il codice ricevuto insieme alla nuova password.
+                  {t('forgotPassword.step2Description')}
                 </Text>
 
                 <View className="card rounded-3xl p-6 gap-4">
                   <View className="flex-col gap-1">
-                    <Text className="text-label">Codice di recupero</Text>
+                    <Text className="text-label">{t('forgotPassword.tokenLabel')}</Text>
                     <TextInput
                       className="input w-full rounded-xl px-4 py-3"
-                      placeholder="Incolla qui il codice dall'email"
+                      placeholder={t('forgotPassword.tokenPlaceholder')}
                       value={tokenHash}
                       onChangeText={setTokenHash}
                       autoCapitalize="none"
@@ -142,10 +144,10 @@ export default function ForgotPasswordScreen({ navigation }) {
                   </View>
 
                   <View className="flex-col gap-1">
-                    <Text className="text-label">Nuova password</Text>
+                    <Text className="text-label">{t('forgotPassword.newPasswordLabel')}</Text>
                     <TextInput
                       className="input w-full rounded-xl px-4 py-3"
-                      placeholder="••••••••"
+                      placeholder={t('common.passwordPlaceholder')}
                       value={newPassword}
                       onChangeText={setNewPassword}
                       secureTextEntry
@@ -153,10 +155,10 @@ export default function ForgotPasswordScreen({ navigation }) {
                   </View>
 
                   <View className="flex-col gap-1">
-                    <Text className="text-label">Conferma password</Text>
+                    <Text className="text-label">{t('forgotPassword.confirmPasswordLabel')}</Text>
                     <TextInput
                       className="input w-full rounded-xl px-4 py-3"
-                      placeholder="••••••••"
+                      placeholder={t('common.passwordPlaceholder')}
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
                       secureTextEntry
@@ -169,7 +171,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                     disabled={loading}
                   >
                     <Text className="btn-primary-text">
-                      {loading ? 'Aggiornamento…' : 'Reimposta password'}
+                      {loading ? t('forgotPassword.resetting') : t('forgotPassword.resetSubmit')}
                     </Text>
                   </TouchableOpacity>
 
@@ -177,7 +179,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                     className="items-center py-2"
                     onPress={() => setStep('email')}
                   >
-                    <Text className="link">Non hai ricevuto il codice? Riprova</Text>
+                    <Text className="link">{t('forgotPassword.resendCode')}</Text>
                   </TouchableOpacity>
                 </View>
               </>
