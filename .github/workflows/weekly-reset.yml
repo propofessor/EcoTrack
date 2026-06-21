@@ -1,0 +1,16 @@
+name: Weekly Leaderboard Reset
+
+on:
+  schedule:
+    - cron: '55 23 * * 0'  # Every Sunday at 23:55 UTC
+  workflow_dispatch:        # Allow manual trigger
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger weekly reset
+        run: |
+          curl --fail --silent --show-error \
+            -X POST "${{ secrets.BACKEND_URL }}/api/internal/weekly-reset" \
+            -H "x-internal-secret: ${{ secrets.INTERNAL_CRON_SECRET }}"

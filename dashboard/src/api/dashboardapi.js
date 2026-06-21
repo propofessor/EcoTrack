@@ -1,28 +1,20 @@
-const API_KEY = import.meta.env.VITE_API_KEY || "";
-const BASE_URL = "/api";
+import { apiFetch } from './client.js';
 
-const headers = {
-  "Content-Type": "application/json",
-  "x-api-key": API_KEY,
-};
+const API_KEY = import.meta.env.VITE_API_KEY || "";
 
 async function fetchData(endpoint, params = {}) {
-  const url = new URL(BASE_URL + endpoint, window.location.origin);
-
-
+  const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, val]) => {
     if (val !== undefined && val !== null && val !== "") {
-      url.searchParams.set(key, val);
+      searchParams.set(key, val);
     }
   });
+  const query = searchParams.toString();
+  const path = `/api${endpoint}${query ? `?${query}` : ''}`;
 
-  const res = await fetch(url.toString(), { headers });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Errore HTTP ${res.status}`);
-  }
-
+  const res = await apiFetch(path, {
+    headers: { 'x-api-key': API_KEY },
+  });
 
   const contentType = res.headers.get("content-type") || "";
   if (contentType.includes("application/json")) return res.json();

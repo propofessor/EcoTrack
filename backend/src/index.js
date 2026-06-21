@@ -25,7 +25,12 @@ const allowedOrigins = process.env.CORS_ORIGINS
 
 app.use(
 	cors({
-		origin: allowedOrigins,
+		origin: (origin, callback) => {
+			if (!origin || allowedOrigins.includes(origin)) {
+				return callback(null, true);
+			}
+			return callback(new Error('Origin non consentita dal CORS'));
+		},
 		credentials: true
 	})
 );
@@ -51,8 +56,9 @@ app.use('/api/history', historyRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/gamification', gamificationRoutes);
+app.use('/api/internal', require('./routes/internal'));
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 if (require.main === module) {
 	app.listen(PORT, () => {

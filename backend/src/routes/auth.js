@@ -71,14 +71,14 @@ router.post('/register', async (req, res) => {
 		res.cookie('access_token', accessToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 3600000
 		});
 
 		res.cookie('refresh_token', refreshToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 7 * 24 * 3600000
 		});
 
@@ -118,14 +118,14 @@ router.post('/login', async (req, res) => {
 		res.cookie('access_token', accessToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 3600000
 		});
 
 		res.cookie('refresh_token', refreshToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 7 * 24 * 3600000
 		});
 
@@ -261,14 +261,14 @@ router.get('/cie/callback', async (req, res) => {
 		res.cookie('access_token', sessionData.session.access_token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 3600000
 		});
 
 		res.cookie('refresh_token', sessionData.session.refresh_token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 7 * 24 * 3600000
 		});
 
@@ -322,14 +322,14 @@ router.post('/refresh', async (req, res) => {
 		res.cookie('access_token', newAccessToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 3600000
 		});
 
 		res.cookie('refresh_token', newRefreshToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 7 * 24 * 3600000
 		});
 
@@ -356,13 +356,13 @@ router.post('/logout', async (req, res) => {
 		res.clearCookie('access_token', {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict'
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
 		});
 
 		res.clearCookie('refresh_token', {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict'
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
 		});
 
 
@@ -603,11 +603,11 @@ router.get('/cie/mobile-callback', async (req, res) => {
 
 		res.cookie('access_token', sessionData.session.access_token, {
 			httpOnly: true, secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict', maxAge: 3600000
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', maxAge: 3600000
 		});
 		res.cookie('refresh_token', sessionData.session.refresh_token, {
 			httpOnly: true, secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict', maxAge: 7 * 24 * 3600000
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', maxAge: 7 * 24 * 3600000
 		});
 
 		return res.status(200).json({
@@ -670,13 +670,13 @@ router.post('/google/token', async (req, res) => {
 		res.cookie('access_token', data.session.access_token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 3600000
 		});
 		res.cookie('refresh_token', data.session.refresh_token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 7 * 24 * 3600000
 		});
 
@@ -720,14 +720,14 @@ router.get('/google/callback', async (req, res) => {
 		res.cookie('access_token', accessToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 3600000
 		});
 
 		res.cookie('refresh_token', refreshToken, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 			maxAge: 7 * 24 * 3600000
 		});
 
@@ -829,7 +829,7 @@ router.get('/google/web-callback', async (req, res) => {
 		const cookieOpts = {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'lax',
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 		};
 		res.cookie('access_token', access_token, { ...cookieOpts, maxAge: 3600000 });
 		res.cookie('refresh_token', refresh_token, { ...cookieOpts, maxAge: 7 * 24 * 3600000 });
