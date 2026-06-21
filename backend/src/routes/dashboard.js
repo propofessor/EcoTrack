@@ -1,4 +1,3 @@
-// backend/src/routes/dashboard.js
 const express = require('express');
 const router = express.Router();
 const { supabaseAdmin } = require('../db');
@@ -9,7 +8,7 @@ router.use(checkApiKey);
 
 const SORTABLE_COLS = new Set(['timestamp_start', 'co2_kgs', 'points']);
 
-// ─── Deterministic mock data (used when Supabase is empty / unavailable) ──────
+
 
 const TRANSPORT_TYPES = [
 	{ label: 'Macchina',    co2Min: 1.8,  co2Max: 7.2,  ptsMin: 10,  ptsMax: 30  },
@@ -19,7 +18,7 @@ const TRANSPORT_TYPES = [
 	{ label: 'Piedi',       co2Min: 0,    co2Max: 0,    ptsMin: 120, ptsMax: 200 },
 ];
 
-// Realistic urban distribution for a small Italian city with good public transport
+
 const TRANSPORT_WEIGHTS = [0.30, 0.28, 0.24, 0.08, 0.10];
 
 function makePRNG(seed) {
@@ -42,9 +41,9 @@ function getMockCo2Stats() {
 	const totalDays = Math.floor((endDate - baseDate) / 86400000);
 
 	for (let d = 0; d < totalDays; d++) {
-		const tripsToday = 2 + Math.floor(rand() * 3); // 2–4 trips/day
+		const tripsToday = 2 + Math.floor(rand() * 3);
 		for (let t = 0; t < tripsToday; t++) {
-			// Pick transport type by weighted distribution
+
 			const r = rand();
 			let cumWeight = 0;
 			let typeIdx = 0;
@@ -98,28 +97,28 @@ const MOCK_LEADERBOARD = [
 	{ user_id: 'usr-020', points:  950 },
 ];
 
-// Trento-area pollution heatmap (mock sensor data)
+
 const MOCK_MAP_POINTS = [
-	{ latitude: 46.0679, longitude: 11.1211, weight: 0.90 }, // Piazza Dante – centro
-	{ latitude: 46.0718, longitude: 11.1204, weight: 0.85 }, // Stazione FS
-	{ latitude: 46.0631, longitude: 11.1132, weight: 0.70 }, // MUSE
-	{ latitude: 46.0745, longitude: 11.1185, weight: 0.65 }, // Ponte S. Lorenzo
-	{ latitude: 46.0620, longitude: 11.1280, weight: 0.60 }, // Via Brennero Sud
-	{ latitude: 46.0695, longitude: 11.1145, weight: 0.55 }, // Via Torre Verde
-	{ latitude: 46.0660, longitude: 11.1260, weight: 0.50 }, // Piedicastello
-	{ latitude: 46.0780, longitude: 11.1230, weight: 0.48 }, // Gardolo
-	{ latitude: 46.0590, longitude: 11.1190, weight: 0.42 }, // Mattarello
-	{ latitude: 46.0710, longitude: 11.1310, weight: 0.38 }, // Povo
-	{ latitude: 46.0640, longitude: 11.1090, weight: 0.33 }, // Ravina
-	{ latitude: 46.0800, longitude: 11.1140, weight: 0.28 }, // Villazzano
-	{ latitude: 46.0560, longitude: 11.1250, weight: 0.40 }, // Cadine
-	{ latitude: 46.0690, longitude: 11.1340, weight: 0.35 }, // Cognola
-	{ latitude: 46.0730, longitude: 11.1080, weight: 0.45 }, // Sardagna
+	{ latitude: 46.0679, longitude: 11.1211, weight: 0.90 },
+	{ latitude: 46.0718, longitude: 11.1204, weight: 0.85 },
+	{ latitude: 46.0631, longitude: 11.1132, weight: 0.70 },
+	{ latitude: 46.0745, longitude: 11.1185, weight: 0.65 },
+	{ latitude: 46.0620, longitude: 11.1280, weight: 0.60 },
+	{ latitude: 46.0695, longitude: 11.1145, weight: 0.55 },
+	{ latitude: 46.0660, longitude: 11.1260, weight: 0.50 },
+	{ latitude: 46.0780, longitude: 11.1230, weight: 0.48 },
+	{ latitude: 46.0590, longitude: 11.1190, weight: 0.42 },
+	{ latitude: 46.0710, longitude: 11.1310, weight: 0.38 },
+	{ latitude: 46.0640, longitude: 11.1090, weight: 0.33 },
+	{ latitude: 46.0800, longitude: 11.1140, weight: 0.28 },
+	{ latitude: 46.0560, longitude: 11.1250, weight: 0.40 },
+	{ latitude: 46.0690, longitude: 11.1340, weight: 0.35 },
+	{ latitude: 46.0730, longitude: 11.1080, weight: 0.45 },
 ];
 
-// ─── Routes ────────────────────────────────────────────────────────────────────
 
-// GET /api/dashboard/co2-stats
+
+
 router.get('/co2-stats', async (req, res) => {
 	try {
 		const {
@@ -145,9 +144,9 @@ router.get('/co2-stats', async (req, res) => {
 
 		const { data, error } = await query;
 
-		// Un errore reale del DB deve emergere come 500 (RNF4 "gestione errori"),
-		// non essere mascherato dai dati mock. Il fallback mock resta solo per il
-		// caso legittimo di DB vuoto / demo offline.
+
+
+
 		if (error) {
 			console.error('[dashboard] co2-stats – errore query database:', error.message);
 			return res.status(500).json({ error: 'Errore query database' });
@@ -163,9 +162,9 @@ router.get('/co2-stats', async (req, res) => {
 			result = result.slice(Number(offset), Number(offset) + Number(limit));
 		}
 
-		// Normalizziamo le etichette dei mezzi verso la forma canonica italiana
-		// (es. 'walking' → 'Piedi'), così la dashboard riceve sempre testo IT a
-		// prescindere da come sono memorizzati i dati nel DB.
+
+
+
 		result = result.map(row =>
 			row?.movement_types
 				? { ...row, movement_types: { ...row.movement_types, label: canonicalMovementLabel(row.movement_types.label) } }
@@ -179,7 +178,7 @@ router.get('/co2-stats', async (req, res) => {
 	}
 });
 
-// GET /api/dashboard/co2-stats.csv
+
 router.get('/co2-stats.csv', async (req, res) => {
 	try {
 		const { date_start, date_end } = req.query;
@@ -218,14 +217,14 @@ router.get('/co2-stats.csv', async (req, res) => {
 	}
 });
 
-// GET /api/dashboard/leaderboard
+
 router.get('/leaderboard', async (req, res) => {
 	try {
 		const { limit = 20 } = req.query;
 
-		// Classifica PER UTENTE: sommiamo i punti di tutti i viaggi di ogni
-		// utente. (Prima si ordinava `history` per i punti del singolo
-		// viaggio, restituendo i viaggi migliori e non gli utenti migliori.)
+
+
+
 		const { data, error } = await supabaseAdmin
 			.from('history')
 			.select('user_id, points');
@@ -257,7 +256,7 @@ router.get('/leaderboard', async (req, res) => {
 	}
 });
 
-// GET /api/dashboard/map-data  (heatmap for the municipality dashboard)
+
 router.get('/map-data', (req, res) => {
 	return res.json({ points: MOCK_MAP_POINTS });
 });

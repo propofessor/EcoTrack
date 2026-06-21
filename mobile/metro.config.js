@@ -4,11 +4,9 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
-config.resolver.extraNodeModules = {
-  '@react-native/assets-registry': path.resolve(
-    __dirname,
-    'node_modules/.pnpm/@react-native+assets-registry@0.74.87/node_modules/@react-native/assets-registry'
-  ),
-};
+config.resolver.unstable_enableSymlinks = true;
+config.resolver.nodeModulesPaths = [
+  path.resolve(__dirname, 'node_modules'),
+];
 
 module.exports = withNativeWind(config, { input: './global.css' });

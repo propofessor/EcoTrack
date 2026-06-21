@@ -1,7 +1,3 @@
-// __tests__/mockData.test.js
-// Unit test dei generatori di dati mock (fallback quando Supabase non è
-// disponibile). Sono funzioni pure e deterministiche (PRNG con seed).
-
 const {
 	MOCK_DRIVING_MOVEMENT_TYPE_ID,
 	getMockHistory,
@@ -18,7 +14,7 @@ describe('getMockHistory', () => {
 		const a = getMockHistory();
 		const b = getMockHistory();
 		expect(a.length).toBeGreaterThan(0);
-		expect(b).toBe(a); // stessa reference grazie alla cache interna
+		expect(b).toBe(a);
 	});
 
 	it('ogni record ha la forma attesa', () => {

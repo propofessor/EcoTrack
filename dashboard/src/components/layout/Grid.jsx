@@ -59,8 +59,8 @@ export default function Grid({ items, setItems }) {
 				};
 				delete updatedItems[index].isAddPlaceholder;
 
-				// Derive next ID from prevItems so it's always unique, regardless
-				// of any external counter state that could be stale or reset.
+
+
 				const maxN = prevItems.reduce((max, item) => {
 					const m = /^placeholder_(\d+)$/.exec(item.i);
 					return m ? Math.max(max, Number(m[1])) : max;
@@ -87,7 +87,7 @@ export default function Grid({ items, setItems }) {
 	};
 
 	const createElement = function (el) {
-		// Vincolo: nessun widget può scendere sotto le 2×2 caselle della griglia
+
 		const dataGrid = { ...el, minW: 2, minH: 2 };
 
 		if (el.isAddPlaceholder) {

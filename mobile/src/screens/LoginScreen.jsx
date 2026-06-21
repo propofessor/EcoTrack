@@ -53,15 +53,15 @@ export default function LoginScreen({ navigation }) {
     }
   }
 
-  // RF5.2: Google login
+
   async function handleGoogleLogin() {
     setLoading(true);
     try {
       if (Platform.OS === 'web') {
-        // Full-page redirect — backend sets cookies, redirects back to this app
+
         const { url } = await getGoogleWebUrl();
         window.location.href = url;
-        return; // page navigates away; AuthContext re-checks session on return
+        return;
       }
       const { url } = await getGoogleMobileUrl();
       const result = await WebBrowser.openAuthSessionAsync(url, GOOGLE_CALLBACK_URL);
@@ -83,13 +83,13 @@ export default function LoginScreen({ navigation }) {
     }
   }
 
-  // RF5.2: CIE authentication via expo-web-browser
+
   async function handleCieLogin() {
     setLoading(true);
     try {
       const { url, state } = await getCieAuthUrl();
 
-      // Open CIE auth page in an in-app browser and capture the redirect
+
       const redirectUrl = `${BASE_URL}/auth/cie/mobile-callback`;
       const result = await WebBrowser.openAuthSessionAsync(url, redirectUrl);
 
@@ -122,14 +122,14 @@ export default function LoginScreen({ navigation }) {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View className="flex-1 justify-center px-6">
 
-            {/* Brand */}
+            {}
             <View className="items-center mb-10">
               <Image source={require('../../assets/icon.png')} accessibilityLabel='EcoTrack Logo' className='w-24 h-24 mb-4' />
               <Text className="heading text-center">{t('login.title')}</Text>
               <Text className="text-muted text-center">{t('login.subtitle')}</Text>
             </View>
 
-            {/* Form surface */}
+            {}
             <View className="card rounded-3xl p-6 gap-4">
 
               <View className="flex-col gap-1">
@@ -171,7 +171,7 @@ export default function LoginScreen({ navigation }) {
                   </Text>
                 </TouchableOpacity>
 
-                {/* RF5.5: Password recovery link */}
+                {}
                 <TouchableOpacity
                   className="items-center py-1"
                   onPress={() => navigation.navigate('ForgotPassword')}
@@ -181,14 +181,14 @@ export default function LoginScreen({ navigation }) {
               </View>
             </View>
 
-            {/* Divider */}
+            {}
             <View className="flex-row items-center gap-3 my-2">
               <View className="divider flex-1 h-px" />
               <Text className="text-muted">{t('common.or')}</Text>
               <View className="divider flex-1 h-px" />
             </View>
 
-            {/* RF5.2: Social login buttons */}
+            {}
             <View className="gap-3">
               <TouchableOpacity
                 className="btn-ghost flex-row items-center justify-center gap-2 rounded-xl py-3"
@@ -209,7 +209,7 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* Register link */}
+            {}
             <View className="flex-row justify-center gap-1 mt-4">
               <Text className="text-muted">{t('login.noAccount')}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>

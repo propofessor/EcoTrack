@@ -1,7 +1,3 @@
-/**
- * PreferencesScreen — RF7.5
- * User preferences: notifications, language, leaderboard privacy, theme.
- */
 import { useState, useEffect } from "react";
 import {
   View,
@@ -48,7 +44,7 @@ export default function PreferencesScreen({ navigation }) {
           theme: p.theme || "dark",
         };
         setPrefs(loaded);
-        // Sync the live UI (i18n + NativeWind) with the stored preferences.
+
         applyTheme(loaded.theme);
         applyLanguage(loaded.language);
       })
@@ -67,7 +63,7 @@ export default function PreferencesScreen({ navigation }) {
     const next = { ...prefs, ...updated };
     setPrefs(next);
     setSaving(true);
-    // Apply theme / language changes immediately (and persist locally).
+
     if (updated.theme) applyTheme(updated.theme);
     if (updated.language) applyLanguage(updated.language);
     try {
@@ -98,7 +94,7 @@ export default function PreferencesScreen({ navigation }) {
     <SafeAreaView className="screen flex-1">
       <ScrollView className="flex-1">
         <View className="px-4 pt-4 pb-8">
-          {/* Header */}
+          {}
           <TouchableOpacity
             className="mb-4"
             onPress={() => navigation.goBack()}
@@ -110,7 +106,7 @@ export default function PreferencesScreen({ navigation }) {
             <Text className="text-muted mb-2">{t("profile.saving")}</Text>
           )}
 
-          {/* Notifications */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <Text className="subheading mb-3">
               {t("preferences.notifications")}
@@ -131,7 +127,7 @@ export default function PreferencesScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Language */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <Text className="subheading mb-3">{t("preferences.language")}</Text>
             {LANGUAGES.map((lang) => (
@@ -148,7 +144,7 @@ export default function PreferencesScreen({ navigation }) {
             ))}
           </View>
 
-          {/* Leaderboard privacy */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <Text className="subheading mb-3">
               {t("preferences.leaderboardPrivacy")}
@@ -170,7 +166,7 @@ export default function PreferencesScreen({ navigation }) {
             ))}
           </View>
 
-          {/* Theme */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <Text className="subheading mb-3">{t("preferences.theme")}</Text>
             <View className="flex-row gap-3">
@@ -200,7 +196,7 @@ export default function PreferencesScreen({ navigation }) {
                       }
                       style={{ fontSize: 17 }}
                     >
-                      {themeOption === "light" ? "Chiaro" : "Scuro"}
+                      {t(`preferences.${themeOption}`)}
                     </Text>
                   </View>
                 </TouchableOpacity>

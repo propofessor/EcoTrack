@@ -1,8 +1,3 @@
-// __tests__/apiKeyMiddleware.test.js
-// Unit test del middleware di validazione API Key.
-// Mockiamo Supabase a livello di DB e isoliamo la cache interna (Map a
-// livello di modulo) con jest.resetModules() prima di ogni test.
-
 jest.mock('../src/db', () => ({
 	supabaseAdmin: { from: jest.fn() }
 }));
@@ -26,8 +21,8 @@ describe('checkApiKey middleware', () => {
 		};
 	}
 
-	// Catena Supabase che copre sia la SELECT (.select().eq().single())
-	// sia l'UPDATE in background (.update().eq().then().catch()).
+
+
 	function makeChain(singleResult) {
 		const chain = {};
 		chain.select = jest.fn(() => chain);
@@ -42,7 +37,7 @@ describe('checkApiKey middleware', () => {
 	}
 
 	beforeEach(() => {
-		jest.resetModules(); // azzera la cache interna del modulo
+		jest.resetModules();
 		checkApiKey = require('../src/middleware/apiKeyMiddleware');
 		supabaseAdmin = require('../src/db').supabaseAdmin;
 		supabaseAdmin.from.mockReset();
@@ -66,7 +61,7 @@ describe('checkApiKey middleware', () => {
 
 		expect(next).toHaveBeenCalledTimes(1);
 		expect(res.status).not.toHaveBeenCalled();
-		// SELECT + UPDATE in background sulla tabella api_keys
+
 		expect(supabaseAdmin.from).toHaveBeenCalledWith('api_keys');
 	});
 
@@ -92,7 +87,7 @@ describe('checkApiKey middleware', () => {
 		await checkApiKey(makeReq('stessa-key'), res, next);
 		const dbCallsAfterFirst = supabaseAdmin.from.mock.calls.length;
 
-		// Seconda chiamata: deve passare dalla cache, niente nuove query
+
 		const res2 = makeRes();
 		const next2 = jest.fn();
 		await checkApiKey(makeReq('stessa-key'), res2, next2);

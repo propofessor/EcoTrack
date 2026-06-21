@@ -1,8 +1,7 @@
-// src/services/co2Service.js
 const EMISSION_FACTORS = {
-	// Emissione per passeggero-km del trasporto pubblico locale: nettamente
-	// inferiore all'auto privata, così l'uso del bus viene premiato nel voto
-	// (vedi scoreEngine/gamificationService).
+
+
+
 	bus: 40,
 	car_average: 110
 };
@@ -26,10 +25,7 @@ async function getCarEmissionFactor(plate) {
 	}
 }
 
-/**
- * Calcola le emissioni per tutti i mezzi, date le loro distanze in km.
- * @returns {{ emissions: { piedi: number, bicicletta: number, autobus: number|null, macchina: number|null }, note: string }}
- */
+
 async function calculateEmissions(distances, userPlate) {
 	const carEmissionFactor = await getCarEmissionFactor(userPlate);
 

@@ -1,7 +1,3 @@
-// __tests__/gamification.extra.test.js
-// Copertura dei rami di errore/catch (500) delle rotte di gamification
-// non coperti da gamification.test.js (che testa gli happy path).
-
 const request = require('supertest');
 
 jest.mock('../src/services/gamificationService', () => ({

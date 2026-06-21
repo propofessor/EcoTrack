@@ -1,7 +1,3 @@
-// __tests__/auth.extra.test.js
-// Copertura delle rotte di auth.js non coperte da auth.test.js:
-// verifica email, recupero password, e le varianti mobile/web di CIE e Google.
-
 const request = require('supertest');
 
 jest.mock('../src/db', () => {
@@ -41,7 +37,7 @@ const app = require('../src/index');
 const { db, supabaseAdmin } = require('../src/db');
 const cieService = require('../src/services/cieService');
 
-// Catena Supabase per la ricerca utente: from().select().eq().single()
+
 function mockUserLookup(result) {
 	supabaseAdmin.from.mockReturnValue({
 		select: jest.fn(() => ({
@@ -62,9 +58,7 @@ beforeEach(() => {
 	jest.clearAllMocks();
 });
 
-// ============================================================
-// POST /register — ramo "email verification required" (session null)
-// ============================================================
+
 describe('POST /api/auth/register (verifica email richiesta)', () => {
 	it('restituisce 201 con email_verification_required quando manca la sessione', async () => {
 		db.auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
@@ -80,9 +74,7 @@ describe('POST /api/auth/register (verifica email richiesta)', () => {
 	});
 });
 
-// ============================================================
-// GET /google — ramo catch (eccezione imprevista)
-// ============================================================
+
 describe('GET /api/auth/google (catch)', () => {
 	it('restituisce 500 se signInWithOAuth solleva un’eccezione', async () => {
 		db.auth.signInWithOAuth.mockRejectedValue(new Error('crash'));
@@ -94,9 +86,7 @@ describe('GET /api/auth/google (catch)', () => {
 	});
 });
 
-// ============================================================
-// POST /resend-verification (RF6.5)
-// ============================================================
+
 describe('POST /api/auth/resend-verification', () => {
 	it('restituisce 400 se manca l’email', async () => {
 		const res = await request(app).post('/api/auth/resend-verification').send({});
@@ -135,9 +125,7 @@ describe('POST /api/auth/resend-verification', () => {
 	});
 });
 
-// ============================================================
-// POST /forgot-password (RF5.5)
-// ============================================================
+
 describe('POST /api/auth/forgot-password', () => {
 	it('restituisce 400 se manca l’email', async () => {
 		const res = await request(app).post('/api/auth/forgot-password').send({});
@@ -175,9 +163,7 @@ describe('POST /api/auth/forgot-password', () => {
 	});
 });
 
-// ============================================================
-// POST /reset-password (RF5.5)
-// ============================================================
+
 describe('POST /api/auth/reset-password', () => {
 	it('restituisce 400 se mancano token_hash o newPassword', async () => {
 		const res = await request(app)
@@ -241,9 +227,7 @@ describe('POST /api/auth/reset-password', () => {
 	});
 });
 
-// ============================================================
-// CIE — variante CREATE-USER fallita nel callback web (ramo 214-222)
-// ============================================================
+
 describe('GET /api/auth/cie/callback (errore creazione utente)', () => {
 	it('restituisce 500 se la createUser fallisce', async () => {
 		const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -269,9 +253,7 @@ describe('GET /api/auth/cie/callback (errore creazione utente)', () => {
 	});
 });
 
-// ============================================================
-// GET /cie/mobile-url
-// ============================================================
+
 describe('GET /api/auth/cie/mobile-url', () => {
 	it('restituisce 200 con url/state/nonce', async () => {
 		cieService.getAuthorizationUrl.mockReturnValue({
@@ -295,9 +277,7 @@ describe('GET /api/auth/cie/mobile-url', () => {
 	});
 });
 
-// ============================================================
-// GET /cie/mobile-callback
-// ============================================================
+
 describe('GET /api/auth/cie/mobile-callback', () => {
 	function happyPathMocks() {
 		cieService.getCieUserIdentity.mockResolvedValue({
@@ -428,9 +408,7 @@ describe('GET /api/auth/cie/mobile-callback', () => {
 	});
 });
 
-// ============================================================
-// POST /google/token (RF5.2)
-// ============================================================
+
 describe('POST /api/auth/google/token', () => {
 	it('restituisce 400 se manca id_token', async () => {
 		const res = await request(app).post('/api/auth/google/token').send({});
@@ -474,9 +452,7 @@ describe('POST /api/auth/google/token', () => {
 	});
 });
 
-// ============================================================
-// GET /google/mobile-url
-// ============================================================
+
 describe('GET /api/auth/google/mobile-url', () => {
 	it('restituisce 200 con l’URL OAuth', async () => {
 		db.auth.signInWithOAuth.mockResolvedValue({
@@ -500,9 +476,7 @@ describe('GET /api/auth/google/mobile-url', () => {
 	});
 });
 
-// ============================================================
-// GET /google/mobile-callback (redirect verso lo schema app)
-// ============================================================
+
 describe('GET /api/auth/google/mobile-callback', () => {
 	it('reindirizza con errore se manca il code', async () => {
 		const res = await request(app).get('/api/auth/google/mobile-callback');
@@ -549,9 +523,7 @@ describe('GET /api/auth/google/mobile-callback', () => {
 	});
 });
 
-// ============================================================
-// GET /google/web-url
-// ============================================================
+
 describe('GET /api/auth/google/web-url', () => {
 	it('restituisce 200 con l’URL OAuth', async () => {
 		db.auth.signInWithOAuth.mockResolvedValue({
@@ -572,9 +544,7 @@ describe('GET /api/auth/google/web-url', () => {
 	});
 });
 
-// ============================================================
-// GET /google/web-callback (redirect verso la web app + cookie)
-// ============================================================
+
 describe('GET /api/auth/google/web-callback', () => {
 	const WEB_APP_URL = 'http://localhost:8081';
 

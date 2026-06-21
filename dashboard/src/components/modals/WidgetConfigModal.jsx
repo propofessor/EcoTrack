@@ -1,9 +1,8 @@
-// src/components/modals/WidgetConfigModal.jsx
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { WIDGET_TYPES, DATASETS } from '../../utils/labels.js';
 
-// Which datasets make sense for each chart type
+
 const VALID_DATASETS = {
 	ChartBar:  ['co2_monthly', 'transport_split', 'leaderboard'],
 	ChartLine: ['co2_monthly', 'history'],
@@ -12,7 +11,7 @@ const VALID_DATASETS = {
 	MapWidget: ['co2_heatmap'],
 };
 
-// Datasets for which a date range is irrelevant
+
 const NO_DATE_FILTER = new Set(['leaderboard', 'co2_heatmap']);
 
 export function WidgetConfigModal({ widget, onSave, onClose }) {
@@ -28,7 +27,7 @@ export function WidgetConfigModal({ widget, onSave, onClose }) {
 		setType(newType);
 		const valid = VALID_DATASETS[newType] || [];
 		if (!valid.includes(dataset)) {
-			// Auto-select when there is only one valid option (e.g. MapWidget → co2_heatmap)
+
 			setDataset(valid.length === 1 ? valid[0] : '');
 		}
 	};
@@ -41,8 +40,8 @@ export function WidgetConfigModal({ widget, onSave, onClose }) {
 			alert('Seleziona il tipo di grafico e il dataset');
 			return;
 		}
-		// Valida l'intervallo statico: la data di inizio non può essere
-		// successiva a quella di fine.
+
+
 		if (
 			showDateFilter &&
 			dateMode === 'static' &&
@@ -74,7 +73,7 @@ export function WidgetConfigModal({ widget, onSave, onClose }) {
 				</div>
 
 				<div className='p-5'>
-					{/* Widget type */}
+					{}
 					<label className='modal-label mb-1.5'>Tipo di Visualizzazione</label>
 					<select
 						value={type}
@@ -87,7 +86,7 @@ export function WidgetConfigModal({ widget, onSave, onClose }) {
 						))}
 					</select>
 
-					{/* Dataset — filtered to only show valid options for the selected type */}
+					{}
 					<label className='modal-label mb-1.5'>Dataset</label>
 					<select
 						value={dataset}
@@ -103,7 +102,7 @@ export function WidgetConfigModal({ widget, onSave, onClose }) {
 							))}
 					</select>
 
-					{/* Date range — hidden for datasets that don't support it */}
+					{}
 					{showDateFilter && (
 						<>
 							<label className='modal-label mb-1.5'>Intervallo Temporale</label>

@@ -1,11 +1,3 @@
-/**
- * MapScreen — RF8
- * Leaflet (OpenStreetMap) map with mutually-exclusive air-pollution / noise-pollution overlays.
- * RF8.1: integrates Leaflet via WebView.
- * RF8.2/8.3: air and noise overlays rendered as Leaflet.heat heatmap.
- * RF8.4: only one overlay active at a time.
- * RF8.5: colour legend.
- */
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Switch, Alert, useColorScheme } from 'react-native';
 import PlatformWebView from '../components/PlatformWebView';
@@ -18,13 +10,11 @@ const OVERLAY = { NONE: 'none', AIR: 'air', NOISE: 'noise' };
 
 const TRENTO = { lat: 46.0748, lng: 11.1217, zoom: 13 };
 
-// Leaflet.heat gradient format: { stop: 'color' }.
-// Opaque colour stops starting low on the scale so even light pollution reads
-// clearly on the map (the previous gradient faded to transparent at low values).
+
 const AIR_GRADIENT = { 0.2: 'rgba(0,200,83,0.6)', 0.45: 'rgba(255,214,0,0.75)', 0.7: 'rgba(255,109,0,0.88)', 1.0: 'rgba(213,0,0,0.95)' };
 const NOISE_GRADIENT = { 0.2: 'rgba(41,98,255,0.6)', 0.45: 'rgba(0,191,165,0.75)', 0.7: 'rgba(255,145,0,0.88)', 1.0: 'rgba(213,0,0,0.95)' };
 
-// Solid legend swatches (low → high), mirroring the heatmap gradients.
+
 const AIR_LEGEND = ['#00c853', '#ffd600', '#ff6d00', '#d50000'];
 const NOISE_LEGEND = ['#2962ff', '#00bfa5', '#ff9100', '#d50000'];
 
@@ -133,7 +123,7 @@ export default function MapScreen({ route: navRoute }) {
       .get('/maps/heatmap', { params: { type: overlay } })
       .then((res) => {
         const raw = res.data?.points || [];
-        // Transform {latitude, longitude, weight} → [lat, lng, intensity] for Leaflet.heat
+
         const pts = raw.map((p) => [p.latitude, p.longitude, p.weight ?? 1]);
         const gradient = overlay === OVERLAY.AIR ? AIR_GRADIENT : NOISE_GRADIENT;
         webViewRef.current?.postMessage(JSON.stringify({ type: 'heatmap', points: pts, gradient }));
@@ -165,7 +155,7 @@ export default function MapScreen({ route: navRoute }) {
         }}
       />
 
-      {/* RF8.4: Layer toggle controls — floating top-right card */}
+      {}
       <View
         className="card absolute top-16 right-4 rounded-xl"
         style={{ minWidth: 110, padding: 8, gap: 4 }}
@@ -190,7 +180,7 @@ export default function MapScreen({ route: navRoute }) {
         </View>
       </View>
 
-      {/* RF8.5: Colour legend — anchored to bottom */}
+      {}
       {overlay !== OVERLAY.NONE && (
         <View className="card absolute bottom-0 left-0 right-0 px-4 py-3 gap-2">
           <Text className="text-label">{overlay === OVERLAY.AIR ? t('map.airQuality') : t('map.noiseLevel')}</Text>
@@ -206,7 +196,7 @@ export default function MapScreen({ route: navRoute }) {
         </View>
       )}
 
-      {/* Locate-me button */}
+      {}
       <TouchableOpacity
         className="card absolute bottom-24 right-4 rounded-full p-3"
         onPress={locateMe}

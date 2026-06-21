@@ -256,5 +256,13 @@
   "gradeCard": {
     "distance": "Strecke",
     "co2Saved": "CO2 gespart"
+  },
+  "nav": {
+    "home": "Home",
+    "map": "Karte",
+    "route": "Strecke",
+    "history": "Verlauf",
+    "leaderboard": "Rangliste",
+    "profile": "Profil"
   }
 }

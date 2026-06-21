@@ -1,4 +1,3 @@
-// src/components/widgets/DataTable.jsx
 const fmtDate = ts =>
 	ts
 		? new Date(ts).toLocaleDateString('it-IT', {
@@ -9,8 +8,7 @@ const fmtDate = ts =>
 
 const fmtCo2 = v => (v !== undefined && v !== null ? `${parseFloat(v).toFixed(2)} kg` : '—');
 
-// Column definitions per dataset
-// Each column: { label, render: (row) => ReactNode|string }
+
 const COLUMNS = {
 	co2_monthly: [
 		{ label: 'Mese',        render: r => r.month },

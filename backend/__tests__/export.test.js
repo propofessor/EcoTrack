@@ -1,11 +1,10 @@
-// __tests__/export.test.js
 const request = require('supertest');
 
-// Creiamo due funzioni stub separate per tracciare le tabelle in modo indipendente
+
 const mockHistoryFrom = jest.fn();
 const mockPromoFrom = jest.fn();
 
-// Mock di Supabase: intercettiamo il metodo .from() e smistiamo la catena
+
 jest.mock('../src/db', () => ({
 	supabaseAdmin: {
 		from: jest.fn((tabella) => {
@@ -16,7 +15,7 @@ jest.mock('../src/db', () => ({
 	}
 }));
 
-// Mock del middleware di autenticazione
+
 jest.mock('../src/middleware/authMiddleware', () => {
 	return (req, res, next) => {
 		req.user = {
@@ -36,7 +35,7 @@ describe('Test delle API di Esportazione Dati (/api/export)', () => {
 
 	describe('GET /api/export/user-data', () => {
 		it("Dovrebbe esportare correttamente lo storico e i premi dell'utente loggato", async () => {
-			// Configura la catena fluente per la tabella history
+
 			mockHistoryFrom.mockReturnValue({
 				select: jest.fn().mockReturnThis(),
 				eq: jest.fn().mockReturnThis(),
@@ -49,7 +48,7 @@ describe('Test delle API di Esportazione Dati (/api/export)', () => {
 				})
 			});
 
-			// Configura la catena fluente per la tabella promotional_codes
+
 			mockPromoFrom.mockReturnValue({
 				select: jest.fn().mockReturnThis(),
 				eq: jest.fn().mockResolvedValue({
@@ -72,7 +71,7 @@ describe('Test delle API di Esportazione Dati (/api/export)', () => {
 		});
 
 		it('Dovrebbe restituire 500 se la query sullo storico fallisce', async () => {
-			// Forziamo il fallimento della tabella history ritornando l'error
+
 			mockHistoryFrom.mockReturnValue({
 				select: jest.fn().mockReturnThis(),
 				eq: jest.fn().mockReturnThis(),
@@ -82,7 +81,7 @@ describe('Test delle API di Esportazione Dati (/api/export)', () => {
 				})
 			});
 
-			// I premi rispondono normalmente vuoti
+
 			mockPromoFrom.mockReturnValue({
 				select: jest.fn().mockReturnThis(),
 				eq: jest.fn().mockResolvedValue({ data: [], error: null })

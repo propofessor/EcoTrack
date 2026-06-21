@@ -1,14 +1,9 @@
-// __tests__/gamificationService.test.js
-// Unit tests for pure / stateless helpers in gamificationService.
-// Async functions that hit Supabase are mocked at the DB level.
-
 jest.mock('../src/db', () => ({
 	db: { auth: { getUser: jest.fn() } },
 	supabaseAdmin: { from: jest.fn() }
 }));
 
-// Le notifiche push sono fire-and-forget: le mockiamo per renderle
-// deterministiche e per evitare che tocchino il DB mockato.
+
 jest.mock('../src/services/notificationService', () => ({
 	notifyUser: jest.fn().mockResolvedValue(undefined),
 	notifyMany: jest.fn().mockResolvedValue(undefined)
@@ -29,9 +24,7 @@ const {
 	notifyMany
 } = require('../src/services/notificationService');
 
-// Catena Supabase "universale": ogni metodo restituisce la catena stessa e
-// la catena è thenable, risolvendo sempre `result`. Copre qualunque
-// combinazione di .select/.eq/.gte/.lte/.in/.upsert/.insert/.single/.order/.limit.
+
 function chainResolving(result) {
 	const chain = {};
 	const methods = [
@@ -47,8 +40,7 @@ function chainResolving(result) {
 	return chain;
 }
 
-// Fa restituire a supabaseAdmin.from() una catena diversa per ogni chiamata,
-// nell'ordine fornito (l'ultima viene riusata se le chiamate eccedono).
+
 function queueFrom(...chains) {
 	let i = 0;
 	supabaseAdmin.from.mockImplementation(
@@ -56,38 +48,34 @@ function queueFrom(...chains) {
 	);
 }
 
-// ============================================================
-// getIsoWeekRange
-// ============================================================
+
 describe('getIsoWeekRange (settimana ISO lun-dom)', () => {
 	it('Dovrebbe restituire lunedì come weekStart e domenica come weekEnd per una data di mercoledì', () => {
-		const result = getIsoWeekRange(new Date('2026-06-17T12:00:00Z')); // mercoledì
-		expect(result.weekStart).toBe('2026-06-15'); // lunedì
-		expect(result.weekEnd).toBe('2026-06-21'); // domenica
+		const result = getIsoWeekRange(new Date('2026-06-17T12:00:00Z'));
+		expect(result.weekStart).toBe('2026-06-15');
+		expect(result.weekEnd).toBe('2026-06-21');
 	});
 
 	it('Dovrebbe gestire correttamente una domenica (che è fine settimana, non inizio)', () => {
-		const result = getIsoWeekRange(new Date('2026-06-21T12:00:00Z')); // domenica
+		const result = getIsoWeekRange(new Date('2026-06-21T12:00:00Z'));
 		expect(result.weekStart).toBe('2026-06-15');
 		expect(result.weekEnd).toBe('2026-06-21');
 	});
 
 	it('Dovrebbe gestire correttamente un lunedì (inizio settimana)', () => {
-		const result = getIsoWeekRange(new Date('2026-06-15T00:00:00Z')); // lunedì
+		const result = getIsoWeekRange(new Date('2026-06-15T00:00:00Z'));
 		expect(result.weekStart).toBe('2026-06-15');
 		expect(result.weekEnd).toBe('2026-06-21');
 	});
 
 	it('Dovrebbe gestire correttamente il cambio di mese', () => {
-		const result = getIsoWeekRange(new Date('2026-06-30T12:00:00Z')); // martedì
-		expect(result.weekStart).toBe('2026-06-29'); // lunedì
-		expect(result.weekEnd).toBe('2026-07-05'); // domenica
+		const result = getIsoWeekRange(new Date('2026-06-30T12:00:00Z'));
+		expect(result.weekStart).toBe('2026-06-29');
+		expect(result.weekEnd).toBe('2026-07-05');
 	});
 });
 
-// ============================================================
-// resolveDisplayName
-// ============================================================
+
 describe('resolveDisplayName (privacy classifica, RF11.4)', () => {
 	it("Dovrebbe restituire 'Utente EcoTrack' se l'utente è null", () => {
 		expect(resolveDisplayName(null)).toBe('Utente EcoTrack');
@@ -128,9 +116,7 @@ describe('resolveDisplayName (privacy classifica, RF11.4)', () => {
 	});
 });
 
-// ============================================================
-// recalculateDailyScore - mocked DB
-// ============================================================
+
 describe('recalculateDailyScore (RF11.1 - integrazione DB mockato)', () => {
 	beforeEach(() => jest.clearAllMocks());
 
@@ -159,7 +145,7 @@ describe('recalculateDailyScore (RF11.1 - integrazione DB mockato)', () => {
 	});
 
 	it('Dovrebbe restituire un punteggio calcolato per una giornata senza dati storici', async () => {
-		// history query returns empty array; upsert returns a score row
+
 		const historyChain = makeSupabaseChain({ data: [], error: null });
 		const upsertChain = makeSupabaseChain({
 			data: { grade: 'E', normalized_score: 0, raw_points: 0 },
@@ -178,9 +164,7 @@ describe('recalculateDailyScore (RF11.1 - integrazione DB mockato)', () => {
 	});
 });
 
-// ============================================================
-// getWeeklyScoreForUser - mocked DB
-// ============================================================
+
 describe('getWeeklyScoreForUser (RF11.3 - integrazione DB mockato)', () => {
 	beforeEach(() => jest.clearAllMocks());
 
@@ -222,9 +206,7 @@ describe('getWeeklyScoreForUser (RF11.3 - integrazione DB mockato)', () => {
 	});
 });
 
-// ============================================================
-// getCurrentWeekLeaderboard - mocked DB
-// ============================================================
+
 describe('getCurrentWeekLeaderboard (RF11.4 - integrazione DB mockato)', () => {
 	beforeEach(() => jest.clearAllMocks());
 
@@ -298,34 +280,32 @@ describe('getCurrentWeekLeaderboard (RF11.4 - integrazione DB mockato)', () => {
 		expect(result.data.podium).toHaveLength(3);
 		expect(result.data.personalRank.userId).toBe('u2');
 		expect(result.data.personalRank.rank).toBe(2);
-		// vicini: l'utente sopra (u1), sé stesso (u2) e quello sotto (u3)
+
 		expect(result.data.personalRank.neighbors).toHaveLength(3);
 	});
 });
 
-// ============================================================
-// recalculateDailyScore - copertura del ramo con movimenti reali
-// ============================================================
+
 describe('recalculateDailyScore (mappatura movimenti reali)', () => {
 	beforeEach(() => jest.clearAllMocks());
 
 	it('Dovrebbe ricostruire le distanze da mezzi emittenti e a emissione zero', async () => {
 		const history = [
-			// auto (emette): km = 500g / 110 ≈ 4.5
+
 			{
 				co2_kgs: '0.5',
 				timestamp_start: '2026-06-18T08:00:00.000Z',
 				timestamp_end: '2026-06-18T08:30:00.000Z',
 				movement_types: { label: 'driving' }
 			},
-			// bus (emette): km = 200g / 40 = 5
+
 			{
 				co2_kgs: '0.2',
 				timestamp_start: '2026-06-18T09:00:00.000Z',
 				timestamp_end: '2026-06-18T09:20:00.000Z',
 				movement_types: { label: 'transit' }
 			},
-			// piedi (zero emission): km = 0.5h × 5 km/h = 2.5
+
 			{
 				co2_kgs: '0',
 				timestamp_start: '2026-06-18T18:00:00.000Z',
@@ -352,7 +332,7 @@ describe('recalculateDailyScore (mappatura movimenti reali)', () => {
 
 		expect(result.error).toBeNull();
 		expect(result.data.grade).toBe('B');
-		// RF11.2: notifica del voto giornaliero inviata (fire-and-forget)
+
 		expect(notifyUser).toHaveBeenCalledTimes(1);
 	});
 
@@ -370,9 +350,7 @@ describe('recalculateDailyScore (mappatura movimenti reali)', () => {
 	});
 });
 
-// ============================================================
-// getWeeklyScoreForUser - ramo di errore
-// ============================================================
+
 describe('getWeeklyScoreForUser (ramo di errore)', () => {
 	beforeEach(() => jest.clearAllMocks());
 
@@ -386,9 +364,7 @@ describe('getWeeklyScoreForUser (ramo di errore)', () => {
 	});
 });
 
-// ============================================================
-// closeWeekAndAwardRewards (RF11.5)
-// ============================================================
+
 describe('closeWeekAndAwardRewards (chiusura settimana e ricompense)', () => {
 	beforeEach(() => jest.clearAllMocks());
 
@@ -447,16 +423,16 @@ describe('closeWeekAndAwardRewards (chiusura settimana e ricompense)', () => {
 		queueFrom(
 			leaderboardScores(),
 			leaderboardUsers(),
-			chainResolving({ data: snapshotRows(), error: null }), // upsert storico
-			chainResolving({ data: [], error: null }), // nessuna ricompensa esistente
-			chainResolving({ data: [{}, {}, {}], error: null }) // insert 3 ricompense
+			chainResolving({ data: snapshotRows(), error: null }),
+			chainResolving({ data: [], error: null }),
+			chainResolving({ data: [{}, {}, {}], error: null })
 		);
 
 		const result = await closeWeekAndAwardRewards(new Date('2026-06-21'));
 
 		expect(result.error).toBeNull();
 		expect(result.data.rewardsAwarded).toBe(3);
-		// RF11.7: notifica a tutti i partecipanti
+
 		expect(notifyMany).toHaveBeenCalledTimes(1);
 	});
 
@@ -503,9 +479,7 @@ describe('closeWeekAndAwardRewards (chiusura settimana e ricompense)', () => {
 	});
 });
 
-// ============================================================
-// getUserWeeklyHistory (RF11.6)
-// ============================================================
+
 describe('getUserWeeklyHistory (storico settimanale personale)', () => {
 	beforeEach(() => jest.clearAllMocks());
 

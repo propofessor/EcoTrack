@@ -1,7 +1,3 @@
-// __tests__/notificationService.test.js
-// Unit test del servizio di notifiche push Expo.
-// Mockiamo il modulo `https` (nessuna chiamata di rete reale) e Supabase.
-
 const { EventEmitter } = require('events');
 
 jest.mock('https');
@@ -13,8 +9,7 @@ const https = require('https');
 const { supabaseAdmin } = require('../src/db');
 const { notifyUser, notifyMany } = require('../src/services/notificationService');
 
-// Simula una richiesta HTTPS che va a buon fine restituendo `responseBody`.
-// Espone le mock di write/end per ispezionare il payload inviato.
+
 function mockHttpsSuccess(responseBody) {
 	const write = jest.fn();
 	const end = jest.fn();
@@ -28,7 +23,7 @@ function mockHttpsSuccess(responseBody) {
 	return { write, end };
 }
 
-// Simula una richiesta HTTPS che emette un errore di rete.
+
 function mockHttpsError(message) {
 	https.request.mockImplementation(() => {
 		const req = new EventEmitter();
@@ -39,7 +34,7 @@ function mockHttpsError(message) {
 	});
 }
 
-// Catena Supabase per getPushToken: .select().eq().single()
+
 function singleChain(result) {
 	const chain = {
 		select: jest.fn(() => chain),
@@ -49,7 +44,7 @@ function singleChain(result) {
 	return chain;
 }
 
-// Catena Supabase per notifyMany: .select().in()
+
 function inChain(result) {
 	const chain = {
 		select: jest.fn(() => chain),
@@ -122,7 +117,7 @@ describe('notifyMany (RF11.7 - notifiche settimanali classifica)', () => {
 			inChain({
 				data: [
 					{ id: 'u1', preferences: { expo_push_token: 'ExponentPushToken[1]' } },
-					{ id: 'u2', preferences: {} }, // senza token → escluso
+					{ id: 'u2', preferences: {} },
 					{ id: 'u3', preferences: { expo_push_token: 'ExponentPushToken[3]' } }
 				]
 			})

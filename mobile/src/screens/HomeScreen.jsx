@@ -1,7 +1,3 @@
-/**
- * HomeScreen — RF11.1 / RF11.2
- * Shows today's ecological grade (S–E) and the current week's score at a glance.
- */
 import { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -37,7 +33,7 @@ export default function HomeScreen({ navigation }) {
       setDaily(d.score);
       setWeekly(w);
     } catch {
-      // Leave previous data visible on error; no crash.
+
     }
   }, []);
 
@@ -58,18 +54,18 @@ export default function HomeScreen({ navigation }) {
       >
         <View className="px-4 pt-4 pb-8">
 
-          {/* Greeting */}
+          {}
           <View className="mb-3">
             <Text className="heading">{t('home.greeting', { name: displayName })}</Text>
             <Text className="text-muted">{t('home.subtitle')}</Text>
           </View>
 
-          {/* Daily grade — RF11.2 */}
+          {}
           <View className="mb-4">
             <GradeCard score={daily} />
           </View>
 
-          {/* Weekly quick-stats — RF11.3 */}
+          {}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-3">
               <Text className="subheading">{t('home.currentWeek')}</Text>
@@ -90,7 +86,7 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Quick navigation shortcuts */}
+          {}
           <View className="mb-6">
             <Text className="subheading mb-3">{t('home.quickActions')}</Text>
             <View className="flex-col gap-2">

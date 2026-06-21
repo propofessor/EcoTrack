@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getCo2Stats, getLeaderboard, getMapData } from '../api/dashboardapi.js';
 
 const FORCE_MOCK = import.meta.env.VITE_FORCE_MOCK === 'true';
-// Fallback mock data for each dataset (shown when API is unavailable)
+
 const MOCK = {
 	co2_monthly: [
 		{ month: '2026-01', co2: 136.5, Macchina: 110.0, Bus: 22.0, Monopattino: 4.5, Bicicletta: 0, Piedi: 0 },
@@ -61,7 +61,7 @@ const MOCK = {
 	],
 };
 
-// Datasets that don't use date range filters
+
 const NO_DATE_FILTER = new Set(['leaderboard', 'co2_heatmap']);
 
 export function useWidgetData(config = {}) {
@@ -69,8 +69,8 @@ export function useWidgetData(config = {}) {
 
 	const [data, setData]       = useState([]);
 	const [loading, setLoading] = useState(true);
-	// True when the data shown is the local MOCK fallback (API unavailable/empty),
-	// so the UI can signal it to the user (RNF4 "gestione errori").
+
+
 	const [usingFallback, setUsingFallback] = useState(false);
 
 	useEffect(() => {
@@ -105,11 +105,11 @@ export function useWidgetData(config = {}) {
 					const rows = res?.data || [];
 					if (rows.length === 0) return MOCK.co2_monthly;
 
-					// Pivot per mese × mezzo: ogni riga porta i kg CO2 di ciascun
-					// mezzo più il totale mensile in `co2` (così istogramma e
-					// tabella, che leggono `co2`, continuano a funzionare).
-					const agg   = {};            // month -> { label -> sumCo2 }
-					const modes = new Set();     // unione dei mezzi presenti
+
+
+
+					const agg   = {};
+					const modes = new Set();
 					rows.forEach(row => {
 						const month = row.timestamp_start?.slice(0, 7) || 'N/D';
 						const label = row.movement_types?.label || 'Altro';
@@ -123,8 +123,8 @@ export function useWidgetData(config = {}) {
 						.map(([month, byMode]) => {
 							const out = { month };
 							let total = 0;
-							// Garantiamo che ogni mezzo sia presente (0 se assente),
-							// così le linee non hanno interruzioni.
+
+
 							modes.forEach(label => {
 								const v = byMode[label] || 0;
 								out[label] = parseFloat(v.toFixed(2));
@@ -192,8 +192,8 @@ export function useWidgetData(config = {}) {
 		fetchAndTransform()
 			.then(result => {
 				setData(result);
-				// Each case returns the MOCK[dataset] array by reference when the
-				// API is empty/unavailable, so an identity check detects fallback.
+
+
 				setUsingFallback(result === MOCK[dataset]);
 			})
 			.catch(() => {

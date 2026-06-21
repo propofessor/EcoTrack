@@ -1,27 +1,22 @@
-// src/routes/gamification.js
 const express = require('express');
 const router = express.Router();
 const requireAuth = require('../middleware/authMiddleware');
 const gamificationService = require('../services/gamificationService');
 
-// Proteggiamo tutte le rotte: la gamification è personale, richiede un utente autenticato
+
 router.use(requireAuth);
 
-// ==========================================
-// 1. VOTO E PUNTEGGIO GIORNALIERO (GET /api/gamification/daily-score)
-// ==========================================
-// RF11.2: "schermata o widget dedicato che mostri il voto calcolato
-// sull'andamento della giornata corrente... e il punteggio numerico esatto"
+
 router.get('/daily-score', async (req, res) => {
 	try {
 		const userId = req.user.id;
 		const today = new Date().toISOString().slice(0, 10);
 
-		// Ricalcoliamo al volo invece di leggere solo l'ultimo valore
-		// salvato: garantisce che la risposta rifletta sempre l'ultima
-		// attività registrata, anche se per qualche motivo il
-		// ricalcolo "best effort" innescato da POST /api/history non
-		// fosse ancora andato a buon fine (RF11.1: "real time").
+
+
+
+
+
 		const { data, error } = await gamificationService.recalculateDailyScore(
 			userId,
 			today
@@ -53,11 +48,7 @@ router.get('/daily-score', async (req, res) => {
 	}
 });
 
-// ==========================================
-// 2. PUNTEGGIO SETTIMANALE PERSONALE (GET /api/gamification/weekly-score)
-// ==========================================
-// RF11.3: "aggregare i voti giornalieri per calcolare un punteggio
-// settimanale complessivo... aggiornato realtime"
+
 router.get('/weekly-score', async (req, res) => {
 	try {
 		const userId = req.user.id;
@@ -83,19 +74,15 @@ router.get('/weekly-score', async (req, res) => {
 	}
 });
 
-// ==========================================
-// 3. CLASSIFICA SETTIMANALE (GET /api/gamification/leaderboard)
-// ==========================================
-// RF11.4: Podio, Top 10/20, posizione personale con utenti adiacenti,
-// rispettando le preferenze di privacy.
+
 router.get('/leaderboard', async (req, res) => {
 	try {
 		const userId = req.user.id;
 		const requestedLimit = parseInt(req.query.limit, 10);
 
-		// RF11.4 menziona esplicitamente "Top 10/Top 20": limitiamo le
-		// scelte a queste due per restare fedeli al requisito invece di
-		// accettare un valore arbitrario dal client.
+
+
+
 		const limit = [10, 20].includes(requestedLimit) ? requestedLimit : 10;
 
 		const { data, error } =
@@ -123,11 +110,7 @@ router.get('/leaderboard', async (req, res) => {
 	}
 });
 
-// ==========================================
-// 4. STORICO PERSONALE E PROGRESSIONE (GET /api/gamification/history)
-// ==========================================
-// RF11.6: "storico delle performance settimanali... punteggi
-// settimanali, posizioni in classifica, ricompense ottenute"
+
 router.get('/history', async (req, res) => {
 	try {
 		const userId = req.user.id;

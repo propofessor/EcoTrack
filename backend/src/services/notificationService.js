@@ -1,19 +1,9 @@
-// services/notificationService.js
-// RF11.2 / RF11.7: send Expo push notifications to mobile users.
-// Uses the Expo Push API (https://exp.host/--/api/v2/push/send).
-// No SDK required — plain HTTP POST.
 const https = require('https');
 const { supabaseAdmin } = require('../db');
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 
-/**
- * Send a push notification to a single Expo push token.
- * @param {string} to   - Expo push token (ExponentPushToken[...])
- * @param {string} title
- * @param {string} body
- * @param {object} [data] - extra payload
- */
+
 async function sendExpoPush(to, title, body, data = {}) {
 	const payload = JSON.stringify([{ to, title, body, data, sound: 'default' }]);
 
@@ -42,10 +32,7 @@ async function sendExpoPush(to, title, body, data = {}) {
 	});
 }
 
-/**
- * Retrieve the Expo push token stored in preferences for a given userId.
- * Returns null if not found.
- */
+
 async function getPushToken(userId) {
 	const { data: user } = await supabaseAdmin
 		.from('users')
@@ -55,21 +42,14 @@ async function getPushToken(userId) {
 	return user?.preferences?.expo_push_token || null;
 }
 
-/**
- * Send a push notification to a single user (RF11.2: daily grade notification).
- * Silently ignores users without a stored token.
- */
+
 async function notifyUser(userId, title, body, data = {}) {
 	const token = await getPushToken(userId);
 	if (!token) return;
 	await sendExpoPush(token, title, body, data);
 }
 
-/**
- * Send push notifications to multiple users (RF11.7: weekly leaderboard results).
- * @param {string[]} userIds
- * @param {Function} messageFactory - receives userId, returns { title, body }
- */
+
 async function notifyMany(userIds, messageFactory) {
 	if (!userIds || userIds.length === 0) return;
 

@@ -1,4 +1,3 @@
-// src/services/gamificationService.js
 const { supabaseAdmin } = require('../db');
 const {
 	computeDailyScore,
@@ -8,32 +7,22 @@ const { EMISSION_FACTORS } = require('./co2Service');
 const { notifyUser, notifyMany } = require('./notificationService');
 const { canonicalMovementLabel } = require('../utils/movementLabels');
 
-// Fattore di emissione (g/km) per i mezzi che emettono CO2, usato per
-// ricostruire la distanza percorsa dal solo dato di emissione salvato in
-// `history` (lo schema non persiste la distanza). Usare il fattore SPECIFICO
-// del mezzo — non sempre quello dell'auto — è ciò che fa guadagnare al bus un
-// credito reale: km = co2/40 → risparmio di ~70 g/km rispetto al baseline auto.
+
 const EMITTING_FACTOR_BY_LABEL = {
-	Macchina: EMISSION_FACTORS.car_average, // 110
-	Bus: EMISSION_FACTORS.bus // 40
+	Macchina: EMISSION_FACTORS.car_average,
+	Bus: EMISSION_FACTORS.bus
 };
 
-// ============================================================
-// HELPERS DI DATA (settimana ISO: lunedì-domenica, reset alla domenica
-// come richiesto da RF11.3 "resettato ogni domenica")
-// ============================================================
+
 
 function toDateOnly(date) {
 	return date.toISOString().slice(0, 10);
 }
 
-/**
- * Calcola inizio (lunedì) e fine (domenica) della settimana ISO a cui
- * appartiene la data fornita.
- */
+
 function getIsoWeekRange(referenceDate = new Date()) {
 	const date = new Date(referenceDate);
-	const dayOfWeek = date.getUTCDay(); // 0 = domenica, 1 = lunedì, ...
+	const dayOfWeek = date.getUTCDay();
 	const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
 	const monday = new Date(date);
@@ -46,22 +35,9 @@ function getIsoWeekRange(referenceDate = new Date()) {
 	return { weekStart: toDateOnly(monday), weekEnd: toDateOnly(sunday) };
 }
 
-// ============================================================
-// RF11.1 / RF11.2: ricalcolo del punteggio giornaliero di un utente
-// ============================================================
 
-/**
- * Ricalcola e salva (upsert) il punteggio giornaliero di un utente per
- * una data specifica, leggendo tutti i movimenti di quel giorno da
- * `history`. Va chiamata ogni volta che un nuovo viaggio viene
- * registrato (RF11.1: "calcolo deve avvenire real time per ogni
- * attività"), così il punteggio del giorno è sempre coerente con
- * l'ultimo dato disponibile.
- *
- * @param {string} userId
- * @param {string} dateOnly - formato 'YYYY-MM-DD'
- * @returns {Promise<{data: object|null, error: object|null}>}
- */
+
+
 async function recalculateDailyScore(userId, dateOnly) {
 	const dayStart = `${dateOnly}T00:00:00.000Z`;
 	const dayEnd = `${dateOnly}T23:59:59.999Z`;
@@ -88,16 +64,16 @@ async function recalculateDailyScore(userId, dateOnly) {
 		return { data: null, error: historyError };
 	}
 
-	// NOTA: history.co2_kgs è l'emissione effettiva del movimento, non la
-	// distanza. Lo schema non persiste la distanza, quindi la ricostruiamo dal
-	// solo dato di emissione. Per i mezzi che emettono usiamo il fattore di
-	// emissione SPECIFICO del mezzo (km = co2/fattore): il bus (40 g/km) ottiene
-	// così una distanza maggiore e quindi un risparmio reale rispetto al
-	// baseline auto (110 g/km), mentre l'auto resta a ~0. Per i viaggi a
-	// emissione zero (piedi/bici) la CO2 non porta informazione sulla distanza,
-	// quindi la stimiamo dal tempo trascorso × una velocità media del mezzo.
-	// Le velocità sono indicizzate sull'etichetta canonica così funziona anche
-	// se il DB salva le etichette in inglese (es. 'walking' → 'Piedi').
+
+
+
+
+
+
+
+
+
+
 	const ZERO_EMISSION_SPEEDS_KMH = { Piedi: 5, Bicicletta: 15, Bus: 20 };
 
 	const movements = (dayHistory || []).map((entry) => {
@@ -106,14 +82,14 @@ async function recalculateDailyScore(userId, dateOnly) {
 
 		let impliedKm;
 		if (co2Grams > 0) {
-			// Emitting trip: reverse-engineer distance from emission / the mode's
-			// own emission factor (bus → /40, car → /110, fallback baseline).
+
+
 			const factor =
 				EMITTING_FACTOR_BY_LABEL[movementLabel] ??
 				BASELINE_CAR_EMISSION_FACTOR_G_PER_KM;
 			impliedKm = co2Grams / factor;
 		} else {
-			// Zero-emission trip: estimate distance from elapsed time × mode speed
+
 			const durationHours =
 				(new Date(entry.timestamp_end) -
 					new Date(entry.timestamp_start)) /
@@ -153,7 +129,7 @@ async function recalculateDailyScore(userId, dateOnly) {
 		return { data: null, error };
 	}
 
-	// RF11.2: notify user of their daily grade (fire-and-forget — don't block the response)
+
 	const grade = score.grade;
 	const gradeEmoji =
 		grade === 'S'
@@ -174,16 +150,9 @@ async function recalculateDailyScore(userId, dateOnly) {
 	return { data, error: null };
 }
 
-// ============================================================
-// RF11.3: punteggio settimanale (aggregazione real-time dei giornalieri)
-// ============================================================
 
-/**
- * Somma i punteggi normalizzati giornalieri di un utente per la
- * settimana corrente. Non persiste nulla: è un calcolo live, coerente
- * con RF11.3 ("aggiornato realtime"). La persistenza dello snapshot
- * settimanale avviene solo alla chiusura (vedi closeWeekAndResetLeaderboard).
- */
+
+
 async function getWeeklyScoreForUser(userId, referenceDate = new Date()) {
 	const { weekStart, weekEnd } = getIsoWeekRange(referenceDate);
 
@@ -220,20 +189,9 @@ async function getWeeklyScoreForUser(userId, referenceDate = new Date()) {
 	};
 }
 
-// ============================================================
-// RF11.4: classifica live della settimana corrente
-// ============================================================
 
-/**
- * Costruisce la classifica della settimana corrente aggregando
- * daily_scores per utente. Applica la preferenza di privacy
- * dell'utente (RF11.4: "nickname, anonimizzazione parziale") leggendo
- * `users.preferences.leaderboard_visibility`.
- *
- * @param {object} options
- * @param {number} options.limit - quanti utenti restituire (es. Top 10/20, RF11.4)
- * @param {string} [options.requestingUserId] - se fornito, calcola anche la posizione personale
- */
+
+
 async function getCurrentWeekLeaderboard({
 	limit = 20,
 	requestingUserId,
@@ -308,7 +266,7 @@ async function getCurrentWeekLeaderboard({
 			(entry) => entry.userId === requestingUserId
 		);
 		if (personalEntry) {
-			// RF11.4: "mostrando anche gli utenti immediatamente sopra e sotto"
+
 			const personalIndex = ranked.indexOf(personalEntry);
 			const neighbors = ranked.slice(
 				Math.max(0, personalIndex - 1),
@@ -330,10 +288,7 @@ async function getCurrentWeekLeaderboard({
 	};
 }
 
-/**
- * Applica la preferenza di privacy dell'utente al nome mostrato in
- * classifica. Default prudente: 'nickname' se non specificato.
- */
+
 function resolveDisplayName(userRow) {
 	if (!userRow) return 'Utente EcoTrack';
 
@@ -343,16 +298,14 @@ function resolveDisplayName(userRow) {
 	if (visibility === 'anonymous') return 'Utente anonimo';
 	if (visibility === 'full_name') return userRow.name || 'Utente EcoTrack';
 
-	// 'nickname': first name + last initial (e.g. "Mario R.").
-	// Single-word names are returned as-is to avoid trailing punctuation.
+
+
 	const parts = (userRow.name || 'Utente').split(' ').filter(Boolean);
 	if (parts.length === 1) return parts[0];
 	return `${parts[0]} ${parts[1][0]}.`;
 }
 
-// ============================================================
-// RF11.5 / RF11.3: chiusura settimana, assegnazione ricompense, reset
-// ============================================================
+
 
 const REWARD_LABELS = {
 	1: 'Medaglia Oro Settimanale 🥇',
@@ -360,20 +313,7 @@ const REWARD_LABELS = {
 	3: 'Medaglia Bronzo Settimanale 🥉'
 };
 
-/**
- * Chiude la settimana appena conclusa: calcola la classifica finale,
- * la persiste in `weekly_leaderboard_history` (storico immutabile per
- * RF11.6), assegna le ricompense ai primi 3 (RF11.5). Non serve
- * "resettare" esplicitamente nulla: la classifica della nuova
- * settimana è automaticamente vuota perché si basa su un range di date
- * diverso (vedi getCurrentWeekLeaderboard) — è la query stessa, non uno
- * stato mutabile, a garantire il reset richiesto da RF11.3.
- *
- * Pensata per essere invocata dal job di cron (vedi
- * src/jobs/weeklyLeaderboardReset.js) ogni domenica a fine giornata,
- * ma esposta come funzione pura del service per essere testabile senza
- * dover simulare un trigger di cron.
- */
+
 async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 	const { data: leaderboardData, error: leaderboardError } =
 		await getCurrentWeekLeaderboard({ limit: 9999, referenceDate });
@@ -424,7 +364,7 @@ async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 
 	let rewardsAwarded = 0;
 	if (rewardRows.length > 0) {
-		// Idempotency guard: skip if rewards were already assigned for these snapshots
+
 		const snapshotIds = topThreeSnapshots.map((s) => s.id).filter(Boolean);
 		if (snapshotIds.length > 0) {
 			const { data: existing } = await supabaseAdmin
@@ -453,7 +393,7 @@ async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 		rewardsAwarded = insertedRewards.length;
 	}
 
-	// RF11.7: notify all participants about their weekly result (fire-and-forget)
+
 	const allUserIds = leaderboard.map((e) => e.userId);
 	const rankByUserId = new Map(leaderboard.map((e) => [e.userId, e.rank]));
 	notifyMany(allUserIds, (userId) => {
@@ -482,9 +422,7 @@ async function closeWeekAndAwardRewards(referenceDate = new Date()) {
 	return { data: { weekStart, weekEnd, rewardsAwarded }, error: null };
 }
 
-// ============================================================
-// RF11.6: storico personale e progressione
-// ============================================================
+
 
 async function getUserWeeklyHistory(userId, { limit = 12 } = {}) {
 	const { data, error } = await supabaseAdmin

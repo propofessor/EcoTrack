@@ -1,8 +1,3 @@
-// src/utils/validation.js
-// Regole di validazione condivise, per evitare duplicazioni tra le rotte.
-
-// RF6.4: la password deve avere almeno 8 caratteri, una maiuscola, una
-// minuscola, un numero e un carattere speciale.
 const PASSWORD_REGEX =
 	/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 

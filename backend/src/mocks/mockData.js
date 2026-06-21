@@ -1,7 +1,3 @@
-// src/mocks/mockData.js
-// Deterministic mock datasets used as fallbacks when Supabase is unavailable.
-// All generators use a seeded PRNG so responses are stable across restarts.
-
 function makePRNG(seed) {
 	let s = seed >>> 0;
 	return () => {
@@ -10,7 +6,7 @@ function makePRNG(seed) {
 	};
 }
 
-// ── Movement types (must match labels in the real DB) ────────────────────────
+
 
 const MOCK_MOVEMENT_TYPES = [
 	{ id: '00000001-0000-0000-0000-000000000001', label: 'Piedi' },
@@ -22,7 +18,7 @@ const MOCK_MOVEMENT_TYPES = [
 
 const MOCK_DRIVING_MOVEMENT_TYPE_ID = '00000001-0000-0000-0000-000000000003';
 
-// Transport config: emission ranges (kg CO2), points, weighted share, trip distance (km)
+
 const TRANSPORT_CONFIG = [
 	{
 		type: MOCK_MOVEMENT_TYPES[0],
@@ -76,7 +72,7 @@ const TRANSPORT_CONFIG = [
 	}
 ];
 
-// ── Trip history ─────────────────────────────────────────────────────────────
+
 
 let _mockHistoryCache = null;
 
@@ -90,9 +86,9 @@ function getMockHistory() {
 	const totalDays = Math.floor((endDate - baseDate) / 86400000);
 
 	for (let d = 0; d < totalDays; d++) {
-		const tripsToday = 2 + Math.floor(rand() * 3); // 2–4 trips per day
+		const tripsToday = 2 + Math.floor(rand() * 3);
 		for (let t = 0; t < tripsToday; t++) {
-			// Weighted transport selection
+
 			const r = rand();
 			let cumWeight = 0;
 			let cfg = TRANSPORT_CONFIG[0];
@@ -142,7 +138,7 @@ function getMockHistory() {
 	return records;
 }
 
-// Stripped-down variant for the export endpoint (no movement_types join)
+
 function getMockExportHistory() {
 	return getMockHistory().map(
 		({ id, timestamp_start, timestamp_end, co2_kgs, points }) => ({
@@ -155,14 +151,14 @@ function getMockExportHistory() {
 	);
 }
 
-// ── Promotional codes ────────────────────────────────────────────────────────
+
 
 const MOCK_PROMO_CODES = [
 	{ id: 'promo-mock-001', code: 'ECOTRACK-VERDE-2026' },
 	{ id: 'promo-mock-002', code: 'TRENTO-ECO-PRIMAVERA' }
 ];
 
-// ── Gamification ─────────────────────────────────────────────────────────────
+
 
 function getMockDailyScore() {
 	return {
@@ -343,7 +339,7 @@ function getMockLeaderboard(requestingUserId, limit = 10) {
 function getMockGamificationHistory(limit = 12) {
 	const rand = makePRNG(99);
 	const weeks = [];
-	// Start from last completed week (Sun Jun 14 2026)
+
 	const lastSunday = new Date('2026-06-14');
 
 	for (let w = 0; w < limit; w++) {

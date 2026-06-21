@@ -1,4 +1,3 @@
-// __tests__/scoreEngine.test.js
 const {
 	calculateRawPoints,
 	normalizeScore,
@@ -7,13 +6,13 @@ const {
 } = require('../src/services/scoreEngine');
 
 describe('ScoreEngine (RF11.1, RF11.2)', () => {
-	// ==========================================
-	// calculateRawPoints
-	// ==========================================
+
+
+
 	describe('calculateRawPoints', () => {
 		it('Dovrebbe restituire punti positivi per un movimento a zero emissioni (es. bicicletta)', () => {
 			const punti = calculateRawPoints('bicicletta', 10, 0);
-			// baseline: 10km * 110 g/km = 1100g risparmiati rispetto all'auto
+
 			expect(punti).toBe(1100);
 		});
 
@@ -23,30 +22,30 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 		});
 
 		it("Dovrebbe restituire 0 (non negativo) se l'emissione reale supera il baseline", () => {
-			// es. un mezzo con fattore di emissione peggiore della media nazionale
+
 			const punti = calculateRawPoints('macchina', 10, 2000);
 			expect(punti).toBe(0);
 		});
 
 		it('Dovrebbe calcolare punti parziali per un movimento a emissione intermedia', () => {
-			// 5km, baseline 550g, emissione reale 520g → 30g risparmiati
+
 			const punti = calculateRawPoints('autobus', 5, 520);
 			expect(punti).toBe(30);
 		});
 	});
 
-	// ==========================================
-	// normalizeScore
-	// ==========================================
+
+
+
 	describe('normalizeScore', () => {
 		it('Dovrebbe dare 100 per una giornata interamente green (risparmio massimo)', () => {
-			// 1100 g risparmiati su 10km = 110 g/km = baseline → 100/100
+
 			const score = normalizeScore(1100, 10);
 			expect(score).toBe(100);
 		});
 
 		it('Dovrebbe dare ~50 quando si risparmia metà del massimo per km', () => {
-			// 550 g risparmiati su 10km = 55 g/km = metà del baseline → 50
+
 			expect(normalizeScore(550, 10)).toBe(50);
 		});
 
@@ -60,10 +59,10 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 		});
 
 		it('Dovrebbe garantire equità tra utenti con diversi livelli di attività (RF11.1)', () => {
-			// Utente A: 1km a piedi (comportamento 100% virtuoso, poca attività)
-			// Utente B: 20km in bici (comportamento 100% virtuoso, molta attività)
-			// Entrambi dovrebbero ottenere un punteggio normalizzato comparabile,
-			// perché entrambi hanno 0 emissioni reali rispetto al baseline.
+
+
+
+
 			const puntiA = calculateRawPoints('piedi', 1, 0);
 			const scoreA = normalizeScore(puntiA, 1);
 
@@ -74,9 +73,9 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 		});
 	});
 
-	// ==========================================
-	// calculateGrade
-	// ==========================================
+
+
+
 	describe('calculateGrade', () => {
 		it.each([
 			[100, 'S'],
@@ -97,9 +96,9 @@ describe('ScoreEngine (RF11.1, RF11.2)', () => {
 		);
 	});
 
-	// ==========================================
-	// computeDailyScore (orchestrazione completa)
-	// ==========================================
+
+
+
 	describe('computeDailyScore', () => {
 		it('Dovrebbe calcolare correttamente il punteggio aggregato di una giornata con più movimenti', () => {
 			const movimenti = [

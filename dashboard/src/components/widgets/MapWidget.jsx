@@ -1,4 +1,3 @@
-// src/components/widgets/MapWidget.jsx
 import { useEffect, useRef, useState } from 'react';
 
 export function MapWidget({ data: heatmapData = [] }) {
@@ -8,9 +7,9 @@ export function MapWidget({ data: heatmapData = [] }) {
 	const [leafletLoaded, setLeafletLoaded] = useState(false);
 	const [error, setError] = useState(null);
 
-	// Load Leaflet from CDN asynchronously.
-	// Guard against duplicate injection: React 19 StrictMode invokes effects
-	// twice in dev, and multiple MapWidget instances share the same global L.
+
+
+
 	useEffect(() => {
 		if (window.L) { setLeafletLoaded(true); return; }
 
@@ -44,7 +43,7 @@ export function MapWidget({ data: heatmapData = [] }) {
 		document.head.appendChild(script);
 	}, []);
 
-	// Block native drag events from bubbling up to react-grid-layout
+
 	useEffect(() => {
 		const container = mapContainerRef.current;
 		if (!container) return;
@@ -59,7 +58,7 @@ export function MapWidget({ data: heatmapData = [] }) {
 		};
 	}, [leafletLoaded]);
 
-	// Initialise Leaflet map centred on Trento
+
 	useEffect(() => {
 		if (!leafletLoaded || !mapContainerRef.current) return;
 		if (mapInstanceRef.current) mapInstanceRef.current.remove();
@@ -83,7 +82,7 @@ export function MapWidget({ data: heatmapData = [] }) {
 				shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 			});
 
-			// Fixed POI markers
+
 			[
 				{ coords: [46.0679, 11.1211], title: 'Trento Centro',          desc: 'Monitoraggio CO2 attivo.' },
 				{ coords: [46.0631, 11.1132], title: 'MUSE - Museo delle Scienze', desc: 'Punto di interesse smart-mobility.' },
@@ -111,23 +110,23 @@ export function MapWidget({ data: heatmapData = [] }) {
 		};
 	}, [leafletLoaded]);
 
-	// Render pollution heatmap circles whenever data arrives
+
 	useEffect(() => {
 		if (!leafletLoaded || !mapInstanceRef.current || heatmapData.length === 0) return;
 
 		const L   = window.L;
 		const map = mapInstanceRef.current;
 
-		// Clear previous circles
+
 		heatCirclesRef.current.forEach(c => c.remove());
 		heatCirclesRef.current = [];
 
 		heatmapData.forEach(({ lat, lng, weight }) => {
 			const circle = L.circle([lat, lng], {
-				radius:      150 + weight * 250,   // 150–400 m
+				radius:      150 + weight * 250,
 				color:       'transparent',
 				fillColor:   '#ef4444',
-				fillOpacity: 0.15 + weight * 0.45, // 0.15–0.60
+				fillOpacity: 0.15 + weight * 0.45,
 			}).addTo(map);
 			heatCirclesRef.current.push(circle);
 		});

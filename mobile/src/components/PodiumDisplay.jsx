@@ -1,11 +1,3 @@
-/**
- * PodiumDisplay — top-3 podium (RF11.4).
- *
- * Props:
- *   podium — [{ rank, displayName, weeklyScore }] up to 3 entries
- *
- * Visual order: 2nd (left) | 1st (centre, tallest) | 3rd (right)
- */
 import { View, Text } from 'react-native';
 import { Medal } from 'lucide-react-native';
 
@@ -37,19 +29,19 @@ export default function PodiumDisplay({ podium }) {
       {ordered.map((entry) => (
         <View key={entry.rank} className="items-center w-24">
 
-          {/* Avatar circle */}
+          {}
           <View className="avatar rounded-full items-center justify-center mb-1 w-20 h-20">
             <Text className="avatar-letter">
               {(entry.displayName || '?').charAt(0).toUpperCase()}
             </Text>
           </View>
 
-          {/* Podium block */}
+          {}
           <View className={`w-full items-center justify-center rounded-t-lg ${PODIUM_HEIGHT[entry.rank]} ${PODIUM_COLOR[entry.rank]}`}>
             <Medal size={26} color={MEDAL_COLORS[entry.rank]} />
           </View>
 
-          {/* Name + score */}
+          {}
           <Text className="podium-name mt-2 text-center" numberOfLines={1}>
             {entry.displayName}
           </Text>

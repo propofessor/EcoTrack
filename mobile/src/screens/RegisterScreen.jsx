@@ -16,12 +16,10 @@ import { useTranslation } from 'react-i18next';
 import { register as apiRegister, getMe } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 
-// Italian plate format: 2 letters + 3 digits + 2 letters (e.g. AB123CD)
+
 const PLATE_REGEX = /^[A-Z]{2}\d{3}[A-Z]{2}$/i;
 
-// RF6.4: must match the backend policy exactly (utils/validation.js) — min 8
-// chars, lowercase, uppercase, digit and special char — otherwise a password
-// that passes the client checks gets rejected by the server.
+
 const PASSWORD_REGEX =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 

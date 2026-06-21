@@ -1,4 +1,3 @@
-// src/context/ThemeContext.jsx
 import { createContext, useContext } from 'react'
 import { useTheme } from '../hooks/useTheme'
 
@@ -13,5 +12,5 @@ export function ThemeProvider({ children }) {
   )
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
+
 export const useThemeContext = () => useContext(ThemeContext)

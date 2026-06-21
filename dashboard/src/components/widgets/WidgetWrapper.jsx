@@ -24,9 +24,9 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 	const [showExportMenu, setShowExportMenu] = useState(false);
 	const widgetRef = useRef(null);
 
-	// Data is fetched here (once per widget) and passed down, so the export
-	// action can serialize exactly what is displayed (RF2) and we can surface
-	// a fallback indicator (RNF4).
+
+
+
 	const { data, loading, usingFallback } = useWidgetData(widgetConfig);
 
 	const WidgetComponent = WIDGET_COMPONENTS[widgetConfig.widgetType];
@@ -47,7 +47,7 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 	return (
 		<div ref={widgetRef} className='widget flex flex-col h-full'>
 
-			{/* Header bar */}
+			{}
 			<div className='widget-header flex items-center justify-between h-14 px-5 gap-3 shrink-0'>
 				<div className='drag-handle flex items-center gap-3 flex-1 min-w-0 cursor-grab'>
 					<GripHorizontal
@@ -70,7 +70,7 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 					)}
 				</div>
 
-				{/* Action buttons */}
+				{}
 				<div
 					className='no-drag flex items-center gap-1.5 shrink-0'
 					onMouseDown={(e) => e.stopPropagation()}
@@ -122,7 +122,7 @@ function WidgetWrapperComponent({ widgetConfig, onRemove, onEdit }) {
 				</div>
 			</div>
 
-			{/* Widget body */}
+			{}
 			<div
 				className='widget-body-container no-drag flex-1 overflow-auto p-3 min-h-0 min-w-0'
 				onMouseDown={(e) => e.stopPropagation()}

@@ -1,14 +1,3 @@
-// src/utils/movementLabels.js
-// Etichette canoniche (in italiano) dei mezzi di trasporto.
-//
-// Lo storico (`movement_types.label`) può contenere valori eterogenei a seconda
-// di come sono stati popolati i dati (es. il riconoscimento attività di Google
-// restituisce `walking`, `bicycling`, `transit`, `driving`). Questa utility
-// normalizza qualunque variante — inglese o italiana, con qualsiasi casing —
-// verso un'unica forma canonica italiana, così l'API espone SEMPRE etichette in
-// italiano a dashboard e app mobile.
-
-// Variante normalizzata (trim + lowercase) → etichetta canonica da mostrare.
 const MOVEMENT_LABEL_MAP = {
 	walking:     'Piedi',
 	on_foot:     'Piedi',
@@ -37,15 +26,7 @@ const MOVEMENT_LABEL_MAP = {
 	treno:       'Treno',
 };
 
-/**
- * Restituisce l'etichetta canonica italiana per un mezzo di trasporto.
- * Per valori non mappati ritorna l'input con l'iniziale maiuscola, così anche
- * eventuali mezzi futuri risultano comunque presentabili. È idempotente: le
- * etichette già canoniche (es. 'Piedi') vengono mappate su sé stesse.
- *
- * @param {string} raw  Etichetta grezza proveniente da `movement_types.label`
- * @returns {string}    Etichetta canonica in italiano
- */
+
 function canonicalMovementLabel(raw) {
 	if (raw == null) return raw;
 	const key = String(raw).trim().toLowerCase();

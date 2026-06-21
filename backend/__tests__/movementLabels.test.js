@@ -1,5 +1,3 @@
-// __tests__/movementLabels.test.js
-// Unit test della utility pura di normalizzazione etichette mezzi.
 const {
 	canonicalMovementLabel,
 	MOVEMENT_LABEL_MAP

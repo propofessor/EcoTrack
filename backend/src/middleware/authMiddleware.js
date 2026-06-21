@@ -1,13 +1,9 @@
-// src/middleware/authMiddleware.js
 const { db } = require('../db');
 
-/**
- * Middleware per proteggere le rotte.
- * Controlla se l'utente ha un token valido nei cookie.
- */
+
 async function requireAuth(req, res, next) {
 	try {
-		// 1. Cerchiamo il token di accesso nei cookie
+
 		const token = req.cookies.access_token;
 
 		if (!token) {
@@ -18,7 +14,7 @@ async function requireAuth(req, res, next) {
 				});
 		}
 
-		// 2. Chiediamo a Supabase di verificare il token e dirci a chi appartiene
+
 		const { data, error } = await db.auth.getUser(token);
 
 		if (error || !data.user) {
@@ -30,11 +26,11 @@ async function requireAuth(req, res, next) {
 				});
 		}
 
-		// 3. SEGRETO DEL SUCCESSO: Salviamo l'utente dentro l'oggetto "req"
-		// In questo modo, le rotte successive sapranno esattamente chi sta facendo la richiesta!
+
+
 		req.user = data.user;
 
-		// 4. Diciamo ad Express: "Tutto ok, puoi procedere alla rotta che l'utente aveva richiesto!"
+
 		next();
 	} catch (err) {
 		console.error('Errore nel middleware di auth:', err);

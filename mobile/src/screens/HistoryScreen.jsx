@@ -1,12 +1,3 @@
-/**
- * HistoryScreen — RF10
- * Ecological footprint over time: line chart + summary statistics.
- *
- * RF10.1: dedicated screen.
- * RF10.2: daily / weekly / monthly / annual granularity.
- * RF10.3: line chart for periods > 1 day.
- * RF10.4: current value, average, trend, min/max, cumulative.
- */
 import { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -79,7 +70,7 @@ export default function HistoryScreen() {
       const data = await getHistory();
       setRawHistory(data.history || []);
     } catch {
-      // Keep existing data on error
+
     }
   }, []);
 
@@ -112,7 +103,7 @@ export default function HistoryScreen() {
           <Text className="heading">{t('history.title')}</Text>
           <Text className="text-muted mb-4">{t('history.subtitle')}</Text>
 
-          {/* Period selector — RF10.2 */}
+          {}
           <View className="flex-row gap-1 mb-4">
             {PERIODS.map((p) => (
               <TouchableOpacity
@@ -127,7 +118,7 @@ export default function HistoryScreen() {
             ))}
           </View>
 
-          {/* Line chart — RF10.3 */}
+          {}
           {loading ? (
             <View className="screen flex-1 items-center justify-center">
               <ActivityIndicator />
@@ -152,7 +143,7 @@ export default function HistoryScreen() {
             </View>
           )}
 
-          {/* Summary statistics — RF10.4 */}
+          {}
           <View className="flex-row flex-wrap gap-3 mb-4">
             <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
               <Text className="text-label">{t('history.stats.total')}</Text>
@@ -172,7 +163,7 @@ export default function HistoryScreen() {
             </View>
           </View>
 
-          {/* Trend indicator */}
+          {}
           {values.length >= 2 && (
             <View className="card rounded-2xl p-4">
               <View className="flex-row items-center gap-1 mt-1">

@@ -1,5 +1,5 @@
 import './global.css';
-import './src/i18n'; // RNF: i18n initialization (must run before first render)
+import './src/i18n';
 
 import { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -11,7 +11,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { loadStoredPreferences } from './src/utils/preferences';
 
 export default function App() {
-  // Restore the user's saved theme & language before they touch any screen.
+
   useEffect(() => {
     loadStoredPreferences();
   }, []);

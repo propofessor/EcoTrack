@@ -1,7 +1,6 @@
-// __tests__/history.test.js
 const request = require('supertest');
 
-// Configura l'oggetto globale finto per gestire le chiamate concatenate di Supabase
+
 const mockChain = {
 	select: jest.fn().mockReturnThis(),
 	eq: jest.fn().mockReturnThis(),
@@ -9,8 +8,7 @@ const mockChain = {
 	insert: jest.fn().mockReturnThis()
 };
 
-// 1. MOCKIAMO IL MODULO DB ESPORTANDO SIA "db" CHE "supabaseAdmin"
-// Questo risolve il conflitto di naming tra test, middleware e rotte.
+
 const mockDb = {
 	auth: {
 		getUser: jest.fn()
@@ -20,11 +18,10 @@ const mockDb = {
 
 jest.mock('../src/db', () => ({
 	db: mockDb,
-	supabaseAdmin: mockDb // <--- FONDAMENTALE: history.js usa questo!
+	supabaseAdmin: mockDb
 }));
 
-// 2. MOCKIAMO IL MIDDLEWARE DI AUTENTICAZIONE ALLA RADICE
-// Taglia fuori i controlli reali dei cookie e inietta direttamente req.user
+
 jest.mock('../src/middleware/authMiddleware', () => {
 	return (req, res, next) => {
 		req.user = {
@@ -34,21 +31,20 @@ jest.mock('../src/middleware/authMiddleware', () => {
 	};
 });
 
-// 3. MOCKIAMO IL SERVICE DI GAMIFICATION per evitare che il ricalcolo
-// asincrono "best-effort" dopo il POST faccia query sullo stesso mock chain
+
 jest.mock('../src/services/gamificationService', () => ({
 	recalculateDailyScore: jest
 		.fn()
 		.mockResolvedValue({ data: null, error: null })
 }));
 
-// Importiamo l'app SOLO DOPO aver configurato i mock
+
 const app = require('../src/index');
 
 describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
-		// Reimposta la catena per i metodi fluent di Supabase
+
 		mockChain.select.mockReturnThis();
 		mockChain.eq.mockReturnThis();
 		mockChain.order.mockReturnThis();
@@ -63,9 +59,9 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 		points: 25.5
 	};
 
-	// =========================================================================
-	// SECTION 1: TEST PER IL RECUPERO DELLO STORICO (GET /api/history)
-	// =========================================================================
+
+
+
 	describe('GET /api/history - Lettura storico viaggi', () => {
 		it("Dovrebbe restituire l'elenco dei viaggi ordinati con successo (200)", async () => {
 			const fintoStoricoDalDb = [
@@ -79,7 +75,7 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 				}
 			];
 
-			// L'ultimo metodo della catena (order) deve risolvere la promessa con i dati
+
 			mockChain.order.mockResolvedValue({
 				data: fintoStoricoDalDb,
 				error: null
@@ -94,8 +90,8 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 				'Storico recuperato con successo'
 			);
 			expect(risposta.body.history).toHaveLength(1);
-			// L'etichetta del mezzo deve essere normalizzata in italiano canonico
-			// (es. il valore 'bicycling' del DB diventa 'Bicicletta').
+
+
 			expect(risposta.body.history[0].movement_types.label).toBe(
 				'Bicicletta'
 			);
@@ -122,9 +118,9 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 		});
 	});
 
-	// =========================================================================
-	// SECTION 2: TEST PER IL SALVATAGGIO DI UN VIAGGIO (POST /api/history)
-	// =========================================================================
+
+
+
 	describe('POST /api/history - Salvataggio nuovo viaggio', () => {
 		it('Dovrebbe salvare un viaggio valido nel DB e restituire 201', async () => {
 			const fintoRecordInserito = {
@@ -133,7 +129,7 @@ describe("Test del modulo Storico dell'Impronta Ecologica (/api/history - RF10)"
 				...fintoViaggioInput
 			};
 
-			// Nella rotta POST, l'ultimo metodo eseguito è .select() dopo l'insert
+
 			mockChain.select.mockResolvedValue({
 				data: [fintoRecordInserito],
 				error: null

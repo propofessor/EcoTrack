@@ -1,8 +1,3 @@
-// src/utils/labels.js
-// Etichette descrittive (in italiano) usate dalla dashboard per tipi di widget
-// e dataset. Centralizzate qui così la modale di configurazione e l'intestazione
-// dei widget restano sempre allineate.
-
 export const WIDGET_TYPES = [
 	{ value: 'ChartBar', label: 'Istogramma' },
 	{ value: 'ChartPie', label: 'Grafico a Torta' },
@@ -26,19 +21,17 @@ const DATASET_LABELS = Object.fromEntries(
 	DATASETS.map((d) => [d.value, d.label])
 );
 
-/** Nome descrittivo del tipo di widget (fallback: il valore grezzo). */
+
 export function widgetTypeLabel(value) {
 	return WIDGET_TYPE_LABELS[value] || value;
 }
 
-/** Nome descrittivo del dataset (fallback: il valore grezzo). */
+
 export function datasetLabel(value) {
 	return DATASET_LABELS[value] || value;
 }
 
-// ── Colori dei mezzi di trasporto ────────────────────────────────────────────
-// Ordine e colori canonici, condivisi tra i grafici così ogni mezzo ha sempre
-// lo stesso colore (es. nel grafico a linee "CO2 Mensile per Mezzo").
+
 export const TRANSPORT_ORDER = [
 	'Macchina',
 	'Bus',
@@ -57,7 +50,7 @@ const TRANSPORT_COLORS = {
 	Piedi:       '#3f981e'
 };
 
-// Palette di riserva per etichette non previste nella mappa.
+
 const FALLBACK_PALETTE = [
 	'#10b981',
 	'#3b82f6',
@@ -67,7 +60,7 @@ const FALLBACK_PALETTE = [
 	'#06b6d4'
 ];
 
-/** Colore stabile per un mezzo; per etichette sconosciute usa la palette per indice. */
+
 export function transportColor(label, idx = 0) {
 	return (
 		TRANSPORT_COLORS[label] ||

@@ -256,5 +256,13 @@
   "gradeCard": {
     "distance": "Distance",
     "co2Saved": "CO2 saved"
+  },
+  "nav": {
+    "home": "Home",
+    "map": "Map",
+    "route": "Route",
+    "history": "History",
+    "leaderboard": "Leaderboard",
+    "profile": "Profile"
   }
 }

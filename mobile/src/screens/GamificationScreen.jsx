@@ -1,13 +1,3 @@
-/**
- * GamificationScreen — RF11
- * Weekly leaderboard with podium (top 3) and ranked list.
- *
- * RF11.2: daily grade display.
- * RF11.3: weekly score.
- * RF11.4: podium + top-10/20 leaderboard + personal rank with neighbours.
- * RF11.5: reward badges from weekly history.
- * RF11.6: weekly progression history.
- */
 import { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -53,7 +43,7 @@ export default function GamificationScreen() {
       setLeaderboard(lb);
       setWeeklyHistory(hist.weeklyHistory || []);
     } catch {
-      // Keep previous data on error
+
     }
   }, [showTop20]);
 
@@ -85,13 +75,13 @@ export default function GamificationScreen() {
             {t('gamification.weekRange', { start: leaderboard?.weekStart, end: leaderboard?.weekEnd })}
           </Text>
 
-          {/* Daily grade — RF11.2 */}
+          {}
           <View className="mb-6">
             <Text className="subheading mb-3">{t('gamification.todayGrade')}</Text>
             <GradeCard score={daily} compact />
           </View>
 
-          {/* Weekly score summary — RF11.3 */}
+          {}
           <View className="mb-6">
             <View className="flex-row flex-wrap gap-3">
               <View className="stat-card rounded-xl p-3 flex-col gap-1 flex-1">
@@ -105,7 +95,7 @@ export default function GamificationScreen() {
             </View>
           </View>
 
-          {/* Podium — RF11.4 */}
+          {}
           {leaderboard?.podium?.length > 0 && (
             <View className="mb-6">
               <Text className="subheading mb-2">{t('gamification.podiumTitle')}</Text>
@@ -113,7 +103,7 @@ export default function GamificationScreen() {
             </View>
           )}
 
-          {/* Personal rank — RF11.4 */}
+          {}
           {leaderboard?.personalRank && (
             <View className="mb-6">
               <Text className="subheading mb-3">{t('gamification.yourRank')}</Text>
@@ -129,7 +119,7 @@ export default function GamificationScreen() {
             </View>
           )}
 
-          {/* Full leaderboard — RF11.4 */}
+          {}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-3">
               <Text className="subheading">{t('gamification.leaderboardTop', { tier: showTop20 ? t('gamification.top20') : t('gamification.top10') })}</Text>
@@ -153,7 +143,7 @@ export default function GamificationScreen() {
             </View>
           </View>
 
-          {/* Weekly history — RF11.6 */}
+          {}
           {weeklyHistory.length > 0 && (
             <View className="mb-6">
               <Text className="subheading mb-3">{t('gamification.weeklyHistory')}</Text>

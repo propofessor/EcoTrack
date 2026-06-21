@@ -10,8 +10,7 @@ import { useElementSize } from '../../hooks/useElementSize.js';
 
 import { transportColor } from '../../utils/labels.js';
 
-// Soglia minima: spicchi sotto questa percentuale non mostrano l'etichetta
-// (evita sovrapposizioni su fette sottili). I nomi restano nella Legend.
+
 const MIN_LABEL_PERCENT = 0.08;
 
 const renderSliceLabel = ({
@@ -22,7 +21,7 @@ const renderSliceLabel = ({
 	outerRadius,
 	percent
 }) => {
-	// Niente etichetta per spicchi piccoli o quando la torta è troppo piccola
+
 	if (percent < MIN_LABEL_PERCENT || outerRadius < 40) return null;
 
 	const RADIAN = Math.PI / 180;

@@ -9,12 +9,12 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On app start, check if we have a stored token and fetch the user profile.
+
   useEffect(() => {
     (async () => {
       try {
         if (Platform.OS === 'web') {
-          // Browser manages session cookies automatically via withCredentials
+
           const data = await getMe();
           setUser(data);
         } else {
@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
 
   async function login(userData) {
     setUser(userData);
-    // RF11.7: register for push notifications after login
+
     registerPushNotifications().catch(() => {});
   }
 

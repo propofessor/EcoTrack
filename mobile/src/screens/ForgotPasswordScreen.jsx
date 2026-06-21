@@ -1,9 +1,3 @@
-/**
- * ForgotPasswordScreen — RF5.5
- * Allows the user to request a password-reset email.
- * After submission the screen shows a confirmation and lets the user
- * enter the OTP token they receive by email to set a new password.
- */
 import { useState } from 'react';
 import {
   View,

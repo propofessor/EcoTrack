@@ -1,8 +1,3 @@
-/**
- * EmailVerificationScreen — RF6.5
- * Shown after registration when Supabase email confirmation is enabled.
- * Prompts the user to check their inbox and allows resending the link.
- */
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

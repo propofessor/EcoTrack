@@ -17,7 +17,7 @@ export function ChartLine({ config = {}, data: rawData = [], loading = false }) 
 
 	const dataset = config.dataset;
 
-	// For 'history', rawData is per-trip; aggregate to daily totals for a smooth line
+
 	const data = useMemo(() => {
 		if (dataset !== 'history') return rawData;
 		const agg = {};
@@ -32,9 +32,9 @@ export function ChartLine({ config = {}, data: rawData = [], loading = false }) 
 
 	const xKey = dataset === 'history' ? 'date' : 'month';
 
-	// Per 'co2_monthly' tracciamo una linea per mezzo (solo quelli che hanno
-	// prodotto CO2 nel periodo). Per gli altri dataset resta un'unica linea
-	// sul totale 'co2'.
+
+
+
 	const lineKeys = useMemo(() => {
 		if (dataset !== 'co2_monthly') return ['co2'];
 		const totals = {};

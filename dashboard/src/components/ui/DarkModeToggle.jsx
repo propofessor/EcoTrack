@@ -1,4 +1,3 @@
-// src/components/ui/DarkModeToggle.jsx
 import { Sun, Moon } from 'lucide-react'
 import { useThemeContext } from '../../context/ThemeContext'
 
@@ -12,6 +11,6 @@ export function DarkModeToggle() {
     >
       {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
       {theme === 'dark' ? 'Light' : 'Dark'}
-    </button> 
+    </button>
   )
 }

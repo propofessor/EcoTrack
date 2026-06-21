@@ -1,14 +1,12 @@
-// __tests__/dashboard.test.js
 const request = require('supertest');
 
-// Mock the DB module — supabaseAdmin.from will be configured per test
+
 jest.mock('../src/db', () => ({
 	db: { auth: { getUser: jest.fn() } },
 	supabaseAdmin: { from: jest.fn() }
 }));
 
-// Mock the API key middleware so we can test route logic in isolation;
-// the middleware itself is tested in apiKeyMiddleware.test.js
+
 jest.mock(
 	'../src/middleware/apiKeyMiddleware',
 	() => (req, res, next) => next()
@@ -17,7 +15,7 @@ jest.mock(
 const { supabaseAdmin } = require('../src/db');
 const app = require('../src/index');
 
-// Helper: builds a fresh Supabase-like fluent chain
+
 function makeChain(resolvedValue) {
 	const chain = {
 		select: jest.fn().mockReturnThis(),
@@ -27,10 +25,10 @@ function makeChain(resolvedValue) {
 		lte: jest.fn().mockReturnThis(),
 		limit: jest.fn().mockReturnThis()
 	};
-	// Make whichever method is called last resolve to the given value.
-	// We do this by turning the chain into a thenable.
-	// Instead, we set mockResolvedValue on every method so the one actually
-	// awaited returns the right payload.
+
+
+
+
 	Object.keys(chain).forEach((k) => {
 		chain[k].mockReturnValue({
 			...chain,
@@ -38,7 +36,7 @@ function makeChain(resolvedValue) {
 			catch: (rej) => Promise.resolve(resolvedValue).catch(rej)
 		});
 	});
-	// Make chain itself awaitable as the terminal node
+
 	chain.then = (res, rej) => Promise.resolve(resolvedValue).then(res, rej);
 	chain.catch = (rej) => Promise.resolve(resolvedValue).catch(rej);
 	return chain;
@@ -49,9 +47,9 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 		jest.clearAllMocks();
 	});
 
-	// ==========================================
-	// GET /api/dashboard/co2-stats
-	// ==========================================
+
+
+
 	describe('GET /api/dashboard/co2-stats', () => {
 		it('Dovrebbe restituire statistiche CO2 con paginazione (200)', async () => {
 			const fakeData = [
@@ -71,8 +69,8 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 			expect(risposta.statusCode).toBe(200);
 			expect(risposta.body.data).toHaveLength(1);
 			expect(risposta.body.count).toBe(1);
-			// L'etichetta del mezzo deve essere normalizzata in italiano canonico
-			// (es. il valore 'driving' del DB diventa 'Macchina').
+
+
 			expect(risposta.body.data[0].movement_types.label).toBe('Macchina');
 		});
 
@@ -84,7 +82,7 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 				'/api/dashboard/co2-stats?date_start=2026-06-01&date_end=2026-06-30'
 			);
 
-			// Verifica che i metodi di filtro siano stati chiamati con i valori giusti
+
 			const gteCall = chain.gte.mock.calls[0];
 			const lteCall = chain.lte.mock.calls[0];
 			expect(gteCall).toEqual(['timestamp_start', '2026-06-01']);
@@ -103,9 +101,9 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 		});
 	});
 
-	// ==========================================
-	// GET /api/dashboard/co2-stats.csv
-	// ==========================================
+
+
+
 	describe('GET /api/dashboard/co2-stats.csv', () => {
 		it('Dovrebbe restituire un file CSV con Content-Type text/csv (200)', async () => {
 			const fakeData = [
@@ -147,9 +145,9 @@ describe('Test delle rotte della Dashboard Admin (/api/dashboard - RF3)', () => 
 		});
 	});
 
-	// ==========================================
-	// GET /api/dashboard/leaderboard
-	// ==========================================
+
+
+
 	describe('GET /api/dashboard/leaderboard', () => {
 		it('Dovrebbe restituire la classifica dei viaggi per punti (200)', async () => {
 			const fakeData = [

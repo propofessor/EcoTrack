@@ -1,7 +1,3 @@
-// __tests__/weeklyLeaderboardReset.test.js
-// Unit test del job di reset settimanale della classifica (RF11.5).
-// Mockiamo node-cron e il gamificationService per isolare la logica del job.
-
 jest.mock('node-cron', () => ({ schedule: jest.fn() }));
 jest.mock('../src/services/gamificationService', () => ({
 	closeWeekAndAwardRewards: jest.fn()

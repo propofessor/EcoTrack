@@ -1,4 +1,3 @@
-// src/services/cieService.js
 const crypto = require('crypto');
 
 const CONFIG = {
@@ -15,9 +14,7 @@ const CONFIG = {
 	REDIRECT_URI: 'http://localhost:3000/api/auth/cie/callback'
 };
 
-/**
- * Genera l'URL di reindirizzamento per CIE e i token di sicurezza
- */
+
 function getAuthorizationUrl() {
 	const state = crypto.randomBytes(16).toString('hex');
 	const nonce = crypto.randomBytes(16).toString('hex');
@@ -40,11 +37,9 @@ function getAuthorizationUrl() {
 	};
 }
 
-/**
- * Scambia il codice con i dati reali dell'utente CIE
- */
+
 async function getCieUserIdentity(code) {
-	// 1. Richiesta POST al server CIE per ottenere i Token
+
 	const tokenResponse = await fetch(CONFIG.TOKEN_URL, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -62,7 +57,7 @@ async function getCieUserIdentity(code) {
 		throw new Error('Fallito lo scambio del token CIE');
 	}
 
-	// 2. Richiesta per ottenere i dati anagrafici certificati
+
 	const userinfoResponse = await fetch(CONFIG.USERINFO_URL, {
 		headers: { Authorization: `Bearer ${tokenData.access_token}` }
 	});

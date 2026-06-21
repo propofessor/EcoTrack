@@ -1,10 +1,6 @@
-// __tests__/gamification.test.js
 const request = require('supertest');
 
-// 1. MOCKIAMO IL SERVICE DI GAMIFICATION DIRETTAMENTE: le rotte sono
-// orchestrazione sottile sopra gamificationService (stesso principio
-// già seguito da maps.js che delega a co2Service), quindi testiamo il
-// contratto HTTP mockando il service, non Supabase due livelli più sotto.
+
 jest.mock('../src/services/gamificationService', () => ({
 	recalculateDailyScore: jest.fn(),
 	getWeeklyScoreForUser: jest.fn(),
@@ -12,7 +8,7 @@ jest.mock('../src/services/gamificationService', () => ({
 	getUserWeeklyHistory: jest.fn()
 }));
 
-// 2. MOCKIAMO IL MIDDLEWARE DI AUTENTICAZIONE ALLA RADICE
+
 jest.mock('../src/middleware/authMiddleware', () => {
 	return (req, res, next) => {
 		req.user = { id: 'utente-gamification-456' };
@@ -28,9 +24,9 @@ describe('Test delle API di Gamification (/api/gamification - RF11)', () => {
 		jest.clearAllMocks();
 	});
 
-	// ==========================================
-	// GET /api/gamification/daily-score
-	// ==========================================
+
+
+
 	describe('GET /api/gamification/daily-score', () => {
 		it('Dovrebbe restituire il voto e il punteggio giornaliero (200)', async () => {
 			gamificationService.recalculateDailyScore.mockResolvedValue({
@@ -76,9 +72,9 @@ describe('Test delle API di Gamification (/api/gamification - RF11)', () => {
 		});
 	});
 
-	// ==========================================
-	// GET /api/gamification/weekly-score
-	// ==========================================
+
+
+
 	describe('GET /api/gamification/weekly-score', () => {
 		it('Dovrebbe restituire il punteggio settimanale aggregato (200)', async () => {
 			gamificationService.getWeeklyScoreForUser.mockResolvedValue({
@@ -101,9 +97,9 @@ describe('Test delle API di Gamification (/api/gamification - RF11)', () => {
 		});
 	});
 
-	// ==========================================
-	// GET /api/gamification/leaderboard
-	// ==========================================
+
+
+
 	describe('GET /api/gamification/leaderboard', () => {
 		it('Dovrebbe restituire podio, classifica e posizione personale (200)', async () => {
 			gamificationService.getCurrentWeekLeaderboard.mockResolvedValue({
@@ -188,9 +184,9 @@ describe('Test delle API di Gamification (/api/gamification - RF11)', () => {
 		});
 	});
 
-	// ==========================================
-	// GET /api/gamification/history
-	// ==========================================
+
+
+
 	describe('GET /api/gamification/history', () => {
 		it('Dovrebbe restituire lo storico settimanale personale (200)', async () => {
 			gamificationService.getUserWeeklyHistory.mockResolvedValue({

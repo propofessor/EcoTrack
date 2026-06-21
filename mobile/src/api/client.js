@@ -5,23 +5,12 @@ import Constants from "expo-constants";
 
 const BACKEND_PORT = 3000;
 
-/**
- * Resolve the base URL for the backend.
- *
- * Priority:
- *   1. EXPO_PUBLIC_API_URL — explicit override (e.g. a deployed backend).
- *   2. The dev machine's LAN IP, auto-detected from the Metro bundler host.
- *      In Expo Go this is the same machine running `expo start`, so the
- *      backend (port 3000) is reachable at that IP from a physical device
- *      or emulator on the same network. This is what the .env comment promises.
- *   3. localhost — final fallback (only works on the dev machine itself,
- *      e.g. iOS simulator or Expo web).
- */
+
 function resolveBaseUrl() {
   const explicit = process.env.EXPO_PUBLIC_API_URL;
   if (explicit) return explicit;
 
-  // hostUri looks like "192.168.1.20:8081"; older SDKs expose debuggerHost.
+
   const hostUri =
     Constants.expoConfig?.hostUri ??
     Constants.expoGoConfig?.debuggerHost ??
@@ -40,10 +29,11 @@ const client = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
   headers: { "Content-Type": "application/json" },
-  withCredentials: Platform.OS === "web", // browser manages httpOnly cookies automatically
+  withCredentials: Platform.OS === "web",
+  adapter: "xhr",
 });
 
-// ─── Token helpers ────────────────────────────────────────────────────────────
+
 
 function extractCookieValue(setCookieHeader, name) {
   if (!setCookieHeader) return null;
@@ -58,7 +48,7 @@ function extractCookieValue(setCookieHeader, name) {
 }
 
 export async function saveTokensFromResponse(response) {
-  if (Platform.OS === "web") return; // browser stores httpOnly cookies automatically
+  if (Platform.OS === "web") return;
   const setCookie =
     response.headers["set-cookie"] || response.headers["Set-Cookie"];
   const access = extractCookieValue(setCookie, "access_token");
@@ -71,16 +61,16 @@ export async function clearTokens() {
   await AsyncStorage.multiRemove(["access_token", "refresh_token"]);
 }
 
-// ─── Request interceptor ─────────────────────────────────────────────────────
+
 
 client.interceptors.request.use(async (config) => {
-  if (Platform.OS === "web") return config; // browser sends cookies via withCredentials
+  if (Platform.OS === "web") return config;
   const token = await AsyncStorage.getItem("access_token");
   if (token) config.headers["Cookie"] = `access_token=${token}`;
   return config;
 });
 
-// ─── Response interceptor — 401 / token refresh ──────────────────────────────
+
 
 let isRefreshing = false;
 let pendingRequests = [];
@@ -89,13 +79,13 @@ client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-    if (error.response?.status !== 401 || original._retry) {
+    if (error.response?.status !== 401 || !original || original._retry) {
       return Promise.reject(error);
     }
     original._retry = true;
 
     if (Platform.OS === "web") {
-      // Browser sends the refresh_token cookie automatically with withCredentials
+
       try {
         await axios.post(`${BASE_URL}/auth/refresh`, null, {
           withCredentials: true,

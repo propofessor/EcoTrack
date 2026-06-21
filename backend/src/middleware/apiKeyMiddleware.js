@@ -1,14 +1,13 @@
-// backend/src/middleware/apiKeyMiddleware.js
 const { supabaseAdmin } = require('../db');
 
 const cache = new Map();
-const CACHE_TTL_MS = 60 * 1000; // 1 minuto
+const CACHE_TTL_MS = 60 * 1000;
 
 async function checkApiKey(req, res, next) {
 	const apiKey = req.header('x-api-key');
 	if (!apiKey) return res.status(401).json({ error: 'API Key mancante.' });
 
-	// Controlla cache
+
 	const cached = cache.get(apiKey);
 	if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
 		if (!cached.valid)
@@ -25,7 +24,7 @@ async function checkApiKey(req, res, next) {
 
 		const valid = !error && data && data.is_active;
 
-		// Salva in cache
+
 		cache.set(apiKey, { valid, timestamp: Date.now() });
 
 		if (!valid)
@@ -33,7 +32,7 @@ async function checkApiKey(req, res, next) {
 				.status(403)
 				.json({ error: 'API Key non valida o disabilitata.' });
 
-		// Aggiorna last_used_at in background
+
 		if (data) {
 			supabaseAdmin
 				.from('api_keys')

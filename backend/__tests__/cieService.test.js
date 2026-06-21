@@ -1,7 +1,3 @@
-// __tests__/cieService.test.js
-// Unit test del servizio di autenticazione CIE (OIDC).
-// Impostiamo le env PRIMA del require perché CONFIG è valutato al load.
-
 process.env.CIE_CLIENT_ID = 'test-client-id';
 process.env.CIE_CLIENT_SECRET = 'test-secret';
 

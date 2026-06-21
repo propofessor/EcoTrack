@@ -1,8 +1,3 @@
-/**
- * CookieBanner — RNF8
- * Shown on first visit; user must accept or reject cookies.
- * Choice is persisted in localStorage under 'cookies_accepted'.
- */
 import { Cookie } from 'lucide-react';
 import { useState } from 'react';
 

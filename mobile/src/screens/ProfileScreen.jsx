@@ -1,13 +1,3 @@
-/**
- * ProfileScreen — RF7
- * View / edit personal data, manage vehicle plate, change password, access preferences, delete account.
- *
- * RF7.1: display personal data.
- * RF7.2: edit name and password.
- * RF7.4: plate CRUD.
- * RF7.5: link to Preferences screen.
- * RF7.6: delete account (GDPR).
- */
 import { useEffect, useState } from "react";
 import {
   View,
@@ -21,6 +11,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import {
   getProfile,
@@ -59,6 +50,7 @@ const PLATE_REGEX = /^[A-Z]{2}\d{3}[A-Z]{2}$/i;
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const scheme = useColorScheme();
   const iconColor = scheme === 'dark' ? '#f4f4f5' : '#09090b';
   const placeholderColor = scheme === 'dark' ? '#71717a' : '#a1a1aa';
@@ -109,14 +101,14 @@ export default function ProfileScreen({ navigation }) {
         const access_token = parsed.searchParams.get('access_token');
         const refresh_token = parsed.searchParams.get('refresh_token');
         const error = parsed.searchParams.get('error');
-        if (error || !access_token) { Alert.alert('Errore', 'Autenticazione Google fallita.'); return; }
+        if (error || !access_token) { Alert.alert(t('common.error'), t('profile.googleLinkFailed')); return; }
         await AsyncStorage.setItem('access_token', access_token);
         if (refresh_token) await AsyncStorage.setItem('refresh_token', refresh_token);
         setLinkedProviders((prev) => [...new Set([...prev, 'google'])]);
-        Alert.alert('Collegato', 'Account Google collegato con successo.');
+        Alert.alert(t('profile.googleLinked'), t('profile.googleLinkedMsg'));
       }
     } catch (err) {
-      Alert.alert('Errore', err.response?.data?.error || 'Impossibile collegare Google.');
+      Alert.alert(t('common.error'), err.response?.data?.error || t('profile.googleLinkFailed'));
     } finally {
       setLinkingProvider(false);
     }
@@ -135,13 +127,13 @@ export default function ProfileScreen({ navigation }) {
         if (code && returnedState === state) {
           await cieCallback({ code, state: returnedState });
           setLinkedProviders((prev) => [...new Set([...prev, "cie"])]);
-          Alert.alert("Collegato", "CIE collegato con successo.");
+          Alert.alert(t('profile.cieLinked'), t('profile.cieLinkedMsg'));
         }
       }
     } catch (err) {
       Alert.alert(
-        "Errore",
-        err.response?.data?.error || "Impossibile collegare CIE.",
+        t('common.error'),
+        err.response?.data?.error || t('profile.cieLinkFailed'),
       );
     } finally {
       setLinkingProvider(false);
@@ -150,7 +142,7 @@ export default function ProfileScreen({ navigation }) {
 
   async function handleSave() {
     if (plate && !PLATE_REGEX.test(plate)) {
-      Alert.alert("Errore", "Formato targa non valido (es. AB123CD).");
+      Alert.alert(t('common.error'), t('profile.plateInvalid'));
       return;
     }
     setSaving(true);
@@ -168,9 +160,9 @@ export default function ProfileScreen({ navigation }) {
         },
       }));
       setEditing(false);
-      Alert.alert("Salvato", "Profilo aggiornato con successo.");
+      Alert.alert(t('profile.saved'), t('profile.profileUpdated'));
     } catch {
-      Alert.alert("Errore", "Impossibile salvare le modifiche.");
+      Alert.alert(t('common.error'), t('profile.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -178,27 +170,24 @@ export default function ProfileScreen({ navigation }) {
 
   async function handleChangePassword() {
     if (!PASSWORD_REGEX.test(newPassword)) {
-      Alert.alert(
-        "Password non valida",
-        "Deve avere almeno 8 caratteri, una maiuscola, un numero e un carattere speciale.",
-      );
+      Alert.alert(t('profile.passwordInvalidTitle'), t('profile.passwordInvalid'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert("Errore", "Le password non coincidono.");
+      Alert.alert(t('common.error'), t('profile.passwordMismatch'));
       return;
     }
     setSavingPassword(true);
     try {
       await changePassword({ newPassword });
-      Alert.alert("Successo", "Password cambiata con successo.");
+      Alert.alert(t('common.success'), t('profile.passwordChanged'));
       setChangingPassword(false);
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
       Alert.alert(
-        "Errore",
-        err.response?.data?.error || "Impossibile aggiornare la password.",
+        t('common.error'),
+        err.response?.data?.error || t('profile.passwordUpdateFailed'),
       );
     } finally {
       setSavingPassword(false);
@@ -210,29 +199,28 @@ export default function ProfileScreen({ navigation }) {
       await deleteAccount();
       await logout();
     } catch {
-      Alert.alert("Errore", "Impossibile eliminare l'account. Riprova.");
+      Alert.alert(t('common.error'), t('profile.deleteFailed'));
     }
   }
 
   // RF7.6 / US7: doppia conferma esplicita prima dell'eliminazione definitiva.
   function handleDeleteAccount() {
     Alert.alert(
-      "Elimina account",
-      "Questa operazione è irreversibile. Tutti i tuoi dati verranno cancellati definitivamente (GDPR).",
+      t('profile.deleteConfirmTitle'),
+      t('profile.deleteConfirmMessage'),
       [
-        { text: "Annulla", style: "cancel" },
+        { text: t('common.cancel'), style: "cancel" },
         {
-          text: "Continua",
+          text: t('profile.continueLabel'),
           style: "destructive",
           onPress: () => {
-            // Secondo popup: conferma finale, per evitare cancellazioni accidentali.
             Alert.alert(
-              "Confermi l’eliminazione?",
-              "Conferma definitiva: l’account e tutti i dati associati verranno eliminati e non sarà possibile recuperarli.",
+              t('profile.deleteFinalTitle'),
+              t('profile.deleteFinalMessage'),
               [
-                { text: "Annulla", style: "cancel" },
+                { text: t('common.cancel'), style: "cancel" },
                 {
-                  text: "Elimina definitivamente",
+                  text: t('profile.deleteConfirm'),
                   style: "destructive",
                   onPress: performDeleteAccount,
                 },
@@ -258,7 +246,7 @@ export default function ProfileScreen({ navigation }) {
     <SafeAreaView className="screen flex-1">
       <ScrollView className="flex-1">
         <View className="px-4 pt-4 pb-8">
-          {/* Profile header — RF7.1 */}
+          {}
           <View className="items-center py-6 mb-4">
             <View className="avatar rounded-full items-center justify-center mb-3 w-20 h-20">
               <Text className="avatar-letter">
@@ -269,12 +257,12 @@ export default function ProfileScreen({ navigation }) {
             <Text className="text-muted text-center">{email}</Text>
           </View>
 
-          {/* Personal data section — RF7.1 / RF7.2 */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <View className="flex-row items-center justify-between py-3">
-              <Text className="subheading">Dati personali</Text>
+              <Text className="subheading">{t('profile.personalData')}</Text>
               <TouchableOpacity onPress={() => setEditing((e) => !e)}>
-                <Text className="link">{editing ? "Annulla" : "Modifica"}</Text>
+                <Text className="link">{editing ? t('common.cancel') : t('profile.edit')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -283,18 +271,18 @@ export default function ProfileScreen({ navigation }) {
             {editing ? (
               <View className="flex-col gap-2 p-0">
                 <View className="flex-col gap-1">
-                  <Text className="text-label">Nome e cognome</Text>
+                  <Text className="text-label">{t('profile.nameLabel')}</Text>
                   <TextInput
                     className="input w-full rounded-xl px-4 py-3"
                     style={{ color: iconColor }}
                     placeholderTextColor={placeholderColor}
                     value={name}
                     onChangeText={setName}
-                    placeholder="Mario Rossi"
+                    placeholder={t('register.namePlaceholder')}
                   />
                 </View>
                 <View className="flex-col gap-1">
-                  <Text className="text-label">Targa veicolo</Text>
+                  <Text className="text-label">{t('profile.plateLabel')}</Text>
                   <TextInput
                     className="input w-full rounded-xl px-4 py-3"
                     style={{ color: iconColor }}
@@ -312,7 +300,7 @@ export default function ProfileScreen({ navigation }) {
                   disabled={saving}
                 >
                   <Text className="btn-primary-text">
-                    {saving ? "Salvataggio…" : "Salva modifiche"}
+                    {saving ? t('profile.saving') : t('profile.saveChanges')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -323,7 +311,7 @@ export default function ProfileScreen({ navigation }) {
                     <View className="svg-wrapper">
                       <User size={20} color={iconColor} />
                     </View>
-                    <Text className="text-label">Nome</Text>
+                    <Text className="text-label">{t('profile.name')}</Text>
                   </View>
                   <Text className="text-body">{name || "—"}</Text>
                 </View>
@@ -331,7 +319,7 @@ export default function ProfileScreen({ navigation }) {
                 <View className="flex-row items-center justify-between py-3">
                   <View className="flex-row items-center gap-3">
                     <Mail size={20} color={iconColor} />
-                    <Text className="text-label">Email</Text>
+                    <Text className="text-label">{t('profile.emailLabel')}</Text>
                   </View>
                   <Text className="text-body">{email}</Text>
                 </View>
@@ -339,15 +327,15 @@ export default function ProfileScreen({ navigation }) {
                 <View className="flex-row items-center justify-between py-3">
                   <View className="flex-row items-center gap-3">
                     <Car size={20} color={iconColor} />
-                    <Text className="text-label">Targa</Text>
+                    <Text className="text-label">{t('profile.plate')}</Text>
                   </View>
-                  <Text className="text-body">{plate || "Non inserita"}</Text>
+                  <Text className="text-body">{plate || t('profile.plateEmpty')}</Text>
                 </View>
               </View>
             )}
           </View>
 
-          {/* RF7.2: Change password section */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <TouchableOpacity
               className="flex-row items-center justify-between py-3"
@@ -355,10 +343,10 @@ export default function ProfileScreen({ navigation }) {
             >
               <View className="flex-row items-center gap-3">
                 <KeyRound size={20} color={iconColor} />
-                <Text className="text-body">Cambia password</Text>
+                <Text className="text-body">{t('profile.changePassword')}</Text>
               </View>
               <Text className="link">
-                {changingPassword ? "Annulla" : "Modifica"}
+                {changingPassword ? t('common.cancel') : t('profile.edit')}
               </Text>
             </TouchableOpacity>
 
@@ -366,7 +354,7 @@ export default function ProfileScreen({ navigation }) {
               <View className="flex-col gap-3 pt-2">
                 <View className="divider h-px mb-2" />
                 <View className="flex-col gap-1">
-                  <Text className="text-label">Nuova password</Text>
+                  <Text className="text-label">{t('profile.newPassword')}</Text>
                   <TextInput
                     className="input w-full rounded-xl px-4 py-3"
                     style={{ color: iconColor }}
@@ -378,7 +366,7 @@ export default function ProfileScreen({ navigation }) {
                   />
                 </View>
                 <View className="flex-col gap-1">
-                  <Text className="text-label">Conferma password</Text>
+                  <Text className="text-label">{t('profile.confirmPassword')}</Text>
                   <TextInput
                     className="input w-full rounded-xl px-4 py-3"
                     style={{ color: iconColor }}
@@ -395,16 +383,16 @@ export default function ProfileScreen({ navigation }) {
                   disabled={savingPassword}
                 >
                   <Text className="btn-primary-text">
-                    {savingPassword ? "Salvataggio…" : "Aggiorna password"}
+                    {savingPassword ? t('profile.saving') : t('profile.updatePassword')}
                   </Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
 
-          {/* RF7.3: Provider linking */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
-            <Text className="subheading mb-3">Account collegati</Text>
+            <Text className="subheading mb-3">{t('profile.linkedAccounts')}</Text>
 
             {(
               <View className="flex-row items-center justify-between py-3">
@@ -415,7 +403,7 @@ export default function ProfileScreen({ navigation }) {
                 {linkedProviders.includes("google") ? (
                   <View className="flex-row items-center gap-1">
                     <Check size={16} color={iconColor} />
-                    <Text className="link">Collegato</Text>
+                    <Text className="link">{t('profile.linked')}</Text>
                   </View>
                 ) : (
                   <TouchableOpacity
@@ -423,7 +411,7 @@ export default function ProfileScreen({ navigation }) {
                     disabled={linkingProvider}
                   >
                     <Text className="link">
-                      {linkingProvider ? "Collegamento…" : "Collega"}
+                      {linkingProvider ? t('profile.linking') : t('profile.link')}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -440,7 +428,7 @@ export default function ProfileScreen({ navigation }) {
               {linkedProviders.includes("cie") ? (
                 <View className="flex-row items-center gap-1">
                   <Check size={16} color={iconColor} />
-                  <Text className="link">Collegato</Text>
+                  <Text className="link">{t('profile.linked')}</Text>
                 </View>
               ) : (
                 <TouchableOpacity
@@ -448,14 +436,14 @@ export default function ProfileScreen({ navigation }) {
                   disabled={linkingProvider}
                 >
                   <Text className="link">
-                    {linkingProvider ? "Collegamento…" : "Collega"}
+                    {linkingProvider ? t('profile.linking') : t('profile.link')}
                   </Text>
                 </TouchableOpacity>
               )}
             </View>
           </View>
 
-          {/* RF7.5: Preferences navigation */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <TouchableOpacity
               className="flex-row items-center justify-between py-3"
@@ -463,31 +451,31 @@ export default function ProfileScreen({ navigation }) {
             >
               <View className="flex-row items-center gap-3">
                 <Settings size={20} color={iconColor} />
-                <Text className="text-body">Preferenze</Text>
+                <Text className="text-body">{t('profile.preferences')}</Text>
               </View>
               <ChevronRight size={20} color={mutedColor} />
             </TouchableOpacity>
           </View>
 
-          {/* Session section */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <TouchableOpacity
               className="flex-row items-center justify-between py-3"
               onPress={() =>
-                Alert.alert("Logout", "Vuoi uscire dall'applicazione?", [
-                  { text: "Annulla", style: "cancel" },
-                  { text: "Logout", style: "destructive", onPress: logout },
+                Alert.alert(t('profile.logoutConfirmTitle'), t('profile.logoutConfirmMessage'), [
+                  { text: t('common.cancel'), style: "cancel" },
+                  { text: t('common.logout'), style: "destructive", onPress: logout },
                 ])
               }
             >
               <View className="flex-row items-center gap-3">
                 <LogOut size={20} color={iconColor} />
-                <Text className="text-body">Logout</Text>
+                <Text className="text-body">{t('common.logout')}</Text>
               </View>
             </TouchableOpacity>
           </View>
 
-          {/* Danger zone — RF7.6 */}
+          {}
           <View className="card rounded-2xl p-4 mb-4">
             <TouchableOpacity
               className="flex-row items-center gap-3 py-3"
@@ -495,7 +483,7 @@ export default function ProfileScreen({ navigation }) {
             >
               <Trash2 size={20} color={dangerColor} />
               <Text className="btn-danger-text">
-                Elimina account definitivamente
+                {t('profile.deleteAccount')}
               </Text>
             </TouchableOpacity>
           </View>

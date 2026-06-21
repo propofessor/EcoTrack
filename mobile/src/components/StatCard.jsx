@@ -1,7 +1,3 @@
-/**
- * StatCard — label + value stat tile.
- * Props: label (string), value (string)
- */
 import { View, Text } from 'react-native';
 
 export default function StatCard({ label, value }) {

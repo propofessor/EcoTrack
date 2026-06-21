@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, useColorScheme } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Map, Compass, BarChart2, Trophy, User } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
@@ -16,17 +17,18 @@ const ACCENT      = '#8ab834';
 const TAB_HEIGHT  = 68;
 
 const TAB_CONFIG = {
-  Home:       { Icon: Home,      label: 'Home'       },
-  Mappa:      { Icon: Map,       label: 'Mappa'      },
-  Percorso:   { Icon: Compass,   label: 'Percorso'   },
-  Storico:    { Icon: BarChart2, label: 'Storico'    },
-  Classifica: { Icon: Trophy,    label: 'Classifica' },
-  Profilo:    { Icon: User,      label: 'Profilo'    },
+  Home:       { Icon: Home,      labelKey: 'nav.home'        },
+  Mappa:      { Icon: Map,       labelKey: 'nav.map'         },
+  Percorso:   { Icon: Compass,   labelKey: 'nav.route'       },
+  Storico:    { Icon: BarChart2, labelKey: 'nav.history'     },
+  Classifica: { Icon: Trophy,    labelKey: 'nav.leaderboard' },
+  Profilo:    { Icon: User,      labelKey: 'nav.profile'     },
 };
 
 function CustomTabBar({ state, navigation }) {
   const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const isDark = scheme === 'dark';
 
   const bg       = isDark ? '#09090b' : '#ffffff';
@@ -46,7 +48,9 @@ function CustomTabBar({ state, navigation }) {
     }}>
       {state.routes.map((route, index) => {
         const focused = state.index === index;
-        const { Icon, label } = TAB_CONFIG[route.name] ?? { Icon: Home, label: route.name };
+        const cfg = TAB_CONFIG[route.name] ?? { Icon: Home, labelKey: route.name };
+        const { Icon } = cfg;
+        const label = t(cfg.labelKey);
         const color = focused ? active : inactive;
 
         const onPress = () => {

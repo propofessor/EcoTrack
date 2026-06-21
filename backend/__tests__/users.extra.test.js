@@ -1,8 +1,3 @@
-// __tests__/users.extra.test.js
-// Copertura delle rotte di users.js non coperte da users.test.js:
-// cambio password, salvataggio push token, e i rami catch (500).
-// Usa il middleware di auth REALE per coprirne anche il blocco catch.
-
 const request = require('supertest');
 
 jest.mock('../src/db', () => ({
@@ -27,7 +22,7 @@ const UTENTE = {
 	user_metadata: { name: 'Mario Rossi', plate: 'AB123CD' }
 };
 
-// Catena select().eq().single()
+
 function selectSingleChain(result) {
 	const c = {
 		select: jest.fn(() => c),
@@ -37,7 +32,7 @@ function selectSingleChain(result) {
 	return c;
 }
 
-// Catena update().eq()  (eq è il terminale che risolve)
+
 function updateChain(result) {
 	const c = {
 		update: jest.fn(() => c),
@@ -48,13 +43,11 @@ function updateChain(result) {
 
 beforeEach(() => {
 	jest.clearAllMocks();
-	// Per default il middleware accetta il token e identifica l'utente
+
 	db.auth.getUser.mockResolvedValue({ data: { user: UTENTE }, error: null });
 });
 
-// ============================================================
-// Middleware di autenticazione — ramo catch (500)
-// ============================================================
+
 describe('Auth middleware (ramo catch)', () => {
 	it('restituisce 500 se la verifica del token solleva un’eccezione', async () => {
 		const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -70,9 +63,7 @@ describe('Auth middleware (ramo catch)', () => {
 	});
 });
 
-// ============================================================
-// PUT /api/users/me — ramo catch (500)
-// ============================================================
+
 describe('PUT /api/users/me (ramo catch)', () => {
 	it('restituisce 500 se updateUserById solleva un’eccezione', async () => {
 		supabaseAdmin.auth.admin.updateUserById.mockRejectedValue(
@@ -89,9 +80,7 @@ describe('PUT /api/users/me (ramo catch)', () => {
 	});
 });
 
-// ============================================================
-// PUT /api/users/me/password (RF7.2)
-// ============================================================
+
 describe('PUT /api/users/me/password', () => {
 	it('restituisce 400 se manca newPassword', async () => {
 		const res = await request(app)
@@ -151,9 +140,7 @@ describe('PUT /api/users/me/password', () => {
 	});
 });
 
-// ============================================================
-// PUT /api/users/me/push-token (RF11.7)
-// ============================================================
+
 describe('PUT /api/users/me/push-token', () => {
 	it('restituisce 400 se manca expo_push_token', async () => {
 		const res = await request(app)
@@ -210,9 +197,7 @@ describe('PUT /api/users/me/push-token', () => {
 	});
 });
 
-// ============================================================
-// DELETE /api/users/me — ramo catch (500)
-// ============================================================
+
 describe('DELETE /api/users/me (ramo catch)', () => {
 	it('restituisce 500 se deleteUser solleva un’eccezione', async () => {
 		const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});

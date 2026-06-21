@@ -1,8 +1,3 @@
-/**
- * notifications.js — RF11.2 / RF11.7
- * Registers the device for Expo push notifications and stores the token
- * on the backend so the server can send daily grade / weekly results alerts.
- */
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
@@ -23,12 +18,9 @@ if (Platform.OS !== 'web') {
   });
 }
 
-/**
- * Requests notification permission and registers the push token with the backend.
- * Safe to call multiple times — silently skips on simulators or if already done.
- */
+
 export async function registerPushNotifications() {
-  if (!Device.isDevice) return; // Push notifications only work on physical devices
+  if (!Device.isDevice) return;
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;

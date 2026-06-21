@@ -7,7 +7,7 @@ export default function App() {
 	return (
 		<ThemeProvider>
 			<Dashboard />
-			{/* RNF8: cookie consent banner — shown on first visit */}
+			{}
 			<CookieBanner />
 		</ThemeProvider>
 	);

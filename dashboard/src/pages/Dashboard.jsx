@@ -5,13 +5,13 @@ import Grid from '../components/layout/Grid.jsx';
 const LAYOUT_KEY = 'ecoTrack_layout';
 
 export default function Dashboard() {
-	// Lazy initializer: reads from localStorage before the first render
+
 	const [items, setItems] = useState(() => {
 		try {
 			const saved = localStorage.getItem(LAYOUT_KEY);
 			if (saved) return JSON.parse(saved);
 		} catch {
-			// corrupted entry — fall through to default
+
 		}
 		return [
 			{
@@ -25,13 +25,13 @@ export default function Dashboard() {
 		];
 	});
 
-	// Save button: persists current grid state to localStorage
+
 	const saveLayout = () => {
 		localStorage.setItem(LAYOUT_KEY, JSON.stringify(items));
 		alert('Layout e configurazioni salvati con successo!');
 	};
 
-	// 4. Funzione BOTTONE ESPORTA: Scarica un file JSON su disco
+
 	const exportConfig = () => {
 		const dataStr = JSON.stringify(items, null, 2);
 		const blob = new Blob([dataStr], { type: 'application/json' });
@@ -46,7 +46,7 @@ export default function Dashboard() {
 		URL.revokeObjectURL(url);
 	};
 
-	// 5. Funzione BOTTONE IMPORTA: Legge il file JSON e sovrascrive la griglia
+
 	const handleImportFile = (event) => {
 		const file = event.target.files[0];
 		if (!file) return;

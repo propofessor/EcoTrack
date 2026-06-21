@@ -11,7 +11,7 @@ import {
 import { useElementSize } from '../../hooks/useElementSize.js';
 import { transportColor } from '../../utils/labels.js';
 
-// Dataset → axis / label mapping
+
 const DATASET_CONFIG = {
 	co2_monthly: {
 		xKey: 'month',
@@ -39,9 +39,9 @@ export function ChartBar({ config = {}, data = [], loading = false }) {
 	const { xKey, yKey, yUnit, yLabel } =
 		DATASET_CONFIG[config.dataset] || DATASET_CONFIG.co2_monthly;
 
-	// Quando l'asse X è un mezzo di trasporto (transport_split), coloriamo ogni
-	// barra con il colore canonico del mezzo, così ogni mezzo ha sempre lo stesso
-	// colore in tutti i grafici. Per gli altri dataset resta una tinta unica.
+
+
+
 	const colorByTransport = xKey === 'name';
 
 	const tooltipStyle = {
